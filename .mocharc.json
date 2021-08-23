@@ -1,0 +1,12 @@
+{
+  "extension": ["ts"],
+  "spec": "tests/**/*.test.ts",
+  "preserve-symlinks": true,
+  "require": [
+    "ts-node/register",
+    "tsconfig-paths/register",
+    "./tests/setup.ts"
+  ],
+  "watch-files": ["./tests/**/*.ts", "./worker/**/*.ts"],
+  "watch-extensions": "ts"
+}

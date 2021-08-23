@@ -1,0 +1,26 @@
+{
+    "compilerOptions": {
+      "outDir": "./lib",
+      "lib": ["ES2015", "DOM"],
+      "target": "esNext",
+      "preserveSymlinks": true,
+      "esModuleInterop": true,
+      "rootDir": "./",
+      "baseUrl": "./",
+      "paths": {
+        "@lib-shared/*": ["./lib-shared/*"],
+        "@sympy-worker/*": ["./worker/*"],
+      },
+      "typeRoots": ["./typings-math-type", "./node_modules/@types"]
+    },
+  
+    "include": [
+      "./lib-shared/**/*",
+      "./mt-sympy-worker/**/*",
+      "./typings-math-type/**/*",
+      "./worker-main-shared/**/*",
+      "./tests/**/*"
+    ],
+    "exclude": ["node_modules"]
+  }
+  

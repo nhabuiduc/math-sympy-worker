@@ -3,5 +3,32 @@
   "version": "1.0.0",
   "main": "index.js",
   "license": "MIT",
-  "private": true
+  "private": true,
+  "dependencies": {
+    "@naytev/grapheme-splitter": "^1.0.0",
+    "fast-deep-equal": "^3.1.3",
+    "xhr2": "^0.2.1"
+  },
+  "scripts": {
+    "p-mock": "PYODIDE_SERVICE_PORT=4893 node ./pyodide-mock-service/pyodide-service.js",
+    "mocha": "mocha",
+    "mocha-w": "TS_NODE_TRANSPILE_ONLY=true mocha -w",
+    "test": "concurrently --kill-others \" sleep 5 && yarn mocha-w\" \" yarn p-mock \" "
+  },
+  "devDependencies": {
+    "@types/chai": "^4.2.21",
+    "@types/mocha": "^9.0.0",
+    "@types/node": "^16.7.1",
+    "@types/react": "^17.0.19",
+    "body-parser": "^1.19.0",
+    "chai": "^4.3.4",
+    "concurrently": "^6.2.1",
+    "cors": "^2.8.5",
+    "express": "^4.17.1",
+    "mocha": "^9.1.0",
+    "pyodide": "^0.18.0",
+    "ts-node": "^10.2.1",
+    "tsconfig-paths": "^3.10.1",
+    "typescript": "^4.3.5"
+  }
 }
