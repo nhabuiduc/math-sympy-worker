@@ -1,10 +1,12 @@
 import { CasEngineProcess } from "@sympy-worker/cas-engine-process";
-declare const casEngineProcess: CasEngineProcess;
+import { PyodideNs } from "@sympy-worker/pyodide-models";
+declare const pyodide: PyodideNs.PythonRunner;
 
 
 class TestHelper {
+    private casEngineProcess = new CasEngineProcess(pyodide, { constantTextFuncs: [] })
     async prepare(statement: string): Promise<void> {
-        await casEngineProcess.processRaw(statement, false);
+        this.casEngineProcess.processRaw(statement, false);
     }
 
     async run(statement: string) {
@@ -13,7 +15,7 @@ expr=${statement}
 rootDic = ___mcSympyExprDump(expr)
 json.dumps(rootDic)
 `;
-        const [, blocks] = await casEngineProcess.processRaw(code, true);
+        const [, blocks] = await this.casEngineProcess.processRaw(code, true);
         let blocksText = "";
         if (blocks) {
             blocksText = this.blocksToText(blocks);

@@ -1,4 +1,4 @@
-import { CasEngineNs } from "../../worker-main-shared/cas-engine-ns";
+import { CasEngineNs } from "@sympy-worker/cas-engine-ns";
 import { P2M } from "./p2m/p2m";
 import { M2P } from "./m2p/m2p";
 import { PyodideNs } from "../pyodide-models";

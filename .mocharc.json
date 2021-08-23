@@ -1,6 +1,6 @@
 {
   "extension": ["ts"],
-  "spec": "tests/**/*.test.ts",
+  "spec": ["tests/**/*.test.ts"],
   "preserve-symlinks": true,
   "require": [
     "ts-node/register",

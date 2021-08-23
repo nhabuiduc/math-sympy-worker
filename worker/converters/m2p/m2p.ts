@@ -2,7 +2,7 @@ import { M2T } from "./m2t";
 import { T2A } from "./t2a";
 import { A2P } from "./a2p";
 import { PGen } from "./p-gen";
-import { CasEngineNs } from "../../../worker-main-shared/cas-engine-ns";
+import { CasEngineNs } from "@sympy-worker/cas-engine-ns";
 
 export class M2P {
     private m2t: M2T;
