@@ -92,9 +92,9 @@ class PrTransformHelper {
                 return EnumPosWeight.Other + EnumPosWeight.Var;
             }
             case "Pow": {
-                // console.log("come here111aa");
                 if (s.symbols[1].type == "Integer") {
-                    return EnumPosWeight.Other + EnumPosWeight.Pow + s.symbols[1].value;
+                    /**higher power will be in front */
+                    return EnumPosWeight.Other + EnumPosWeight.Pow + 50 - s.symbols[1].value;
                 }
 
                 if (s.symbols[0].type == "GenericFunc") {
