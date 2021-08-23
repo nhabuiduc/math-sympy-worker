@@ -290,12 +290,14 @@ export class PrFracTransform implements P2Pr.IPrTransform {
 
     private transformMulFrac(symbol: Symbol): Symbol {
         if (symbol.type == "Mul") {
-            const children = this.combineMulFracs(symbol.symbols.map(s => this.transformMulFrac(s)));
+            const children = symbol.symbols.map(s => this.transformMulFrac(s));
             if (children.length <= 1) {
                 return children[0];
             }
+            
+            const orderedChildren = symbol.unevaluatedDetected ? children : this.combineMulFracs(children);
 
-            return { ...symbol, symbols: children };
+            return { ...symbol, symbols: orderedChildren };
         }
 
         if (symbol.kind == "Container") {
@@ -335,7 +337,7 @@ export class PrFracTransform implements P2Pr.IPrTransform {
             return symbols[0];
         }
 
-        return { type: "Mul", kind: "Container", symbols }
+        return { type: "Mul", unevaluatedDetected: true, kind: "Container", symbols }
     }
 }
 

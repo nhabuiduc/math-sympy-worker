@@ -25,7 +25,7 @@ export class PrAddTransform implements P2Pr.IPrTransform {
         if (symbols.length == 2 && symbols.some(c => prTransformHelper.symbolStartWithMinus(c)) && symbols.some(c => !prTransformHelper.symbolStartWithMinus(c))) {
             return this.order2Symbols(symbols);
         }
-        const pair = symbols.map(c => ({ s: c, weight: prTransformHelper.positionWeight(c) }));
+        const pair = symbols.map(c => ({ s: c, weight: prTransformHelper.positionWeight(c, "add") }));
         pair.sort((c1, c2) => c1.weight - c2.weight);
         return pair.map(c => c.s);
     }

@@ -405,13 +405,8 @@ export class Pr2M {
         for (let idx = 0; idx < items.length; idx++) {
             const item = items[idx];
             const curArg = args[idx];
-
-            if (curArg.type == "NegativeOne" || (curArg.type == "Integer" && curArg.value == -1)) {
-                isNegative = !isNegative;
-                continue;
-            }
-            if (curArg.type == "One" || (curArg.type == "Integer" && curArg.value == 1)) {
-                continue;
+            if (idx == 0 && curArg.type == "NegativeOne") {
+                isNegative = true;
             }
 
             if (this.shouldSeparateByMulSymbol(prevAdjacentArg, args[idx])) {

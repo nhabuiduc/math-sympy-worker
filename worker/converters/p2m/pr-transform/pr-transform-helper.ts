@@ -1,8 +1,9 @@
 import type { P2Pr } from "../p2pr";
 
 const enum EnumPosWeight {
-    Constant = 20000,
-    MinusSign = 1000,
+    ConstantInAddCtx = 30000,
+    ConstantInMulCtx = 10000,
+    MinusSign = 2000,
     Integer = 100,
     Float = 200,
     FracConstant = 300,
@@ -25,6 +26,7 @@ const enum EnumPosWeight {
 class PrTransformHelper {
 
 
+
     /**
      * Constants:  +20000
      * -- Minus Sign:  +1000
@@ -39,41 +41,41 @@ class PrTransformHelper {
      * -- -- Power: +700
      * -- -- Symbol: +800
      */
-    positionWeight(s: Symbol): number {
-
+    positionWeight(s: Symbol, type: "add" | "mul"): number {
+        const constantBase = type == "add" ? EnumPosWeight.ConstantInAddCtx : EnumPosWeight.ConstantInMulCtx;
         switch (s.type) {
             case "One":
             case "Half": {
-                return EnumPosWeight.Constant + EnumPosWeight.Integer;
+                return constantBase + EnumPosWeight.Integer;
             }
 
             case "NegativeOne": {
-                return EnumPosWeight.Constant + EnumPosWeight.MinusSign + EnumPosWeight.Integer;
+                return constantBase + EnumPosWeight.MinusSign + EnumPosWeight.Integer;
             }
             case "Integer": {
                 if (s.value > 0) {
-                    return EnumPosWeight.Constant + EnumPosWeight.Integer;
+                    return constantBase + EnumPosWeight.Integer;
                 }
 
-                return EnumPosWeight.Constant + EnumPosWeight.MinusSign + EnumPosWeight.Integer;
+                return constantBase + EnumPosWeight.MinusSign + EnumPosWeight.Integer;
             }
             case "Float": {
                 if (s.value[0] == "-") {
-                    return EnumPosWeight.Constant + EnumPosWeight.MinusSign + EnumPosWeight.Float;
+                    return constantBase + EnumPosWeight.MinusSign + EnumPosWeight.Float;
                 }
 
-                return EnumPosWeight.Constant + EnumPosWeight.Float;
+                return constantBase + EnumPosWeight.Float;
             }
             case "Frac": {
                 if (this.isConstant(s)) {
-                    return EnumPosWeight.Constant + EnumPosWeight.FracConstant;
+                    return constantBase + EnumPosWeight.FracConstant;
                 }
 
                 return EnumPosWeight.Other + EnumPosWeight.Frac;
             }
             case "Mul": {
                 if (s.type == "Mul" && s.symbols.length == 2 && s.symbols[0].type == "NegativeOne" && this.isConstant(s.symbols[1])) {
-                    return EnumPosWeight.Constant + EnumPosWeight.MinusSign + EnumPosWeight.FracConstant
+                    return constantBase + EnumPosWeight.MinusSign + EnumPosWeight.FracConstant
                 }
 
                 if (this.isConstant(s.symbols[0])) {
@@ -86,7 +88,7 @@ class PrTransformHelper {
 
                 const foundNotConstant = s.symbols.find(s => !this.isConstant(s));
                 if (foundNotConstant) {
-                    return this.positionWeight(foundNotConstant);
+                    return this.positionWeight(foundNotConstant, type);
                 }
 
                 return EnumPosWeight.Other + EnumPosWeight.Var;
@@ -98,7 +100,7 @@ class PrTransformHelper {
                 }
 
                 if (s.symbols[0].type == "GenericFunc") {
-                    return this.positionWeight(s.symbols[0]);
+                    return this.positionWeight(s.symbols[0], type);
                 }
                 return EnumPosWeight.Other + EnumPosWeight.Pow;
             }
@@ -138,7 +140,7 @@ class PrTransformHelper {
             return { ...s2, symbols: [s1 as Symbol].concat(s2.symbols) }
         }
 
-        return { type: "Mul", kind: "Container", symbols: [s1, s2] };
+        return { type: "Mul", unevaluatedDetected: true, kind: "Container", symbols: [s1, s2] };
     }
 
 

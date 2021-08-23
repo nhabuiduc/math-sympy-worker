@@ -4,6 +4,7 @@ import { PrMulTransform } from "./pr-transform/pr-mul-transform";
 import { PrSqrtTransform } from "./pr-transform/pr-sqrt-transform";
 import { PrAddTransform } from "./pr-transform/pr-add-transform";
 import { prCreator } from "./pr/pr-creator";
+import { prTransformHelper } from "./pr-transform/pr-transform-helper";
 
 export class P2Pr {
 
@@ -29,7 +30,13 @@ export class P2Pr {
                 return this.parseSymbol(obj);
             }
             case "Mul": {
-                return { type: "Mul", kind: "Container", symbols: obj.args.map(c => this.innerConvert(c)) }
+                const symbols = obj.args.map(c => this.innerConvert(c));
+                return {
+                    type: "Mul",
+                    kind: "Container",
+                    unevaluatedDetected: this.detectUnevaluatedMul(symbols),
+                    symbols: symbols
+                }
             }
             case "Pow": {
                 return { type: "Pow", kind: "Container", symbols: obj.args.map(c => this.innerConvert(c)), indexJson: undefined }
@@ -129,7 +136,7 @@ export class P2Pr {
                 return { type: "Add", kind: "Container", symbols: obj.args.map(c => this.innerConvert(c)) }
             }
             case "VectorMul": {
-                return { type: "Mul", kind: "Container", symbols: obj.args.map(c => this.innerConvert(c)) }
+                return { type: "Mul", kind: "Container", unevaluatedDetected: true, symbols: obj.args.map(c => this.innerConvert(c)) }
             }
             case "VectorZero": {
                 return { type: "VectorZero", kind: "Leaf" }
@@ -180,6 +187,10 @@ export class P2Pr {
         }
     }
 
+    private detectUnevaluatedMul(symbols: Symbol[]): boolean {
+        return symbols[0].type == "One" || symbols.some((c, idx) => idx > 0 && prTransformHelper.isConstant(c));
+    }
+
     static parseIntegerConstant(s: P.Basic): number {
         switch (s.func) {
             case "One": return 1;
@@ -223,7 +234,7 @@ export namespace P2Pr {
 
     export interface Mul extends Container {
         type: "Mul";
-
+        unevaluatedDetected: boolean;
     }
 
     export interface Add extends Container {
