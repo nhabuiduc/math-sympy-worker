@@ -55,6 +55,9 @@ class BlockBd {
         if (constantTextFuncSet.has(mappedMcFuncName)) {
             return this.opConstantBlock(name);
         }
+        if (mappedMcFuncName.length <= 1) {
+            return blockBd.textBlock(mappedMcFuncName);
+        }
 
         return blockBd.operatorNameBlock(mappedMcFuncName)
     }
@@ -123,6 +126,10 @@ class BlockBd {
             text: text,
             style,
         }
+    }
+
+    flattenBlocks(blocks: BlockModel[][]): BlockModel[] {
+        return blocks.reduce((prev, cur) => this.combine2Blocks(prev, cur), [] as BlockModel[])
     }
 
     combineMultipleBlocks(...blocks: BlockModel[][]): BlockModel[] {

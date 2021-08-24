@@ -11,7 +11,7 @@ class __McHdl:
         return {'func': 'List', 'args': self.argsMap(expr), 'separator':','}
 
     def hdl_UndefinedFunction(self, expr):
-        return {'func': 'GenericFunc', 'name': str(expr), 'args': []}
+        return {'func': 'UndefinedFunction', 'name': str(expr), 'args': []}
 
     def hdl_PolynomialRing(self, expr):
         return {'func': 'PolynomialRing', 'domain': self.hdlAll(expr.domain), 'args': self.argsMap(expr.symbols) }
@@ -60,7 +60,7 @@ class __McHdl:
 
     def hdl_Derivative(self, expr):
         from sympy.printing.conventions import requires_partial
-        return {'func':'Derivative', 'partial':requires_partial(expr) }
+        return {'func':'Derivative', 'partial':requires_partial(expr), 'args':  self.argsMap(expr.args) }
 
     def hdl_Relational(self, expr):
         return {'func': 'Relational', 'relOp': expr.rel_op, 'args':  self.argsMap(expr.args)  } 

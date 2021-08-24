@@ -27,7 +27,7 @@ json.dumps(rootDic)
         return blocks.map(b => {
             if (b.type == "single") {
                 if(b.text.length == 1) {
-                    return `[b${b.text}]`
+                    return b.text;
                 }
                 return `[b,${b.text}${this.styleToText(b.style)}]`;
             }

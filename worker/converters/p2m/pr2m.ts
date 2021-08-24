@@ -50,6 +50,11 @@ export class Pr2M {
             case "Var": {
                 return this.convertVarSymbol(obj);
             }
+            case "VarList": {
+                return {
+                    blocks: blockBd.flattenBlocks(obj.symbols.map(c => this.innerConvert(c, 0).blocks))
+                }
+            }
             case "Mul": {
                 return this.joinMulOp(obj.symbols, level);
             }
@@ -83,6 +88,13 @@ export class Pr2M {
             case "GenericFunc": {
                 const { name, args, index } = this.buildToGenericFunc(obj);
                 return { blocks: name.concat(index).concat(args) }
+            }
+            case "UndefinedFunction": {
+                return {
+                    blocks: [
+                        blockBd.textBlock(obj.name)
+                    ]
+                }
             }
             case "Matrix": {
                 const matrixBlock = blockBd.compositeBlock("\\matrix", [], []) as MatrixLikeBlockModel;
@@ -155,7 +167,7 @@ export class Pr2M {
                 }
             }
             case "Derivative": {
-                return { blocks: this.derivative.convert(obj) };
+                return { blocks: this.derivative.convert(obj, level) };
             }
             case "Exp": {
                 return {
@@ -293,6 +305,8 @@ export class Pr2M {
         return this.crs([fracBlock]);
     }
 
+
+
     private buildPow(pow: { indexJson: string }, args: P2Pr.Symbol[], level: number): CResult {
         if (args.length > 3) {
             throw new Error("Unsupported power with different than 2,3 arguments");
@@ -303,7 +317,8 @@ export class Pr2M {
         }
 
         let base = this.innerConvert(args[0], level + 1).blocks;
-        if (args[0].type == "Pow" || args[0].type == "Frac" || args[0].type == "Sqrt") {
+        // if (args[0].type == "Pow" || args[0].type == "Frac" || args[0].type == "Sqrt") {
+        if (!(prTransformHelper.isSingleVar(args[0]) || prTransformHelper.isIntegerValue(args[0]))) {
             base = blockBd.wrapBetweenBrackets(base);
         }
 

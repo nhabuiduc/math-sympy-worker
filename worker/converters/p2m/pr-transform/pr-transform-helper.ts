@@ -242,6 +242,44 @@ class PrTransformHelper {
     extractRationalFrac(s: P2Pr.Frac): [number, number] {
         return [this.extractIntegerValue(s.symbols[0]), this.extractIntegerValue(s.symbols[1])]
     }
+
+    isSingleVar(s: Symbol): boolean {
+        return s.type == "Var" && s.name.length == 1;
+    }
+
+    isIntegerValue(s: Symbol): boolean {
+        if (s.type == "Zero") {
+            return true;
+        }
+        if (s.type == "One") {
+            return true;
+        }
+        if (s.type == "NegativeOne") {
+            return true;
+        }
+        if (s.type == "Integer") {
+            return true;
+        }
+
+        return false;
+    }
+
+    var(text: string): P2Pr.Var {
+        return { type: "Var", kind: "Leaf", name: text };
+    }
+
+    int(vl:number):P2Pr.Integer {
+        return { type: "Integer", kind: "Leaf", value: vl }
+    }
+
+    pow(base: Symbol, root: Symbol): P2Pr.Pow {
+        return {
+            type: "Pow",
+            kind: "Container",
+            indexJson: undefined,
+            symbols: [base, root]
+        }
+    }
 }
 
 export const prTransformHelper = new PrTransformHelper();

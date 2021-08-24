@@ -233,7 +233,7 @@ export class PrFracTransform implements P2Pr.IPrTransform {
     }
 
     private transformMultipleInverseFrac(symbol: Symbol): Symbol {
-        if (symbol.type == "Mul") {
+        if (symbol.type == "Mul" && !symbol.unevaluatedDetected) {
             const children = this.combineInverseFrac(symbol.symbols.map(s => this.transformMultipleInverseFrac(s)));
             if (children.length <= 1) {
                 return children[0];
@@ -298,7 +298,7 @@ export class PrFracTransform implements P2Pr.IPrTransform {
                 return children[0];
             }
 
-            const orderedChildren = this.combineMulFracs(children);
+            const orderedChildren = symbol.unevaluatedDetected ? children : this.combineMulFracs(children);
 
             return { ...symbol, symbols: orderedChildren };
         }

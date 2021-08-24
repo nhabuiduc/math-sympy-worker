@@ -21,9 +21,9 @@ describe("Mul", () => {
         expect(await th.run("Mul(1, S.Half, evaluate=False)")).equal(`[1×][frac,[1],[2]]`);
         expect(await th.run("Mul(1, 1, S.Half, evaluate=False)")).equal(`[1×1×][frac,[1],[2]]`);
         expect(await th.run("Mul(1, 1, 2, 3, x, evaluate=False)")).equal(`[1×1×2×3x]`);
-        expect(await th.run("Mul(1, -1, evaluate=False)")).equal(`[1×][b(][-1][b)]`);
+        expect(await th.run("Mul(1, -1, evaluate=False)")).equal(`[1×]([-1])`);
         expect(await th.run("Mul(4, 3, 2, 1, 0, y, x, evaluate=False)")).equal(`[4×3×2×1×0yx]`);
-        expect(await th.run("Mul(4, 3, 2, 1+z, 0, y, x, evaluate=False)")).equal(`[4×3×2][b(][z+1][b)][0yx]`);
+        expect(await th.run("Mul(4, 3, 2, 1+z, 0, y, x, evaluate=False)")).equal(`[4×3×2]([z+1])[0yx]`);
         expect(await th.run("Mul(Rational(2, 3), Rational(5, 7), evaluate=False)")).equal(`[frac,[2],[3]][frac,[5],[7]]`);
     });
     
