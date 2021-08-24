@@ -1,9 +1,9 @@
 import { expect } from "chai";
 import { testHelper as th } from "./test-helper";
 
+/** Test from: https://github.com/sympy/sympy/blob/master/sympy/printing/tests/test_latex.py */
 describe("Mul", () => {
-
-    it("should mul", async () => {
+    it("convert", async () => {
         expect(await th.run("x+10")).equal(`[x+10]`);
         expect(await th.run("x**2")).equal(`[x][pow,[2]]`);
         expect(await th.run("x**(1 + x)")).equal(`[x][pow,[x+1]]`);
@@ -21,7 +21,10 @@ describe("Mul", () => {
         expect(await th.run("Mul(1, S.Half, evaluate=False)")).equal(`[1×][frac,[1],[2]]`);
         expect(await th.run("Mul(1, 1, S.Half, evaluate=False)")).equal(`[1×1×][frac,[1],[2]]`);
         expect(await th.run("Mul(1, 1, 2, 3, x, evaluate=False)")).equal(`[1×1×2×3x]`);
-        expect(await th.run("Mul(1, -1, evaluate=False)")).equal(`[1×(-1)]`);
+        expect(await th.run("Mul(1, -1, evaluate=False)")).equal(`[1×][b(][-1][b)]`);
+        expect(await th.run("Mul(4, 3, 2, 1, 0, y, x, evaluate=False)")).equal(`[4×3×2×1×0yx]`);
+        expect(await th.run("Mul(4, 3, 2, 1+z, 0, y, x, evaluate=False)")).equal(`[4×3×2][b(][z+1][b)][0yx]`);
+        expect(await th.run("Mul(Rational(2, 3), Rational(5, 7), evaluate=False)")).equal(`[frac,[2],[3]][frac,[5],[7]]`);
     });
     
 })

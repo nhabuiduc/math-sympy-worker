@@ -266,19 +266,6 @@ export class Pr2M {
         };
     }
 
-    // private wrapBracketsIfNotSingleVar(argSymbols: Symbol[], blocks: BlockModel[]) {
-    //     if (argSymbols.length == 1) {
-    //         switch (argSymbols[0].kind) {
-    //             case "Leaf": {
-    //                 return blocks;
-    //             }
-
-    //         }
-    //     }
-
-    //     return blockBd.wrapBetweenBrackets(blocks);
-    // }
-
     private frac(numerator: BlockModel[], denominator: BlockModel[]) {
         return this.crs([
             blockBd.compositeBlock("\\frac", ["value", "sub1"], [
@@ -367,7 +354,7 @@ export class Pr2M {
                 blocks = blockBd.combine2Blocks(blocks, item.blocks);
                 continue;
             }
-            if (prTransformHelper.symbolStartWithMinus(args[idx])) {
+            if (prTransformHelper.startWithMinus(args[idx])) {
                 blocks = blockBd.combine2Blocks(blocks, item.blocks);
                 continue;
             }
@@ -407,12 +394,15 @@ export class Pr2M {
             const curArg = args[idx];
             if (idx == 0 && curArg.type == "NegativeOne") {
                 isNegative = true;
+                continue;
             }
 
+            const blocksToAdd = this.shouldWrapBrackets(idx, curArg) ? blockBd.wrapBetweenBrackets(item.blocks) : item.blocks;
+
             if (this.shouldSeparateByMulSymbol(prevAdjacentArg, args[idx])) {
-                blocks = blockBd.combineMultipleBlocks(blocks, [blockBd.textBlock("×")], item.blocks);
+                blocks = blockBd.combineMultipleBlocks(blocks, [blockBd.textBlock("×")], blocksToAdd);
             } else {
-                blocks = blockBd.combine2Blocks(blocks, item.blocks);
+                blocks = blockBd.combine2Blocks(blocks, blocksToAdd);
             }
 
             prevAdjacentArg = args[idx];
@@ -425,8 +415,20 @@ export class Pr2M {
         return { blocks };
     }
 
+    private shouldWrapBrackets(idx: number, symbol: P2Pr.Symbol): boolean {
+        if (idx <= 0) {
+            return false;
+        }
+
+        return prTransformHelper.startWithMinus(symbol);
+    }
+
     private shouldSeparateByMulSymbol(prev: Symbol, cur: Symbol) {
         if (!prev || !cur) {
+            return false;
+        }
+
+        if (prev.type == "Frac" && cur.type == "Frac") {
             return false;
         }
         return this.firstShouldPosfixMul(prev) && this.secondShouldPrefixMul(cur);
@@ -454,7 +456,6 @@ export class Pr2M {
         if (s.type == "Frac") {
             return true;
         }
-
 
         if (s.type == "Mul") {
             return this.firstShouldPosfixMul(_l.last(s.symbols));

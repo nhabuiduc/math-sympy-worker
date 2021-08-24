@@ -5,6 +5,7 @@
       "target": "esNext",
       "preserveSymlinks": true,
       "esModuleInterop": true,
+      "moduleResolution": "node",
       "rootDir": "./",
       "baseUrl": "./",
       "paths": {

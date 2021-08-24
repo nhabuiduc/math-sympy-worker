@@ -5,6 +5,20 @@ class PrCreator {
         return { type: "Integer", kind: "Leaf", value: vl };
     }
 
+    integerOrSpecial(vl: number): P2Pr.Symbol {
+        if (vl == 0) {
+            return { type: "Zero", kind: "Leaf" }
+        }
+        if (vl == 1) {
+            return { type: "One", kind: "Leaf" }
+        }
+        if (vl == -1) {
+            return { type: "NegativeOne", kind: "Leaf" }
+        }
+
+        return { type: "Integer", kind: "Leaf", value: vl };
+    }
+
     power(base: Symbol, vl: number): P2Pr.Pow {
         return { type: "Pow", kind: "Container", symbols: [base, this.integer(vl)], indexJson: undefined };
     }
@@ -21,6 +35,7 @@ class PrCreator {
             type: "Mul",
             kind: "Container",
             symbols: symbols,
+            unevaluatedDetected: false,
         }
     }
 

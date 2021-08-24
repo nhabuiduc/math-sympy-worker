@@ -2,6 +2,7 @@ import { _l } from "../../../light-lodash";
 import type { P2Pr } from "../p2pr";
 import fEqual from "fast-deep-equal";
 import { prCreator } from "../pr/pr-creator";
+import { prTransformHelper } from "./pr-transform-helper";
 
 
 export class PrFracTransform implements P2Pr.IPrTransform {
@@ -252,12 +253,14 @@ export class PrFracTransform implements P2Pr.IPrTransform {
             return symbols;
         }
 
+
         const rs: Symbol[] = [];
         for (let idx = 0; idx < symbols.length; idx++) {
             const symbol = symbols[idx];
             this.tryCombineInverseFracBy2(rs, symbol)
         }
 
+        // console.dir(rs, { depth: 10 });
         return rs;
     }
 
@@ -285,7 +288,7 @@ export class PrFracTransform implements P2Pr.IPrTransform {
 
 
     private isInverseFrac(symbol: Symbol): symbol is P2Pr.Frac {
-        return symbol.type == "Frac" && symbol.symbols[0].type == "One";
+        return symbol.type == "Frac" && prTransformHelper.isSymbolValueOne(symbol.symbols[0])
     }
 
     private transformMulFrac(symbol: Symbol): Symbol {
@@ -294,8 +297,8 @@ export class PrFracTransform implements P2Pr.IPrTransform {
             if (children.length <= 1) {
                 return children[0];
             }
-            
-            const orderedChildren = symbol.unevaluatedDetected ? children : this.combineMulFracs(children);
+
+            const orderedChildren = this.combineMulFracs(children);
 
             return { ...symbol, symbols: orderedChildren };
         }
@@ -329,7 +332,16 @@ export class PrFracTransform implements P2Pr.IPrTransform {
             return symbols;
         }
 
-        return [{ type: "Frac", kind: "Container", symbols: [this.wrapMulIfRequire(enumerator), this.wrapMulIfRequire(denominator)] }];
+        return [{
+            type: "Frac", kind: "Container", symbols: [
+                this.wrapMulIfRequire(this.filterOutOneSymbol(enumerator)),
+                this.wrapMulIfRequire(this.filterOutOneSymbol(denominator))]
+        }];
+    }
+
+    private filterOutOneSymbol(symbols: Symbol[]): Symbol[] {
+        const rs = symbols.filter(c => !prTransformHelper.isSymbolValueOne(c));
+        return rs.length <= 0 ? [{ type: "One", kind: "Leaf" }] : rs;
     }
 
     private wrapMulIfRequire(symbols: Symbol[]): Symbol {
@@ -337,7 +349,7 @@ export class PrFracTransform implements P2Pr.IPrTransform {
             return symbols[0];
         }
 
-        return { type: "Mul", unevaluatedDetected: true, kind: "Container", symbols }
+        return { type: "Mul", unevaluatedDetected: false, kind: "Container", symbols }
     }
 }
 

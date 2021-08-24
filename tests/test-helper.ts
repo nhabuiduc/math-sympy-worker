@@ -25,6 +25,12 @@ json.dumps(rootDic)
 
     blocksToText(blocks: BlockModel[]): string {
         return blocks.map(b => {
+            if (b.type == "single") {
+                if(b.text.length == 1) {
+                    return `[b${b.text}]`
+                }
+                return `[b,${b.text}${this.styleToText(b.style)}]`;
+            }
             if (b.type == "composite") {
                 const elements = Object.keys((b as CompositeBlockModel).elements)
                     .map(c => this.blocksToText((b as CompositeBlockModel).elements[c].lines[0].blocks))

@@ -13,6 +13,9 @@ export class PrPowerTransform implements P2Pr.IPrTransform {
         if (symbol.type == "Pow" && symbol.symbols[0].type == "Integer" && prTransformHelper.isRationalFrac(symbol.symbols[1])) {
             return this.powerRationalToSqrt(symbol.symbols[0], symbol.symbols[1], symbol);
         }
+        if (symbol.type == "Pow" && symbol.symbols[1].type == "Integer" && symbol.symbols[1].value == 1) {
+            return this.transformPositiveNumberPower(symbol.symbols[0]);
+        }
 
         if (symbol.kind == "Container") {
             return { ...symbol, symbols: symbol.symbols.map(s => this.transformPositiveNumberPower(s)) }

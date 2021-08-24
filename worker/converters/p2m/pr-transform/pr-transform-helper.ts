@@ -168,10 +168,21 @@ class PrTransformHelper {
                 return "negative";
             }
         }
-
     }
 
-    symbolStartWithMinus(symbol: Symbol): boolean {
+    isSymbolValueOne(symbol: Symbol): boolean {
+        if (symbol.type == "One") {
+            return true;
+        }
+
+        if (symbol.type == "Integer" && symbol.value == 1) {
+            return true;
+        }
+
+        return false;
+    }
+
+    startWithMinus(symbol: Symbol): boolean {
         if (symbol.type == "NegativeOne") {
             return true;
         }
@@ -184,7 +195,7 @@ class PrTransformHelper {
         }
 
         if (symbol.type == "Mul" || symbol.type == "Pow") {
-            return this.symbolStartWithMinus(symbol.symbols[0]);
+            return this.startWithMinus(symbol.symbols[0]);
         }
 
         return false;
@@ -211,12 +222,25 @@ class PrTransformHelper {
         return !!this.isConstant(s.symbols[0]) && !!this.isConstant(s.symbols[1]);
     }
 
-    extractRationalFrac(s: P2Pr.Frac): [number, number] {
-        if (s.symbols[0].type != "Integer" || s.symbols[1].type != "Integer") {
-            throw new Error("not rational frac");
+    extractIntegerValue(s: Symbol): number {
+        if (s.type == "Zero") {
+            return 0;
+        }
+        if (s.type == "One") {
+            return 1;
+        }
+        if (s.type == "NegativeOne") {
+            return -1;
+        }
+        if (s.type == "Integer") {
+            return s.value;
         }
 
-        return [s.symbols[0].value, s.symbols[1].value]
+        throw new Error("Unable to extract integer value");
+    }
+
+    extractRationalFrac(s: P2Pr.Frac): [number, number] {
+        return [this.extractIntegerValue(s.symbols[0]), this.extractIntegerValue(s.symbols[1])]
     }
 }
 

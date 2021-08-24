@@ -21,8 +21,12 @@ export class PrAddTransform implements P2Pr.IPrTransform {
     }
 
     private orderSymbols(symbols: Symbol[]): Symbol[] {
+        if (symbols.length <= 0) {
+            return symbols;
+        }
+
         /**ok if we only have 2 symbols, we priority minus sign */
-        if (symbols.length == 2 && symbols.some(c => prTransformHelper.symbolStartWithMinus(c)) && symbols.some(c => !prTransformHelper.symbolStartWithMinus(c))) {
+        if (symbols.length == 2 && symbols.some(c => prTransformHelper.startWithMinus(c)) && symbols.some(c => !prTransformHelper.startWithMinus(c))) {
             return this.order2Symbols(symbols);
         }
         const pair = symbols.map(c => ({ s: c, weight: prTransformHelper.positionWeight(c, "add") }));
@@ -31,7 +35,7 @@ export class PrAddTransform implements P2Pr.IPrTransform {
     }
 
     private order2Symbols(symbols: Symbol[]): Symbol[] {
-        if (prTransformHelper.symbolStartWithMinus(symbols[0])) {
+        if (prTransformHelper.startWithMinus(symbols[0])) {
             return [symbols[1], symbols[0]]
         }
 

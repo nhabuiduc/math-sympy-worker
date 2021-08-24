@@ -99,7 +99,8 @@ export class P2Pr {
                 return prCreator.frac(prCreator.integer(1), prCreator.integer(2));
             }
             case "Rational": {
-                return prCreator.frac(prCreator.integer(obj.p), prCreator.integer(obj.q));
+                // return prCreator.frac(prCreator.integer(obj.p), prCreator.integer(obj.q));
+                return prCreator.frac(prCreator.integerOrSpecial(obj.p), prCreator.integerOrSpecial(obj.q));
             }
             case "Matrix": {
                 return { type: "Matrix", kind: "Container", row: obj.row, col: obj.col, symbols: obj.args.map(c => this.innerConvert(c)) }
