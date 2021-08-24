@@ -14,7 +14,7 @@ export class Derivative {
         let allVar = 0;
         for (let idx = 1; idx < derivative.symbols.length; idx++) {
             const tuple = (derivative.symbols[idx] as P2Pr.Tuple);
-            const symbolCount = Derivative.parseIntegerConstant(tuple.symbols[1]);
+            const symbolCount = prTh.extractIntegerValue(tuple.symbols[1]);
             denomVarList.symbols.push(prTh.var(dLetter));
 
             if (symbolCount > 1) {
@@ -42,16 +42,6 @@ export class Derivative {
 
         return blockBd.wrapBetweenBrackets(rs)
 
-    }
-
-    static parseIntegerConstant(s: P2Pr.Symbol): number {
-        switch (s.type) {
-            case "One": return 1;
-            case "Zero": return 0;
-            case "Integer": return s.value;
-        }
-
-        throw new Error("Unsupported symbol for parsing integer");
     }
 }
 

@@ -184,6 +184,10 @@ export class P2Pr {
                 return { type: "DisplayedDomain", kind: "Leaf", name: obj.name }
             }
 
+            case "Integral": {
+                return { type: "Integral", kind: "Container", symbols: obj.args.map(c => this.innerConvert(c)) }
+            }
+
             case "UndefinedFunction": {
                 return { type: "UndefinedFunction", kind: "Leaf", name: obj.name };
             }
@@ -237,11 +241,15 @@ export namespace P2Pr {
     export type Symbol = Mul | Add | One | NegativeOne | Integer | Var | Pow | Matrix | Frac | Float | Half | Sqrt | GenericFunc |
         NaN | ConstantSymbol | CoordSys3D | Str | BaseVector | BaseScalar | VectorZero | Point | Tuple | BaseDyadic |
         Derivative | Zero | Exp | Relational | List | Poly | PolynomialRing | DisplayedDomain | Binomial | UndefinedFunction |
-        VarList |
+        VarList | Integral |
         UnknownFunc;
 
     export interface VarList extends Container {
         type: "VarList";
+    }
+
+    export interface Integral extends Container {
+        type: "Integral";
     }
 
     export interface Mul extends Container {
@@ -413,25 +421,30 @@ export namespace P2Pr {
 
 namespace P {
 
-    export type Basic = AddFunc | MulFunc | PowFunc | Symbol | Integer | Float | NegativeOne |
+    export type Basic = Add | Mul | Pow | Symbol | Integer | Float | NegativeOne |
         One | Rational | Matrix | Half | GenericFunc | NaN | Infinity | NegativeInfinity | ComplexInfinity |
         Exp1 | ImaginaryUnit | Pi | EulerGamma | Catalan | GoldenRatio | TribonacciConstant |
         NumberSymbol | HBar | Zero | CoordSys3D | Str | BaseVector | BaseScalar | VectorAdd | VectorZero | VectorMul |
         Point | Tuple | BaseDyadic | Derivative | BooleanFalse | BooleanTrue | Relational | List | Dummy | Poly |
-        PolynomialRing | DisplayedDomain | UndefinedFunction |
+        PolynomialRing | DisplayedDomain | UndefinedFunction | Integral |
         UnknownFunc;
     interface FuncArgs {
         args: Basic[];
     }
-    export interface AddFunc extends FuncArgs {
+
+    export interface Add extends FuncArgs {
         func: "Add";
     }
 
-    export interface MulFunc extends FuncArgs {
+    export interface Integral extends FuncArgs {
+        func: "Integral";
+    }
+
+    export interface Mul extends FuncArgs {
         func: "Mul";
     }
 
-    export interface PowFunc extends FuncArgs {
+    export interface Pow extends FuncArgs {
         func: "Pow";
     }
 

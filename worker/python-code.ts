@@ -7,6 +7,9 @@ class __McHdl:
     def hdl_tuple(self, expr):
         return {'func': 'Tuple', 'args':  self.argsMap(expr) }
 
+    def hdl_Tuple(self, expr):
+        return {'func': 'Tuple', 'args':  self.argsMap(expr) }
+
     def hdl_list(self, expr):
         return {'func': 'List', 'args': self.argsMap(expr), 'separator':','}
 

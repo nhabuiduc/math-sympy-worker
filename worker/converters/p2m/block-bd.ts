@@ -2,6 +2,7 @@ import { generator } from "@lib-shared/id-generator";
 import objectHelper from "@lib-shared/object-helper";
 import { tabularKeyInfoHelper } from "@lib-shared/tabular-key-info-helper";
 import { sympyToMcConstantFuncs } from "../mapping/generic-func-map";
+import type { Pr2M } from "./pr2m";
 
 class BlockBd {
 
@@ -94,9 +95,10 @@ class BlockBd {
     }
 
     compositeBlock(
-        name: "\\power-index" | "\\frac" | "\\sqrt" | "\\matrix" | "\\text" | "\\small-tilde" | "\\small-hat" | "\\middle|" | "\\operatorname" | "\\binom",
-        elementNames: ("powerValue" | "indexValue" | "value" | "sub1" | "textValue" | `${number}_${number}`)[],
-        innerBlocks: BlockModel[][],
+        name: "\\power-index" | "\\frac" | "\\sqrt" | "\\matrix" | "\\text" | "\\small-tilde" | "\\small-hat" | "\\middle|" |
+            "\\operatorname" | "\\binom" | `\\${"i" | "ii" | "iii" | "iii"}nt`,
+        elementNames: ("powerValue" | "indexValue" | "value" | "sub1" | "textValue" | `${number}_${number}`)[] = [],
+        innerBlocks: BlockModel[][] = [],
         style?: BlockStyle): CompositeBlockModel {
         const block: CompositeBlockModel = {
             id: generator.nextId(),
@@ -120,7 +122,7 @@ class BlockBd {
         return { id: generator.nextId(), lines: [{ id: generator.nextId(), blocks }] };
     }
 
-    textBlock(text: string, style?: BlockStyle) {
+    textBlock(text: string, style?: BlockStyle): BlockModel {
         return {
             id: generator.nextId(),
             text: text,
@@ -161,7 +163,7 @@ class BlockBd {
         return rs;
     }
 
-    argumentBlocks(blockss: BlockModel[][], join: string, bracketType: "(" | "[" = "("): BlockModel[] {
+    argumentBlocks(blockss: BlockModel[][], join: string, bracketType: "(" | "[" = "("): Pr2M.CResult {
         return this.wrapBetweenBrackets(this.joinBlocks(blockss, join), bracketType);
     }
 
@@ -180,9 +182,12 @@ class BlockBd {
         return rs;
     }
 
-    wrapBetweenBrackets(blocks: BlockModel[], bracketType: "(" | "[" = "("): BlockModel[] {
+    wrapBetweenBrackets(blocks: BlockModel[], bracketType: "(" | "[" = "("): Pr2M.CResult {
         const right = bracketType == "(" ? ")" : "]"
-        return [blockBd.bracketBlock(bracketType)].concat(blocks).concat([blockBd.bracketBlock(right)])
+        return {
+            blocks: [blockBd.bracketBlock(bracketType)].concat(blocks).concat([blockBd.bracketBlock(right)]),
+            wrapBrackets: bracketType,
+        }
     }
 }
 
