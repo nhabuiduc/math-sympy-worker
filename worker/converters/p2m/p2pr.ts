@@ -110,6 +110,9 @@ export class P2Pr {
                 if (obj.name == "exp") {
                     return { type: "Exp", kind: "Container", symbols: obj.args.map(c => this.innerConvert(c)) }
                 }
+                if (obj.name == "binomial") {
+                    return { type: "Binomial", kind: "Container", symbols: obj.args.map(c => this.innerConvert(c)) }
+                }
                 return { type: "GenericFunc", kind: "Container", func: obj.name, symbols: obj.args.map(c => this.innerConvert(c)) }
             }
             case "Str": {
@@ -230,7 +233,7 @@ export namespace P2Pr {
 
     export type Symbol = Mul | Add | One | NegativeOne | Integer | Var | Pow | Matrix | Frac | Float | Half | Sqrt | GenericFunc |
         NaN | ConstantSymbol | CoordSys3D | Str | BaseVector | BaseScalar | VectorZero | Point | Tuple | BaseDyadic |
-        Derivative | Zero | Exp | Relational | List | Poly | PolynomialRing | DisplayedDomain |
+        Derivative | Zero | Exp | Relational | List | Poly | PolynomialRing | DisplayedDomain | Binomial |
         UnknownFunc;
 
     export interface Mul extends Container {
@@ -357,6 +360,10 @@ export namespace P2Pr {
 
     export interface Exp extends Container {
         type: "Exp";
+    }
+
+    export interface Binomial extends Container {
+        type: "Binomial";
     }
 
     export interface Relational extends Container {

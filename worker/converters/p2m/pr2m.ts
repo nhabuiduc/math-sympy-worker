@@ -165,6 +165,13 @@ export class Pr2M {
                     ]
                 }
             }
+            case "Binomial": {
+                return {
+                    blocks: [
+                        blockBd.binomBlock(this.innerConvert(obj.symbols[0], 0).blocks, this.innerConvert(obj.symbols[1], 0).blocks)
+                    ]
+                }
+            }
             case "Relational": {
                 return {
                     blocks: [

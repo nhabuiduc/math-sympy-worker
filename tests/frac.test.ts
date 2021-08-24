@@ -12,6 +12,6 @@ describe("Frac", () => {
         expect(await th.run("(x + y)/(2*x)")).equal(`[frac,[x+y],[2x]]`);
         expect(await th.run("(x + y)/x")).equal(`[frac,[x+y],[x]]`);
         expect(await th.run("(2*sqrt(2)*x)/3")).equal(`[frac,[2][sqrt,[2]][x],[3]]`);
-        expect(await th.run("binomial(x, y)")).equal(`[frac,[2][sqrt,[2]][x],[3]]`);
+        expect(await th.run("binomial(x, y)")).equal(`[binom,[x],[y]]`);
     })
 });

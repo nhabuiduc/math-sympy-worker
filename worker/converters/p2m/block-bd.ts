@@ -8,6 +8,9 @@ class BlockBd {
     fracBlock(num: BlockModel[], den: BlockModel[]) {
         return this.compositeBlock("\\frac", ["value", "sub1"], [num, den]);
     }
+    binomBlock(first: BlockModel[], second: BlockModel[]) {
+        return this.compositeBlock("\\binom", ["0_0", "1_0"], [first, second]);
+    }
 
     powerBlock(text: string | BlockModel[], style?: BlockStyle): BlockModel {
         if (typeof text == "string") {
@@ -88,8 +91,8 @@ class BlockBd {
     }
 
     compositeBlock(
-        name: "\\power-index" | "\\frac" | "\\sqrt" | "\\matrix" | "\\text" | "\\small-tilde" | "\\small-hat" | "\\middle|" | "\\operatorname",
-        elementNames: ("powerValue" | "indexValue" | "value" | "sub1" | "textValue")[],
+        name: "\\power-index" | "\\frac" | "\\sqrt" | "\\matrix" | "\\text" | "\\small-tilde" | "\\small-hat" | "\\middle|" | "\\operatorname" | "\\binom",
+        elementNames: ("powerValue" | "indexValue" | "value" | "sub1" | "textValue" | `${number}_${number}`)[],
         innerBlocks: BlockModel[][],
         style?: BlockStyle): CompositeBlockModel {
         const block: CompositeBlockModel = {
