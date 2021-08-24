@@ -3,7 +3,7 @@ import { expect } from "chai";
 import { testHelper as th } from "./test-helper";
 
 /** Test from: https://github.com/sympy/sympy/blob/master/sympy/printing/tests/test_latex.py */
-describe("Others", () => {
+describe("3: Others", () => {
     before(async () => {
         await th.prepare(`
         x_star = Symbol('x^*')
@@ -30,6 +30,17 @@ describe("Others", () => {
     });
 
     it.only("tini float value", async () => {
-        expect(await th.run("1.5e20*x")).equal(`[sqrt,[x]]`);
+        expect(await th.run("1.5e20*x")).equal(`[1.5×10][pow,[20]][x]`);
+    });
+
+    it.only("sin", async () => {
+        expect(await th.run("1/sin(x)")).equal(`[frac,[1],[sin,]([x])]`);
+        expect(await th.run("sin(x)**-1")).equal(`[frac,[1],[sin,]([x])]`);
+        expect(await th.run("sin(x)**Rational(3, 2)")).equal(`[sin,][pow,[frac,[3],[2]]]([x])`);
+    });
+    
+    it.only("discrete", async () => {
+        
+        expect(await th.run("~x")).equal(`[frac,[1],[sin,]([x])]`);
     })
 });

@@ -5,6 +5,7 @@ import { PrSqrtTransform } from "./pr-transform/pr-sqrt-transform";
 import { PrAddTransform } from "./pr-transform/pr-add-transform";
 import { prCreator } from "./pr/pr-creator";
 import { prTransformHelper } from "./pr-transform/pr-transform-helper";
+import { float } from "./p2pr/float";
 
 export class P2Pr {
 
@@ -24,7 +25,8 @@ export class P2Pr {
                 return { type: "Integer", kind: "Leaf", value: obj.value };
             }
             case "Float": {
-                return { type: "Float", kind: "Leaf", value: obj.value };
+                return float.parse(obj.value);
+                // return { type: "Float", kind: "Leaf", value: obj.value };
             }
             case "Symbol": {
                 return this.parseSymbol(obj);
@@ -292,7 +294,7 @@ export namespace P2Pr {
 
     export interface Float extends Leaf {
         type: "Float";
-        value: string;
+        value: string | Mul;
     }
 
     export interface Var extends Leaf {

@@ -1,8 +1,9 @@
 import { blockBd } from "../block-bd";
 import type { P2Pr } from "../p2pr";
+import { Pr2M } from "../pr2m";
 
 export class Integral {
-    constructor(private main: { convert(obj: P2Pr.Symbol): BlockModel[] }) {
+    constructor(private main: { convert(obj: P2Pr.Symbol): Pr2M.CResult }) {
 
     }
 
@@ -14,7 +15,7 @@ export class Integral {
             intBlocks = [this.intBlockByCount(limits.length)];
             symbolBlocks = blockBd.joinBlocks(limits.map(c => {
                 const rs = this.main.convert((c as P2Pr.Tuple).symbols[0]);
-                return [blockBd.textBlock("d")].concat(rs);
+                return [blockBd.textBlock("d")].concat(rs.blocks);
             }), " ");
         } else {
             intBlocks = [];
@@ -24,23 +25,23 @@ export class Integral {
                 let intBlock: CompositeBlockModel;
                 if (lim.symbols.length >= 3) {
                     intBlock = blockBd.compositeBlock("\\int", ["indexValue", "powerValue"],
-                        [this.main.convert(lim.symbols[1]), this.main.convert(lim.symbols[2])]);
+                        [this.main.convert(lim.symbols[1]).blocks, this.main.convert(lim.symbols[2]).blocks]);
                 } else if (lim.symbols.length >= 2) {
                     intBlock = blockBd.compositeBlock("\\int", ["powerValue"],
-                        [this.main.convert(lim.symbols[1])]);
+                        [this.main.convert(lim.symbols[1]).blocks]);
                 } else {
                     intBlock = blockBd.compositeBlock("\\int");
                 }
 
                 intBlocks.push(intBlock);
-                sBlockss.unshift(this.main.convert(lim.symbols[0]));
+                sBlockss.unshift(this.main.convert(lim.symbols[0]).blocks);
             }
             symbolBlocks = blockBd.joinBlocks(sBlockss, " ");
         }
 
         return blockBd.combineMultipleBlocks(
             intBlocks,
-            this.main.convert(derivative.symbols[0]),
+            this.main.convert(derivative.symbols[0]).blocks,
             [blockBd.textBlock(" ")],
             symbolBlocks,
         )

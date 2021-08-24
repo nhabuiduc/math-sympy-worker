@@ -7,15 +7,17 @@ import { tabularKeyInfoHelper } from "@lib-shared/tabular-key-info-helper";
 import { blockBd } from "./block-bd";
 import { Derivative } from "./pr2m/derivative";
 import { Integral } from "./pr2m/integral";
+import { Float } from "./pr2m/float";
 
 export class Pr2M {
     private derivative = new Derivative(this);
     private integral = new Integral(this);
+    private float = new Float(this);
     constructor(private constantTextFuncSet: Set<string>) {
     }
 
-    convert(obj: P2Pr.Symbol): BlockModel[] {
-        return this.innerConvert(obj, 0).blocks;
+    convert(obj: P2Pr.Symbol, level = 0): CResult {
+        return this.innerConvert(obj, level);
     }
 
     private innerConvert(obj: P2Pr.Symbol, level: number): CResult {
@@ -30,9 +32,10 @@ export class Pr2M {
                 }
             }
             case "Float": {
-                return {
-                    blocks: [blockBd.textBlock(obj.value.toString())],
-                }
+                return this.float.convert(obj, level);
+                // return {
+                //     blocks: [blockBd.textBlock(obj.value.toString())],
+                // }
             }
             case "NaN": {
                 return {

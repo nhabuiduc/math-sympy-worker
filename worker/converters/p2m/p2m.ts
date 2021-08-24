@@ -13,6 +13,6 @@ export class P2M {
     convert(data: PyodideNs.DummyPythonRunnerResult): BlockModel[] {
         const pr = this.p2Pr.convert(data as any, {});
         const md = this.pr2m.convert(pr);
-        return md;
+        return md.blocks;
     }
 }

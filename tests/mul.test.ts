@@ -2,7 +2,7 @@ import { expect } from "chai";
 import { testHelper as th } from "./test-helper";
 
 /** Test from: https://github.com/sympy/sympy/blob/master/sympy/printing/tests/test_latex.py */
-describe("Mul", () => {
+describe("1: Mul", () => {
     it("convert", async () => {
         expect(await th.run("x+10")).equal(`[x+10]`);
         expect(await th.run("x**2")).equal(`[x][pow,[2]]`);

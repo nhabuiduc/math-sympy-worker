@@ -4,7 +4,7 @@ declare const pyodide: PyodideNs.PythonRunner;
 
 
 class TestHelper {
-    private casEngineProcess = new CasEngineProcess(pyodide, { constantTextFuncs: [] })
+    private casEngineProcess = new CasEngineProcess(pyodide, { constantTextFuncs: constFuncs })
     async prepare(statement: string): Promise<void> {
         this.casEngineProcess.processRaw(statement, false);
     }
@@ -59,4 +59,53 @@ const commonFuncReducedMap = {
     "power-index": "pow"
 }
 
+const constFuncs = [
+    "sin",
+    "dim",
+    "cos",
+    "tan",
+    "sec",
+    "cot",
+    "csc",
+    "arccos",
+    "arccot",
+    "arccsc",
+    "arcsec",
+    "arcsin",
+    "arctan",
+    "sinh",
+    "cosh",
+    "tanh",
+    "sech",
+    "coth",
+    "csch",
+    "arccosh",
+    "arccoth",
+    "arccsch",
+    "arcsech",
+    "arcsinh",
+    "arctanh",
+    "exp",
+    "ln",
+    "log",
+    "min",
+    "max",
+    "sgn",
+    "inf",
+    "deg",
+    "det",
+    "ker",
+    "hom",
+    "arg",
+    "Pr",
+    "gcd",
+    "lg",
+    "mod",
+    "bmod",
+    "acos",
+    "asin",
+    "atan",
+]
+
 export const testHelper = new TestHelper();
+
