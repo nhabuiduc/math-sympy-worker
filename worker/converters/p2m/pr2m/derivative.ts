@@ -1,13 +1,14 @@
 import { blockBd } from "../block-bd";
 import type { P2Pr } from "../p2pr";
 import { prTransformHelper as prTh } from "../pr-transform/pr-transform-helper";
+import { Pr2M } from "../pr2m";
 
 export class Derivative {
     constructor(private main: { convert(obj: P2Pr.Symbol): BlockModel[] }) {
 
     }
 
-    convert(derivative: P2Pr.Derivative, level: number): BlockModel[] {
+    convert(derivative: P2Pr.Derivative, level: number): Pr2M.CResult {
         const exprBlocks = this.main.convert(derivative.symbols[0]);
         let denomVarList: P2Pr.VarList = { type: "VarList", kind: "Container", symbols: [] };
         const dLetter = derivative.partial ? "∂" : "d";
@@ -37,7 +38,7 @@ export class Derivative {
             ...exprBlocks
         ];
         if (level == 0) {
-            return rs;
+            return { blocks: rs };
         }
 
         return blockBd.wrapBetweenBrackets(rs)

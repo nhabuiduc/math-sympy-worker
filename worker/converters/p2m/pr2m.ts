@@ -167,7 +167,7 @@ export class Pr2M {
                 );
             }
             case "Derivative": {
-                return { blocks: this.derivative.convert(obj, level) };
+                return this.derivative.convert(obj, level);
             }
             case "Integral": {
                 return { blocks: this.integral.convert(obj, level) };
