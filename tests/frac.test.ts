@@ -6,7 +6,7 @@ describe("2: Frac", () => {
     it("convert", async () => {
         expect(await th.run("1/x")).equal(`[frac,[1],[x]]`);
         expect(await th.run("-S(3)/2")).equal(`[-][frac,[3],[2]]`);
-        expect(await th.run("1/x**2")).equal(`[frac,[1],[x][pow,[2]]]`);
+        expect(await th.run("1/x**2")).equal(`[frac,[1],[x][💪,[2]]]`);
         expect(await th.run("1/(x + y)/2")).equal(`[frac,[1],[2]([x+y])]`);
         expect(await th.run("x/2")).equal(`[frac,[x],[2]]`);
         expect(await th.run("(x + y)/(2*x)")).equal(`[frac,[x+y],[2x]]`);

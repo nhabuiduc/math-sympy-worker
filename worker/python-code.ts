@@ -92,6 +92,22 @@ class __McHdl:
     def hdl_SingularityFunction(self, expr):
         return {'func': 'SingularityFunction', 'args': [self.hdlAll(expr.args[0] - expr.args[1]), self.hdlAll(expr.args[2])] }     
 
+    def hdl_Cycle(self, expr):
+        from sympy.combinatorics.permutations import Permutation
+        if expr.size == 0:
+            return { 'func': 'Cycle', 'perm' : [] }
+
+        expr = Permutation(expr)
+        expr_perm = expr.cyclic_form
+        siz = expr.size
+        if expr.array_form[-1] == siz - 1:
+            expr_perm = expr_perm + [[siz - 1]]
+
+        return { 'func': 'Cycle', 'perm' : expr_perm }
+
+    def hdl_Permutation(self, expr):
+        return self.hdl_Cycle(expr)
+
     def hdlGenericFunc(name, args):
         dic['func'] = 'GenericFunc' 
         dic['name'] = name

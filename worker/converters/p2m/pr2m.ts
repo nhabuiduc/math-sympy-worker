@@ -169,7 +169,7 @@ export class Pr2M {
             }
             case "List": {
                 const join = this.joinBy(obj.symbols, obj.separator);
-                return blockBd.wrapBetweenBrackets(join, "[")
+                return blockBd.wrapBetweenBrackets(join, obj.bracket);
             }
             case "BaseDyadic": {
                 const first = this.innerConvert(obj.symbols[0], 0).blocks;
@@ -237,6 +237,7 @@ export class Pr2M {
                     ]
                 }
             }
+            
 
             case "UnknownFunc": {
                 return this.convertFullNameFunc(obj.name, obj.symbols);

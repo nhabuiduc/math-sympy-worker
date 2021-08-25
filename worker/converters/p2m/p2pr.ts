@@ -175,7 +175,13 @@ export class P2Pr {
                 return { type: "Relational", kind: "Container", relOp: obj.relOp, symbols: obj.args.map(c => this.innerConvert(c)) }
             }
             case "List": {
-                return { type: "List", kind: "Container", separator: obj.separator, symbols: obj.args.map(c => this.innerConvert(c)) }
+                return {
+                    type: "List",
+                    kind: "Container",
+                    separator: obj.separator,
+                    symbols: obj.args.map(c => this.innerConvert(c)),
+                    bracket: "[",
+                }
             }
             case "Dummy": {
                 return { type: "Var", kind: "Leaf", name: obj.name }
@@ -209,6 +215,23 @@ export class P2Pr {
             }
             case "SingularityFunction": {
                 return { type: "SingularityFunction", kind: "Container", symbols: obj.args.map(c => this.innerConvert(c)) }
+            }
+            case "Cycle": {
+                if (obj.perm.length == 0) {
+                    return { type: "List", kind: "Container", bracket: "(", separator: ";", symbols: [] }
+                }
+
+                const listss: P2Pr.List[] = obj.perm.map(c => {
+                    const list: P2Pr.List = { type: "List", kind: "Container", bracket: "(", separator: ";", symbols: c.map(i => prTh.int(i)) };
+                    return list;
+                });
+
+                if (listss.length == 1) {
+                    return listss[0]
+                }
+
+                const vl: P2Pr.VarList = { type: "VarList", kind: "Container", symbols: listss };
+                return vl;
             }
         }
 
@@ -415,6 +438,7 @@ export namespace P2Pr {
     export interface List extends Container {
         type: "List";
         separator: "," | ";",
+        bracket: SupportBracket;
     }
 
     export interface Poly extends Container {
@@ -437,8 +461,6 @@ export namespace P2Pr {
     }
 
 
-
-
     export interface UnknownFunc extends Container {
         type: "UnknownFunc";
         name: string;
@@ -459,6 +481,7 @@ namespace P {
         NumberSymbol | HBar | Zero | CoordSys3D | Str | BaseVector | BaseScalar | VectorAdd | VectorZero | VectorMul |
         Point | Tuple | BaseDyadic | Derivative | BooleanFalse | BooleanTrue | Relational | List | Dummy | Poly |
         PolynomialRing | DisplayedDomain | UndefinedFunction | Integral | Not | And | Or | Implies | SingularityFunction |
+        Cycle |
         UnknownFunc;
     interface FuncArgs {
         args: Basic[];
@@ -666,6 +689,11 @@ namespace P {
 
     export interface SingularityFunction extends FuncArgs {
         func: "SingularityFunction";
+    }
+
+    export interface Cycle {
+        func: "Cycle";
+        perm: number[][];
     }
 
     export interface UnknownFunc extends FuncArgs {

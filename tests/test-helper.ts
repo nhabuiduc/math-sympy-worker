@@ -53,7 +53,18 @@ json.dumps(rootDic)
             return "";
         }
 
-        return `,${Object.keys(bs).map(k => bs[k]).join("|")}`
+        return `,${Object.keys(bs).map(k => this.reduceStyleName(bs[k])).join("|")}`
+    }
+
+    private reduceStyleName(sn: string): string {
+        switch (sn) {
+            case "\\mathbf": return "bf"
+        }
+        if (sn.startsWith("\\")) {
+            return sn.substr(1);
+        }
+
+        return sn;
     }
 
     private reduceFuncName(name: string): string {
@@ -63,7 +74,8 @@ json.dumps(rootDic)
 }
 
 const commonFuncReducedMap = {
-    "power-index": "pow"
+    "power-index": "💪",
+    "small-hat": "🎩",
 }
 
 const constFuncs = [
