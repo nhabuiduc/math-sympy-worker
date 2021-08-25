@@ -144,7 +144,6 @@ class PrTransformHelper {
     }
 
 
-
     isConstant(s: Symbol): "positive" | "negative" | false {
         switch (s.type) {
             case "Float":

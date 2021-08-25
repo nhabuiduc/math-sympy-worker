@@ -10,6 +10,7 @@ import { Integral } from "./pr2m/integral";
 import { Float } from "./pr2m/float";
 import { Mul } from "./pr2m/mul";
 import { Discrete } from "./pr2m/discrete";
+import { Add } from "./pr2m/add";
 
 export class Pr2M {
     private derivative = new Derivative(this);
@@ -17,6 +18,7 @@ export class Pr2M {
     private float = new Float(this);
     private mul = new Mul(this);
     private discrete = new Discrete(this);
+    private add = new Add(this);
 
     constructor(private constantTextFuncSet: Set<string>) {
     }
@@ -29,11 +31,12 @@ export class Pr2M {
 
         switch (obj.type) {
             case "Add": {
-                return this.joinAddOp(obj.symbols, level);
+                return this.add.convert(obj);
             }
             case "Integer": {
                 return {
                     blocks: [blockBd.textBlock(obj.value.toString())],
+                    prMinusSign: obj.value < 0,
                 }
             }
             case "Float": {
@@ -87,7 +90,7 @@ export class Pr2M {
                     [blockBd.textBlock("2")])
             }
             case "NegativeOne": {
-                return { blocks: [blockBd.textBlock("-1")] }
+                return { blocks: [blockBd.textBlock("-1")], prMinusSign: true }
             }
             case "Sqrt": {
                 if (obj.symbols.length <= 1) {
@@ -387,30 +390,6 @@ export class Pr2M {
         }
     }
 
-
-    private joinAddOp(args: P2Pr.Symbol[], level: number): CResult {
-        let items = args.map(a => this.innerConvert(a, level + 1));
-
-        let blocks: BlockModel[] = [];
-        for (let idx = 0; idx < items.length; idx++) {
-            const item = items[idx];
-            const blocksToAdd = (item.prUnit == "op" && item.prOp != "add") ? blockBd.wrapBetweenBrackets(item.blocks).blocks : item.blocks;
-            if (idx == 0) {
-                blocks = blockBd.combine2Blockss(blocks, blocksToAdd);
-                continue;
-            }
-
-            if (prTh.startWithMinus(args[idx])) {
-                blocks = blockBd.combine2Blockss(blocks, blocksToAdd);
-                continue;
-            }
-
-            blocks = blockBd.combineMultipleBlocks(blocks, [blockBd.textBlock("+")], blocksToAdd);
-        }
-
-        return { blocks, prUnit: "op", prOp: "add" };
-    }
-
     private joinBy(args: P2Pr.Symbol[], text: string): BlockModel[] {
         const items = args.map(a => this.innerConvert(a, 0));
         let blocks: BlockModel[] = [];
@@ -447,6 +426,7 @@ export namespace Pr2M {
         prUnit?: "bracket" | "op" | "not" | undefined;
         prOp?: "mul" | "add";
         prBracket?: P2Pr.SupportBracket;
+        prMinusSign?: boolean;
 
         // wrapBrackets?: "[" | "(";
     }

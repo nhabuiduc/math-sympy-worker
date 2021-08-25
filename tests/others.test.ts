@@ -69,12 +69,23 @@ describe("3: Others", () => {
         expect(await th.run("false")).equal(`[text,[False]]`);
     });
     
-    it.only("SingularityFunction", async () => {
+    it("SingularityFunction", async () => {
         expect(await th.run("SingularityFunction(x, 4, 5)")).equal(`<[x-4]>[pow,[5]]`);
         expect(await th.run("SingularityFunction(x, -3, 4)")).equal(`<[x+3]>[pow,[4]]`);
         expect(await th.run("SingularityFunction(x, 0, 4)")).equal(`<[x]>[pow,[4]]`);
-        expect(await th.run("SingularityFunction(x, a, n)")).equal(`<[x]>[pow,[4]]`);
-        
+        expect(await th.run("SingularityFunction(x, a, n)")).equal(`<[x-a]>[pow,[n]]`);
+        expect(await th.run("SingularityFunction(x, 4, -2)")).equal(`<[x-4]>[pow,[-2]]`);
+        expect(await th.run("SingularityFunction(x, 4, -1)")).equal(`<[x-4]>[pow,[-1]]`);
+        expect(await th.run("SingularityFunction(x, 4, 5)**3")).equal(`(<[x-4]>[pow,[5]])[pow,[3]]`);
+        expect(await th.run("SingularityFunction(x, -3, 4)**3")).equal(`(<[x+3]>[pow,[4]])[pow,[3]]`);
+        expect(await th.run("SingularityFunction(x, 0, 4)**3")).equal(`(<[x]>[pow,[4]])[pow,[3]]`);
+        expect(await th.run("SingularityFunction(x, a, n)**3")).equal(`(<[x-a]>[pow,[n]])[pow,[3]]`);
+        expect(await th.run("SingularityFunction(x, 4, -2)**3")).equal(`(<[x-4]>[pow,[-2]])[pow,[3]]`);
+        expect(await th.run("(SingularityFunction(x, 4, -1)**3)**3")).equal(`(<[x-4]>[pow,[-1]])[pow,[9]]`);        
+    })
+
+    it.only("cycle", async () => {
+
     })
 
 });

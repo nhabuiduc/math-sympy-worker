@@ -9,7 +9,7 @@ export class Float {
 
     convert(obj: P2Pr.Float): Pr2M.CResult {
         if (typeof obj.value == "string") {
-            return { blocks: [blockBd.textBlock(obj.value)] }
+            return { blocks: [blockBd.textBlock(obj.value)], prMinusSign: obj.value[0] == "-" }
         }
 
         return this.main.convert(obj.value);

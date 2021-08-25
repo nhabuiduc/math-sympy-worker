@@ -19,10 +19,11 @@ export class Mul {
         for (let idx = 0; idx < items.length; idx++) {
             const item = items[idx];
             const curArg = symbols[idx];
-            if (idx == 0 && prTh.isNegativeOne(curArg)) {
+            if (idx == 0 && prTh.isNegativeOne(curArg) && !obj.unevaluatedDetected) {
                 isNegative = true;
                 continue;
             }
+
 
             const blocksToAdd = this.shouldWrapBrackets(idx, curArg, item) ? blockBd.wrapBetweenBrackets(item.blocks).blocks : item.blocks;
 
@@ -38,12 +39,17 @@ export class Mul {
         if (isNegative) {
             return {
                 blocks: blockBd.combine2Blockss([blockBd.textBlock("-")], blocks),
-                prUnit: "op",
-                prOp: "mul"
+                prUnit: items.length <= 2 ? undefined : "op",
+                prOp: items.length <= 2 ? undefined : "mul",
+                prMinusSign: true,
             };
         }
 
-        return { blocks, prUnit: "op", prOp: "mul" };
+        return {
+            blocks,
+            prUnit: items.length <= 1 ? undefined : "op",
+            prOp: items.length <= 1 ? undefined : "mul"
+        };
     }
 
     private shouldSeparateByMulSymbol(prev: Symbol, cur: Symbol) {
@@ -66,7 +72,7 @@ export class Mul {
             return true;
         }
 
-        return prTh.startWithMinus(symbol);
+        return cResult.prMinusSign;
     }
 
     private secondShouldPrefixMul(s: Symbol): boolean {
