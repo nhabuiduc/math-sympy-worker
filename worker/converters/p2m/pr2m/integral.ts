@@ -7,7 +7,7 @@ export class Integral {
 
     }
 
-    convert(derivative: P2Pr.Integral, level: number): BlockModel[] {
+    convert(derivative: P2Pr.Integral): BlockModel[] {
         const limits = derivative.symbols.slice(1);
         let intBlocks: CompositeBlockModel[];
         let symbolBlocks: BlockModel[];

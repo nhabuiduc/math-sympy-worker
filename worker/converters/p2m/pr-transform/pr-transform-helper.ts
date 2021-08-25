@@ -60,7 +60,7 @@ class PrTransformHelper {
                 return constantBase + EnumPosWeight.MinusSign + EnumPosWeight.Integer;
             }
             case "Float": {
-                if (s.value[0] == "-") {
+                if (typeof s.value == "string" && s.value[0] == "-") {
                     return constantBase + EnumPosWeight.MinusSign + EnumPosWeight.Float;
                 }
 
@@ -148,7 +148,13 @@ class PrTransformHelper {
     isConstant(s: Symbol): "positive" | "negative" | false {
         switch (s.type) {
             case "Float":
-                return s.value[0] == "-" ? "negative" : "positive";
+                if (typeof s.value == "string") {
+                    return s.value[0] == "-" ? "negative" : "positive";
+                }
+
+                const firstPartFloat = (s.value as P2Pr.Mul).symbols[0] as P2Pr.Float;
+                return this.isConstant(firstPartFloat);
+
             case "Integer":
                 return s.value > 0 ? "positive" : "negative";
             case "NegativeOne":
@@ -187,7 +193,7 @@ class PrTransformHelper {
             return true;
         }
 
-        if (symbol.type == "Float" && symbol.value[0] == "-") {
+        if (symbol.type == "Float" && typeof symbol.value == "string" && symbol.value[0] == "-") {
             return true;
         }
         if (symbol.type == "Integer" && symbol.value < 0) {

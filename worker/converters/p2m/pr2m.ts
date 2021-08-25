@@ -179,7 +179,7 @@ export class Pr2M {
                 return this.derivative.convert(obj, level);
             }
             case "Integral": {
-                return { blocks: this.integral.convert(obj, level) };
+                return { blocks: this.integral.convert(obj) };
             }
             case "Exp": {
                 return {
@@ -340,7 +340,7 @@ export class Pr2M {
             return this.handlePowToGenericFunc(args, level);
         }
 
-        let { blocks: base, prUnit, prBracket } = this.innerConvert(args[0], level + 1);
+        let { blocks: base, prUnit } = this.innerConvert(args[0], level + 1);
         // if (args[0].type == "Pow" || args[0].type == "Frac" || args[0].type == "Sqrt") {
         if (!(prUnit == "bracket" || prTh.isSingleVar(args[0]) || prTh.isIntegerValue(args[0]))) {
             base = blockBd.wrapBetweenBrackets(base).blocks;
