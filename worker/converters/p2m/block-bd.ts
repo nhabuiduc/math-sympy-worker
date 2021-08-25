@@ -175,7 +175,9 @@ class BlockBd {
         return this.wrapBetweenBrackets(this.joinBlocks(blockss, join), bracketType);
     }
 
-    
+    wrapBracketIfOp(rs: Pr2M.CResult): BlockModel[] {
+        return (rs.prUnit == "op" ) ? this.wrapBetweenBrackets(rs.blocks).blocks : rs.blocks;
+    }
 
     joinBlocks(blockss: BlockModel[][], text: string) {
         let rs: BlockModel[] = [];

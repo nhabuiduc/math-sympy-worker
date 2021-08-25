@@ -1,5 +1,5 @@
 import type { P2Pr } from "../p2pr";
-import { prTransformHelper } from "./pr-transform-helper";
+import { prTh } from "./pr-transform-helper";
 
 export class PrMulTransform implements P2Pr.IPrTransform {
     transform(symbol: P2Pr.Symbol): P2Pr.Symbol {
@@ -33,16 +33,16 @@ export class PrMulTransform implements P2Pr.IPrTransform {
         /**we keep order if unevalated mul */
 
         /**ok if we only have 2 symbols, we priority minus sign */
-        if (symbols.length == 2 && symbols.some(c => prTransformHelper.startWithMinus(c)) && symbols.some(c => !prTransformHelper.startWithMinus(c))) {
+        if (symbols.length == 2 && symbols.some(c => prTh.startWithMinus(c)) && symbols.some(c => !prTh.startWithMinus(c))) {
             return this.order2Symbols(symbols);
         }
-        const pair = symbols.map(c => ({ s: c, weight: prTransformHelper.positionWeight(c, "mul") }));
+        const pair = symbols.map(c => ({ s: c, weight: prTh.positionWeight(c, "mul") }));
         pair.sort((c1, c2) => c1.weight - c2.weight);
         return pair.map(c => c.s);
     }
 
     private order2Symbols(symbols: Symbol[]): Symbol[] {
-        if (prTransformHelper.startWithMinus(symbols[0])) {
+        if (prTh.startWithMinus(symbols[0])) {
             return [symbols[1], symbols[0]]
         }
 

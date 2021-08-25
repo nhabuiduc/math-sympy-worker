@@ -1,6 +1,6 @@
 import type { P2Pr } from "../p2pr";
 import { prCreator } from "../pr/pr-creator";
-import { prTransformHelper } from "./pr-transform-helper";
+import { prTh } from "./pr-transform-helper";
 
 export class PrPowerTransform implements P2Pr.IPrTransform {
     transform(symbol: P2Pr.Symbol): P2Pr.Symbol {
@@ -10,7 +10,7 @@ export class PrPowerTransform implements P2Pr.IPrTransform {
     }
 
     private transformPositiveNumberPower(symbol: P2Pr.Symbol): P2Pr.Symbol {
-        if (symbol.type == "Pow" && symbol.symbols[0].type == "Integer" && prTransformHelper.isRationalFrac(symbol.symbols[1])) {
+        if (symbol.type == "Pow" && symbol.symbols[0].type == "Integer" && prTh.isRationalFrac(symbol.symbols[1])) {
             return this.powerRationalToSqrt(symbol.symbols[0], symbol.symbols[1], symbol);
         }
         if (symbol.type == "Pow" && symbol.symbols[1].type == "Integer" && symbol.symbols[1].value == 1) {
@@ -55,11 +55,11 @@ export class PrPowerTransform implements P2Pr.IPrTransform {
             }
 
 
-            if (prTransformHelper.matchRationalFrac(root, 1, 2)) {
+            if (prTh.matchRationalFrac(root, 1, 2)) {
                 return this.powerRationalToSqrt(this.transformSpecialPower(symbol.symbols[0]), root, symbol);
 
             }
-            if (prTransformHelper.matchRationalFrac(root, 1)) {
+            if (prTh.matchRationalFrac(root, 1)) {
                 return this.powerRationalToSqrt(this.transformSpecialPower(symbol.symbols[0]), root, symbol);
             }
 
@@ -84,7 +84,7 @@ export class PrPowerTransform implements P2Pr.IPrTransform {
     }
 
     private powerRationalToSqrt(base: Symbol, rational: P2Pr.Frac, defaultSymbol: Symbol): Symbol {
-        const [enumerator, denominator] = prTransformHelper.extractRationalFrac(rational);
+        const [enumerator, denominator] = prTh.extractRationalFrac(rational);
         if (enumerator == 1 && denominator == 2) {
             return {
                 type: "Sqrt",

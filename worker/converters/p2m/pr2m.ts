@@ -1,6 +1,6 @@
 import { generator } from "@lib-shared/id-generator";
 import { _l } from "../../light-lodash";
-import { prTransformHelper } from "./pr-transform/pr-transform-helper";
+import { prTh } from "./pr-transform/pr-transform-helper";
 import { symbolIndexSerialize } from "../../symbol-index-serializer";
 import type { P2Pr } from "./p2pr";
 import { tabularKeyInfoHelper } from "@lib-shared/tabular-key-info-helper";
@@ -8,11 +8,16 @@ import { blockBd } from "./block-bd";
 import { Derivative } from "./pr2m/derivative";
 import { Integral } from "./pr2m/integral";
 import { Float } from "./pr2m/float";
+import { Mul } from "./pr2m/mul";
+import { Discrete } from "./pr2m/discrete";
 
 export class Pr2M {
     private derivative = new Derivative(this);
     private integral = new Integral(this);
     private float = new Float(this);
+    private mul = new Mul(this);
+    private discrete = new Discrete(this);
+
     constructor(private constantTextFuncSet: Set<string>) {
     }
 
@@ -32,26 +37,11 @@ export class Pr2M {
                 }
             }
             case "Float": {
-                return this.float.convert(obj, level);
+                return this.float.convert(obj);
             }
             case "Discrete": {
-                switch (obj.op) {
-                    case "Not": {
-                        return {
-                            blocks: [
-                                blockBd.textBlock(`¬`),
-                                ...this.innerConvert(obj.symbols[0], level).blocks
-                            ], prUnit: "op"
-                        }
-                    }
+                return this.discrete.convert(obj);
 
-                    case "And": {
-                        return this.discreteJoin(obj.symbols, "∧", level);
-                    }
-                    case "Or": {
-                        return this.discreteJoin(obj.symbols, "∨", level);
-                    }
-                }
             }
             case "NaN": {
                 return {
@@ -77,7 +67,7 @@ export class Pr2M {
                 }
             }
             case "Mul": {
-                return this.joinMulOp(obj.symbols, level);
+                return this.mul.convert(obj);
             }
             case "Pow": {
                 return this.buildPow(obj, obj.symbols, level);
@@ -343,7 +333,7 @@ export class Pr2M {
 
         let { blocks: base, prUnit, prBracket } = this.innerConvert(args[0], level + 1);
         // if (args[0].type == "Pow" || args[0].type == "Frac" || args[0].type == "Sqrt") {
-        if (!(prUnit == "bracket" || prTransformHelper.isSingleVar(args[0]) || prTransformHelper.isIntegerValue(args[0]))) {
+        if (!(prUnit == "bracket" || prTh.isSingleVar(args[0]) || prTh.isIntegerValue(args[0]))) {
             base = blockBd.wrapBetweenBrackets(base).blocks;
         }
 
@@ -388,24 +378,6 @@ export class Pr2M {
         }
     }
 
-    discreteJoin(args: P2Pr.Symbol[], text: string, level: number): CResult {
-        let items = args.map(a => this.innerConvert(a, level + 1));
-
-        let blocks: BlockModel[] = [];
-        for (let idx = 0; idx < items.length; idx++) {
-            const item = items[idx];
-            if (idx == 0) {
-                blocks = blockBd.combine2Blockss(blocks, item.blocks);
-                continue;
-            }
-
-            const curBlocks = item.prUnit == "op" ? blockBd.wrapBetweenBrackets(item.blocks).blocks : item.blocks;
-
-            blocks = blockBd.combineMultipleBlocks(blocks, [blockBd.textBlock(text)], curBlocks);
-        }
-
-        return { blocks, prUnit: "op" };
-    }
 
     private joinAddOp(args: P2Pr.Symbol[], level: number): CResult {
         let items = args.map(a => this.innerConvert(a, level + 1));
@@ -413,16 +385,18 @@ export class Pr2M {
         let blocks: BlockModel[] = [];
         for (let idx = 0; idx < items.length; idx++) {
             const item = items[idx];
+            const blocksToAdd = (item.prUnit == "op" && item.prOp != "add") ? blockBd.wrapBetweenBrackets(item.blocks).blocks : item.blocks;
             if (idx == 0) {
-                blocks = blockBd.combine2Blockss(blocks, item.blocks);
+                blocks = blockBd.combine2Blockss(blocks, blocksToAdd);
                 continue;
             }
-            if (prTransformHelper.startWithMinus(args[idx])) {
-                blocks = blockBd.combine2Blockss(blocks, item.blocks);
+            
+            if (prTh.startWithMinus(args[idx])) {
+                blocks = blockBd.combine2Blockss(blocks, blocksToAdd);
                 continue;
             }
 
-            blocks = blockBd.combineMultipleBlocks(blocks, [blockBd.textBlock("+")], item.blocks);
+            blocks = blockBd.combineMultipleBlocks(blocks, [blockBd.textBlock("+")], blocksToAdd);
         }
 
         return { blocks, prUnit: "op", prOp: "add" };
@@ -443,92 +417,6 @@ export class Pr2M {
         return blocks;
     }
 
-    private joinMulOp(args: P2Pr.Symbol[], level: number): CResult {
-        const items = args.map(a => this.innerConvert(a, level + 1));
-        let blocks: BlockModel[] = [];
-        let isNegative = false;
-
-        let prevAdjacentArg: Symbol;
-        for (let idx = 0; idx < items.length; idx++) {
-            const item = items[idx];
-            const curArg = args[idx];
-            if (idx == 0 && curArg.type == "NegativeOne") {
-                isNegative = true;
-                continue;
-            }
-
-            const blocksToAdd = this.shouldWrapBrackets(idx, curArg) ? blockBd.wrapBetweenBrackets(item.blocks).blocks : item.blocks;
-
-            if (this.shouldSeparateByMulSymbol(prevAdjacentArg, args[idx])) {
-                blocks = blockBd.combineMultipleBlocks(blocks, [blockBd.textBlock("×")], blocksToAdd);
-            } else {
-                blocks = blockBd.combine2Blockss(blocks, blocksToAdd);
-            }
-
-            prevAdjacentArg = args[idx];
-        }
-
-        if (isNegative) {
-            return {
-                blocks: blockBd.combine2Blockss([blockBd.textBlock("-")], blocks),
-                prUnit: "op",
-                prOp: "mul"
-            };
-        }
-
-        return { blocks, prUnit: "op", prOp: "mul" };
-    }
-
-    private shouldWrapBrackets(idx: number, symbol: P2Pr.Symbol): boolean {
-        if (idx <= 0) {
-            return false;
-        }
-
-        return prTransformHelper.startWithMinus(symbol);
-    }
-
-    private shouldSeparateByMulSymbol(prev: Symbol, cur: Symbol) {
-        if (!prev || !cur) {
-            return false;
-        }
-
-        if (prev.type == "Frac" && cur.type == "Frac") {
-            return false;
-        }
-        return this.firstShouldPosfixMul(prev) && this.secondShouldPrefixMul(cur);
-    }
-
-    private secondShouldPrefixMul(s: Symbol): boolean {
-        if (prTransformHelper.isConstant(s)) {
-            return true;
-        }
-
-        if (s.type == "Frac") {
-            return true;
-        }
-
-        if (s.type == "Mul" || s.type == "Pow") {
-            return this.secondShouldPrefixMul(_l.first(s.symbols));
-        }
-    }
-
-    private firstShouldPosfixMul(s: Symbol): boolean {
-        if (prTransformHelper.isConstant(s)) {
-            return true;
-        }
-
-        if (s.type == "Frac") {
-            return true;
-        }
-
-        if (s.type == "Mul") {
-            return this.firstShouldPosfixMul(_l.last(s.symbols));
-        }
-    }
-
-
-
-
 }
 
 interface GenericFuncArgsResult {
@@ -547,7 +435,7 @@ type CResult = Pr2M.CResult;
 export namespace Pr2M {
     export interface CResult {
         blocks: BlockModel[];
-        prUnit?: "bracket" | "op" | undefined;
+        prUnit?: "bracket" | "op" | "not" | undefined;
         prOp?: "mul" | "add";
         prBracket?: "[" | "(";
 

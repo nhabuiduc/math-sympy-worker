@@ -2,7 +2,7 @@ import { _l } from "../../../light-lodash";
 import type { P2Pr } from "../p2pr";
 import fEqual from "fast-deep-equal";
 import { prCreator } from "../pr/pr-creator";
-import { prTransformHelper } from "./pr-transform-helper";
+import { prTh } from "./pr-transform-helper";
 
 
 export class PrFracTransform implements P2Pr.IPrTransform {
@@ -288,7 +288,7 @@ export class PrFracTransform implements P2Pr.IPrTransform {
 
 
     private isInverseFrac(symbol: Symbol): symbol is P2Pr.Frac {
-        return symbol.type == "Frac" && prTransformHelper.isSymbolValueOne(symbol.symbols[0])
+        return symbol.type == "Frac" && prTh.isSymbolValueOne(symbol.symbols[0])
     }
 
     private transformMulFrac(symbol: Symbol): Symbol {
@@ -340,7 +340,7 @@ export class PrFracTransform implements P2Pr.IPrTransform {
     }
 
     private filterOutOneSymbol(symbols: Symbol[]): Symbol[] {
-        const rs = symbols.filter(c => !prTransformHelper.isSymbolValueOne(c));
+        const rs = symbols.filter(c => !prTh.isSymbolValueOne(c));
         return rs.length <= 0 ? [{ type: "One", kind: "Leaf" }] : rs;
     }
 

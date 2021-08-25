@@ -282,6 +282,6 @@ class PrTransformHelper {
     }
 }
 
-export const prTransformHelper = new PrTransformHelper();
+export const prTh = new PrTransformHelper();
 
 type Symbol = P2Pr.Symbol;

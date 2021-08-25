@@ -83,8 +83,11 @@ class __McHdl:
     def hdl_ComplexField(self, expr):
         return {'func': 'DisplayedDomain', 'name': 'C' } 
 
-
-
+    def hdl_bool(self, expr):    
+        if expr:
+            return {'func': 'BooleanTrue' } 
+        else: 
+            return {'func': 'BooleanFalse' } 
 
 
     def hdlGenericFunc(name, args):

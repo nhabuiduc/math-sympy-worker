@@ -1,6 +1,6 @@
 import { blockBd } from "../block-bd";
 import type { P2Pr } from "../p2pr";
-import { prTransformHelper as prTh } from "../pr-transform/pr-transform-helper";
+import { prTh as prTh } from "../pr-transform/pr-transform-helper";
 import { Pr2M } from "../pr2m";
 
 export class Derivative {

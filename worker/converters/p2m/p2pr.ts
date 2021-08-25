@@ -4,7 +4,7 @@ import { PrMulTransform } from "./pr-transform/pr-mul-transform";
 import { PrSqrtTransform } from "./pr-transform/pr-sqrt-transform";
 import { PrAddTransform } from "./pr-transform/pr-add-transform";
 import { prCreator } from "./pr/pr-creator";
-import { prTransformHelper } from "./pr-transform/pr-transform-helper";
+import { prTh } from "./pr-transform/pr-transform-helper";
 import { float } from "./p2pr/float";
 
 export class P2Pr {
@@ -115,6 +115,9 @@ export class P2Pr {
                 if (obj.name == "binomial") {
                     return { type: "Binomial", kind: "Container", symbols: obj.args.map(c => this.innerConvert(c)) }
                 }
+                if (obj.name == "NoneType") {
+                    return { type: "ConstantSymbol", kind: "Leaf", showType: "text", name: "None" }
+                }
                 return { type: "GenericFunc", kind: "Container", func: obj.name, symbols: obj.args.map(c => this.innerConvert(c)) }
             }
             case "Str": {
@@ -167,6 +170,7 @@ export class P2Pr {
             case "BooleanFalse": {
                 return { type: "ConstantSymbol", kind: "Leaf", showType: "text", name: "False" }
             }
+
             case "Relational": {
                 return { type: "Relational", kind: "Container", relOp: obj.relOp, symbols: obj.args.map(c => this.innerConvert(c)) }
             }
@@ -193,6 +197,7 @@ export class P2Pr {
             case "UndefinedFunction": {
                 return { type: "UndefinedFunction", kind: "Leaf", name: obj.name };
             }
+            case "Implies":
             case "Not":
             case "And":
             case "Or": {
@@ -210,7 +215,7 @@ export class P2Pr {
     }
 
     private detectUnevaluatedMul(symbols: Symbol[]): boolean {
-        return symbols[0].type == "One" || symbols.some((c, idx) => idx > 0 && prTransformHelper.isConstant(c));
+        return symbols[0].type == "One" || symbols.some((c, idx) => idx > 0 && prTh.isConstant(c));
     }
 
     static parseIntegerConstant(s: P.Basic): number {
@@ -261,7 +266,7 @@ export namespace P2Pr {
 
     export interface Discrete extends Container {
         type: "Discrete";
-        op: "Not" | "And" | "Or";
+        op: "Not" | "And" | "Or" | "Implies";
     }
 
 
@@ -443,7 +448,7 @@ namespace P {
         Exp1 | ImaginaryUnit | Pi | EulerGamma | Catalan | GoldenRatio | TribonacciConstant |
         NumberSymbol | HBar | Zero | CoordSys3D | Str | BaseVector | BaseScalar | VectorAdd | VectorZero | VectorMul |
         Point | Tuple | BaseDyadic | Derivative | BooleanFalse | BooleanTrue | Relational | List | Dummy | Poly |
-        PolynomialRing | DisplayedDomain | UndefinedFunction | Integral | Not | And | Or |
+        PolynomialRing | DisplayedDomain | UndefinedFunction | Integral | Not | And | Or | Implies |
         UnknownFunc;
     interface FuncArgs {
         args: Basic[];
@@ -645,7 +650,9 @@ namespace P {
     export interface Or extends FuncArgs {
         func: "Or";
     }
-
+    export interface Implies extends FuncArgs {
+        func: "Implies";
+    }
 
     export interface UnknownFunc extends FuncArgs {
         func: "";

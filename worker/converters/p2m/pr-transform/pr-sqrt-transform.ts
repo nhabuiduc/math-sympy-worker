@@ -1,7 +1,7 @@
 import { _l } from "../../../light-lodash";
 import type { P2Pr } from "../p2pr";
 import fEqual from "fast-deep-equal";
-import { prTransformHelper } from "./pr-transform-helper";
+import { prTh } from "./pr-transform-helper";
 
 export class PrSqrtTransform implements P2Pr.IPrTransform {
     transform(symbol: Symbol): Symbol {
@@ -31,7 +31,7 @@ export class PrSqrtTransform implements P2Pr.IPrTransform {
             const sqrt: P2Pr.Sqrt = {
                 type: "Sqrt",
                 kind: "Container",
-                symbols: [prTransformHelper.mul(last.symbols[0], (cur as P2Pr.Sqrt).symbols[0])]
+                symbols: [prTh.mul(last.symbols[0], (cur as P2Pr.Sqrt).symbols[0])]
             };
             if (last.symbols[1]) {
                 sqrt.symbols.push(last.symbols[1]);

@@ -8,10 +8,11 @@ describe("3: Others", () => {
         await th.prepare(`
         x_star = Symbol('x^*')
         f = Function('f')`);
+
+        // await th.prepare(defineSympyExprDumpFunc);
     });
 
     it("symbol with multiple characters", async () => {
-        // await th.prepare(defineSympyExprDumpFunc);
 
 
         expect(await th.run("x_star**2")).equal(`([x^*])[pow,[2]]`);
@@ -29,24 +30,48 @@ describe("3: Others", () => {
         expect(await th.run("(x + 1)**Rational(3, 4)")).equal(`([x+1])[pow,[frac,[3],[4]]]`);
     });
 
-    it.only("tini float value", async () => {
+    it("tini float value", async () => {
         expect(await th.run("1.5e20*x")).equal(`[1.5×10][pow,[20]][x]`);
     });
 
-    it.only("sin", async () => {
+    it("sin", async () => {
         expect(await th.run("1/sin(x)")).equal(`[frac,[1],[sin,]([x])]`);
         expect(await th.run("sin(x)**-1")).equal(`[frac,[1],[sin,]([x])]`);
         expect(await th.run("sin(x)**Rational(3, 2)")).equal(`[sin,][pow,[frac,[3],[2]]]([x])`);
     });
-    
-    it.only("discrete", async () => {
-        
+
+    it("discrete", async () => {
+
         expect(await th.run("~x")).equal(`[¬][x]`);
         expect(await th.run("x & y")).equal(`[x∧y]`);
         expect(await th.run("x & y & z")).equal(`[x∧y∧z]`);
         expect(await th.run("x | y")).equal(`[x∨y]`);
         expect(await th.run("x | y | z")).equal(`[x∨y∨z]`);
         expect(await th.run("(x & y) | z")).equal(`[z∨]([x∧y])`);
-        expect(await th.run("Implies(x, y)")).equal(`[z∨]([x∧y])`);
+        expect(await th.run("Implies(x, y)")).equal(`[x⇒y]`);
+        expect(await th.run("~(x >> ~y)")).equal(`[¬]([x⇒¬y])`);
+        expect(await th.run("Implies(Or(x,y), z)")).equal(`([x∨y])[⇒z]`);
+        expect(await th.run("Implies(z, Or(x,y))")).equal(`[z⇒]([x∨y])`);
+        expect(await th.run("~(x & y)")).equal(`[¬]([x∧y])`);
     })
+
+    it("Pow", async () => {
+        expect(await th.run("Pow(Rational(1, 3), -1, evaluate=False)")).equal(`[frac,[1],[frac,[1],[3]]]`);
+        expect(await th.run("Pow(Rational(1, 3), -2, evaluate=False)")).equal(`[frac,[1],([frac,[1],[3]])[pow,[2]]]`);
+        expect(await th.run("Pow(Integer(1)/100, -1, evaluate=False)")).equal(`[frac,[1],[frac,[1],[100]]]`);
+    });
+
+    it("Builtins", async () => {
+        expect(await th.run("True")).equal(`[text,[True]]`);
+        expect(await th.run("False")).equal(`[text,[False]]`);
+        expect(await th.run("None")).equal(`[text,[None]]`);
+        expect(await th.run("true")).equal(`[text,[True]]`);
+        expect(await th.run("false")).equal(`[text,[False]]`);
+    });
+    
+    it.only("SingularityFunction", async () => {
+        expect(await th.run("SingularityFunction(x, 4, 5)")).equal(`[text,[False]]`);
+        
+    })
+
 });
