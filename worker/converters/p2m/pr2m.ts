@@ -33,9 +33,25 @@ export class Pr2M {
             }
             case "Float": {
                 return this.float.convert(obj, level);
-                // return {
-                //     blocks: [blockBd.textBlock(obj.value.toString())],
-                // }
+            }
+            case "Discrete": {
+                switch (obj.op) {
+                    case "Not": {
+                        return {
+                            blocks: [
+                                blockBd.textBlock(`¬`),
+                                ...this.innerConvert(obj.symbols[0], level).blocks
+                            ], prUnit: "op"
+                        }
+                    }
+
+                    case "And": {
+                        return this.discreteJoin(obj.symbols, "∧", level);
+                    }
+                    case "Or": {
+                        return this.discreteJoin(obj.symbols, "∨", level);
+                    }
+                }
             }
             case "NaN": {
                 return {
@@ -81,14 +97,14 @@ export class Pr2M {
                     [blockBd.textBlock("2")])
             }
             case "NegativeOne": {
-                return this.crs([blockBd.textBlock("-1")]);
+                return { blocks: [blockBd.textBlock("-1")] }
             }
             case "Sqrt": {
                 if (obj.symbols.length <= 1) {
-                    return this.crs([blockBd.compositeBlock("\\sqrt", ["value"], [this.innerConvert(obj.symbols[0], 0).blocks])])
+                    return { blocks: [blockBd.compositeBlock("\\sqrt", ["value"], [this.innerConvert(obj.symbols[0], 0).blocks])] }
                 }
 
-                return this.crs([blockBd.compositeBlock("\\sqrt", ["value", "sub1"], [this.innerConvert(obj.symbols[0], 0).blocks, this.innerConvert(obj.symbols[1], 0).blocks])])
+                return { blocks: [blockBd.compositeBlock("\\sqrt", ["value", "sub1"], [this.innerConvert(obj.symbols[0], 0).blocks, this.innerConvert(obj.symbols[1], 0).blocks])] }
             }
             case "GenericFunc": {
                 const { name, args, index } = this.buildToGenericFunc(obj);
@@ -155,11 +171,11 @@ export class Pr2M {
                 // return { blocks: [blockBd.textBlock(obj.name)] }
             }
             case "Tuple": {
-                const join = this.joinBy(obj.symbols, ", ").blocks;
+                const join = this.joinBy(obj.symbols, ", ");
                 return blockBd.wrapBetweenBrackets(join)
             }
             case "List": {
-                const join = this.joinBy(obj.symbols, obj.separator).blocks;
+                const join = this.joinBy(obj.symbols, obj.separator);
                 return blockBd.wrapBetweenBrackets(join, "[")
             }
             case "BaseDyadic": {
@@ -246,7 +262,7 @@ export class Pr2M {
         return {
             blocks: [
                 blockBd.normalText(name),
-                ...blockBd.wrapBetweenBrackets(this.joinBy(symbbol, ", ").blocks).blocks,
+                ...blockBd.wrapBetweenBrackets(this.joinBy(symbbol, ", ")).blocks,
             ]
         }
     }
@@ -265,12 +281,14 @@ export class Pr2M {
         if (obj.indexJson) {
             const { lines } = symbolIndexSerialize.parseJson(obj.indexJson);
 
-            return this.crs([
-                blockBd.textBlock(obj.name),
-                blockBd.indexBlock(lines),
-            ]);
+            return {
+                blocks: [
+                    blockBd.textBlock(obj.name),
+                    blockBd.indexBlock(lines),
+                ]
+            }
         }
-        return this.crs([blockBd.textBlock(obj.name, obj.bold ? { mathType: "\\mathbf" } : undefined)]);
+        return { blocks: [blockBd.textBlock(obj.name, obj.bold ? { mathType: "\\mathbf" } : undefined)], }
     }
 
     private buildGenericFuncArgs(container: { indexExist?: boolean }, symbols: Symbol[]): GenericFuncArgsResult {
@@ -289,12 +307,15 @@ export class Pr2M {
         };
     }
 
-    private frac(numerator: BlockModel[], denominator: BlockModel[]) {
-        return this.crs([
-            blockBd.compositeBlock("\\frac", ["value", "sub1"], [
-                numerator,
-                denominator,
-            ])])
+    private frac(numerator: BlockModel[], denominator: BlockModel[]): CResult {
+        return {
+            blocks: [
+                blockBd.compositeBlock("\\frac", ["value", "sub1"], [
+                    numerator,
+                    denominator,
+                ])],
+
+        }
     }
 
     private buildFrac(args: P2Pr.Symbol[]): CResult {
@@ -306,7 +327,7 @@ export class Pr2M {
         const denominator = this.innerConvert(args[1], 0).blocks;
 
         const fracBlock = blockBd.compositeBlock("\\frac", ["value", "sub1"], [enumerator, denominator]);
-        return this.crs([fracBlock]);
+        return { blocks: [fracBlock], }
     }
 
 
@@ -320,9 +341,9 @@ export class Pr2M {
             return this.handlePowToGenericFunc(args, level);
         }
 
-        let { blocks: base, wrapBrackets: baseBrackets } = this.innerConvert(args[0], level + 1);
+        let { blocks: base, prUnit, prBracket } = this.innerConvert(args[0], level + 1);
         // if (args[0].type == "Pow" || args[0].type == "Frac" || args[0].type == "Sqrt") {
-        if (!(baseBrackets || prTransformHelper.isSingleVar(args[0]) || prTransformHelper.isIntegerValue(args[0]))) {
+        if (!(prUnit == "bracket" || prTransformHelper.isSingleVar(args[0]) || prTransformHelper.isIntegerValue(args[0]))) {
             base = blockBd.wrapBetweenBrackets(base).blocks;
         }
 
@@ -334,14 +355,14 @@ export class Pr2M {
                 lines: symbolIndexSerialize.parseJson(pow.indexJson).lines,
             }
 
-            return this.crs(base.concat([cBlock]));
+            return { blocks: base.concat([cBlock]), }
         } else if (args[2]) {
             const index = this.innerConvert(args[2], 0).blocks;
             const cBlock = blockBd.compositeBlock("\\power-index", ["powerValue", "indexValue"], [power, index]);
-            return { blocks: base.concat([cBlock]) };
+            return { blocks: base.concat([cBlock]), };
 
         }
-        return this.crs(base.concat([blockBd.compositeBlock("\\power-index", ["powerValue"], [power])]));
+        return { blocks: base.concat([blockBd.compositeBlock("\\power-index", ["powerValue"], [power])]), }
     }
 
     private handlePowToGenericFunc(powArgs: P2Pr.Symbol[], level: number): CResult {
@@ -357,17 +378,33 @@ export class Pr2M {
             powerBlock = blockBd.compositeBlock("\\power-index", ["powerValue"], [power]);
         }
 
-        return this.crs([
-            ...name,
-            powerBlock,
-            ...args,
-        ])
+        return {
+            blocks: [
+                ...name,
+                powerBlock,
+                ...args,
+            ],
+
+        }
     }
 
+    discreteJoin(args: P2Pr.Symbol[], text: string, level: number): CResult {
+        let items = args.map(a => this.innerConvert(a, level + 1));
 
+        let blocks: BlockModel[] = [];
+        for (let idx = 0; idx < items.length; idx++) {
+            const item = items[idx];
+            if (idx == 0) {
+                blocks = blockBd.combine2Blockss(blocks, item.blocks);
+                continue;
+            }
 
-    private crs(blocks: BlockModel[]): CResult {
-        return { blocks };
+            const curBlocks = item.prUnit == "op" ? blockBd.wrapBetweenBrackets(item.blocks).blocks : item.blocks;
+
+            blocks = blockBd.combineMultipleBlocks(blocks, [blockBd.textBlock(text)], curBlocks);
+        }
+
+        return { blocks, prUnit: "op" };
     }
 
     private joinAddOp(args: P2Pr.Symbol[], level: number): CResult {
@@ -377,25 +414,21 @@ export class Pr2M {
         for (let idx = 0; idx < items.length; idx++) {
             const item = items[idx];
             if (idx == 0) {
-                blocks = blockBd.combine2Blocks(blocks, item.blocks);
+                blocks = blockBd.combine2Blockss(blocks, item.blocks);
                 continue;
             }
             if (prTransformHelper.startWithMinus(args[idx])) {
-                blocks = blockBd.combine2Blocks(blocks, item.blocks);
+                blocks = blockBd.combine2Blockss(blocks, item.blocks);
                 continue;
             }
 
             blocks = blockBd.combineMultipleBlocks(blocks, [blockBd.textBlock("+")], item.blocks);
         }
 
-        if (level == 0) {
-            return this.crs(blocks);
-        }
-
-        return blockBd.wrapBetweenBrackets(blocks);
+        return { blocks, prUnit: "op", prOp: "add" };
     }
 
-    private joinBy(args: P2Pr.Symbol[], text: string): CResult {
+    private joinBy(args: P2Pr.Symbol[], text: string): BlockModel[] {
         const items = args.map(a => this.innerConvert(a, 0));
         let blocks: BlockModel[] = [];
         for (let idx = 0; idx < items.length; idx++) {
@@ -406,7 +439,8 @@ export class Pr2M {
                 blocks = blockBd.combineMultipleBlocks(blocks, item.blocks);
             }
         }
-        return { blocks };
+
+        return blocks;
     }
 
     private joinMulOp(args: P2Pr.Symbol[], level: number): CResult {
@@ -428,17 +462,21 @@ export class Pr2M {
             if (this.shouldSeparateByMulSymbol(prevAdjacentArg, args[idx])) {
                 blocks = blockBd.combineMultipleBlocks(blocks, [blockBd.textBlock("×")], blocksToAdd);
             } else {
-                blocks = blockBd.combine2Blocks(blocks, blocksToAdd);
+                blocks = blockBd.combine2Blockss(blocks, blocksToAdd);
             }
 
             prevAdjacentArg = args[idx];
         }
 
         if (isNegative) {
-            return { blocks: blockBd.combine2Blocks([blockBd.textBlock("-")], blocks) };
+            return {
+                blocks: blockBd.combine2Blockss([blockBd.textBlock("-")], blocks),
+                prUnit: "op",
+                prOp: "mul"
+            };
         }
 
-        return { blocks };
+        return { blocks, prUnit: "op", prOp: "mul" };
     }
 
     private shouldWrapBrackets(idx: number, symbol: P2Pr.Symbol): boolean {
@@ -509,6 +547,10 @@ type CResult = Pr2M.CResult;
 export namespace Pr2M {
     export interface CResult {
         blocks: BlockModel[];
-        wrapBrackets?: "[" | "(";
+        prUnit?: "bracket" | "op" | undefined;
+        prOp?: "mul" | "add";
+        prBracket?: "[" | "(";
+
+        // wrapBrackets?: "[" | "(";
     }
 }

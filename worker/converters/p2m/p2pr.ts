@@ -193,6 +193,15 @@ export class P2Pr {
             case "UndefinedFunction": {
                 return { type: "UndefinedFunction", kind: "Leaf", name: obj.name };
             }
+            case "Not":
+            case "And":
+            case "Or": {
+                return {
+                    type: "Discrete",
+                    kind: "Container",
+                    op: obj.func, symbols: obj.args.map(c => this.innerConvert(c)),
+                }
+            }
         }
 
         if (obj.args) {
@@ -243,12 +252,18 @@ export namespace P2Pr {
     export type Symbol = Mul | Add | One | NegativeOne | Integer | Var | Pow | Matrix | Frac | Float | Half | Sqrt | GenericFunc |
         NaN | ConstantSymbol | CoordSys3D | Str | BaseVector | BaseScalar | VectorZero | Point | Tuple | BaseDyadic |
         Derivative | Zero | Exp | Relational | List | Poly | PolynomialRing | DisplayedDomain | Binomial | UndefinedFunction |
-        VarList | Integral |
+        VarList | Integral | Discrete |
         UnknownFunc;
 
     export interface VarList extends Container {
         type: "VarList";
     }
+
+    export interface Discrete extends Container {
+        type: "Discrete";
+        op: "Not" | "And" | "Or";
+    }
+
 
     export interface Integral extends Container {
         type: "Integral";
@@ -428,7 +443,7 @@ namespace P {
         Exp1 | ImaginaryUnit | Pi | EulerGamma | Catalan | GoldenRatio | TribonacciConstant |
         NumberSymbol | HBar | Zero | CoordSys3D | Str | BaseVector | BaseScalar | VectorAdd | VectorZero | VectorMul |
         Point | Tuple | BaseDyadic | Derivative | BooleanFalse | BooleanTrue | Relational | List | Dummy | Poly |
-        PolynomialRing | DisplayedDomain | UndefinedFunction | Integral |
+        PolynomialRing | DisplayedDomain | UndefinedFunction | Integral | Not | And | Or |
         UnknownFunc;
     interface FuncArgs {
         args: Basic[];
@@ -619,6 +634,16 @@ namespace P {
     export interface UndefinedFunction {
         func: "UndefinedFunction";
         name: string;
+    }
+
+    export interface Not extends FuncArgs {
+        func: "Not";
+    }
+    export interface And extends FuncArgs {
+        func: "And";
+    }
+    export interface Or extends FuncArgs {
+        func: "Or";
     }
 
 

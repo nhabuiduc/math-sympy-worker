@@ -41,6 +41,12 @@ describe("3: Others", () => {
     
     it.only("discrete", async () => {
         
-        expect(await th.run("~x")).equal(`[frac,[1],[sin,]([x])]`);
+        expect(await th.run("~x")).equal(`[¬][x]`);
+        expect(await th.run("x & y")).equal(`[x∧y]`);
+        expect(await th.run("x & y & z")).equal(`[x∧y∧z]`);
+        expect(await th.run("x | y")).equal(`[x∨y]`);
+        expect(await th.run("x | y | z")).equal(`[x∨y∨z]`);
+        expect(await th.run("(x & y) | z")).equal(`[z∨]([x∧y])`);
+        expect(await th.run("Implies(x, y)")).equal(`[z∨]([x∧y])`);
     })
 });

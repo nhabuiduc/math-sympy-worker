@@ -6,6 +6,10 @@ import type { Pr2M } from "./pr2m";
 
 class BlockBd {
 
+    blocks(...blocks: BlockModel[]): BlockModel[] {
+        return this.combineBlocks(blocks);
+    }
+
     fracBlock(num: BlockModel[], den: BlockModel[]) {
         return this.compositeBlock("\\frac", ["value", "sub1"], [num, den]);
     }
@@ -131,13 +135,13 @@ class BlockBd {
     }
 
     flattenBlocks(blocks: BlockModel[][]): BlockModel[] {
-        return blocks.reduce((prev, cur) => this.combine2Blocks(prev, cur), [] as BlockModel[])
+        return blocks.reduce((prev, cur) => this.combine2Blockss(prev, cur), [] as BlockModel[])
     }
 
     combineMultipleBlocks(...blocks: BlockModel[][]): BlockModel[] {
-        return blocks.reduce((prev, cur) => this.combine2Blocks(prev, cur), [] as BlockModel[])
+        return blocks.reduce((prev, cur) => this.combine2Blockss(prev, cur), [] as BlockModel[])
     }
-    combine2Blocks(b1: BlockModel[], b2: BlockModel[]): BlockModel[] {
+    combine2Blockss(b1: BlockModel[], b2: BlockModel[]): BlockModel[] {
         if (b1.length <= 0) {
             return b2;
         }
@@ -147,7 +151,11 @@ class BlockBd {
 
         const all = b1.concat(b2);
 
-        let last: Writeable<BlockModel> = b1[0];
+        return this.combineBlocks(all);
+    }
+
+    combineBlocks(all: BlockModel[]): BlockModel[] {
+        let last: Writeable<BlockModel> = all[0];
         const rs: Writeable<BlockModel>[] = [last];
         for (let idx = 1; idx < all.length; idx++) {
             const cur = all[idx];
@@ -167,12 +175,14 @@ class BlockBd {
         return this.wrapBetweenBrackets(this.joinBlocks(blockss, join), bracketType);
     }
 
+    
+
     joinBlocks(blockss: BlockModel[][], text: string) {
         let rs: BlockModel[] = [];
         for (let idx = 0; idx < blockss.length; idx++) {
             const blocks = blockss[idx];
             if (idx <= 0) {
-                rs = this.combine2Blocks(rs, blocks);
+                rs = this.combine2Blockss(rs, blocks);
             } else {
                 rs = this.combineMultipleBlocks(rs, [this.textBlock(text)], blocks);
             }
@@ -186,7 +196,8 @@ class BlockBd {
         const right = bracketType == "(" ? ")" : "]"
         return {
             blocks: [blockBd.bracketBlock(bracketType)].concat(blocks).concat([blockBd.bracketBlock(right)]),
-            wrapBrackets: bracketType,
+            prUnit: "bracket",
+            prBracket: bracketType,
         }
     }
 }
