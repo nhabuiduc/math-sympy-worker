@@ -226,6 +226,15 @@ export class Pr2M {
                 }
             }
 
+            case "SingularityFunction": {
+                return {
+                    blocks: [
+                        ...blockBd.wrapBetweenBrackets(this.innerConvert(obj.symbols[0], level).blocks, "<").blocks,
+                        blockBd.powerBlock(this.innerConvert(obj.symbols[1], level).blocks)
+                    ]
+                }
+            }
+
             case "UnknownFunc": {
                 return this.convertFullNameFunc(obj.name, obj.symbols);
             }
@@ -390,7 +399,7 @@ export class Pr2M {
                 blocks = blockBd.combine2Blockss(blocks, blocksToAdd);
                 continue;
             }
-            
+
             if (prTh.startWithMinus(args[idx])) {
                 blocks = blockBd.combine2Blockss(blocks, blocksToAdd);
                 continue;
@@ -437,7 +446,7 @@ export namespace Pr2M {
         blocks: BlockModel[];
         prUnit?: "bracket" | "op" | "not" | undefined;
         prOp?: "mul" | "add";
-        prBracket?: "[" | "(";
+        prBracket?: P2Pr.SupportBracket;
 
         // wrapBrackets?: "[" | "(";
     }

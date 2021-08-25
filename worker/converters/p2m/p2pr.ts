@@ -207,6 +207,9 @@ export class P2Pr {
                     op: obj.func, symbols: obj.args.map(c => this.innerConvert(c)),
                 }
             }
+            case "SingularityFunction": {
+                return { type: "SingularityFunction", kind: "Container", symbols: obj.args.map(c => this.innerConvert(c)) }
+            }
         }
 
         if (obj.args) {
@@ -257,7 +260,7 @@ export namespace P2Pr {
     export type Symbol = Mul | Add | One | NegativeOne | Integer | Var | Pow | Matrix | Frac | Float | Half | Sqrt | GenericFunc |
         NaN | ConstantSymbol | CoordSys3D | Str | BaseVector | BaseScalar | VectorZero | Point | Tuple | BaseDyadic |
         Derivative | Zero | Exp | Relational | List | Poly | PolynomialRing | DisplayedDomain | Binomial | UndefinedFunction |
-        VarList | Integral | Discrete |
+        VarList | Integral | Discrete | SingularityFunction |
         UnknownFunc;
 
     export interface VarList extends Container {
@@ -423,6 +426,11 @@ export namespace P2Pr {
         type: "PolynomialRing";
         domain: Symbol;
     }
+
+    export interface SingularityFunction extends Container {
+        type: "SingularityFunction";
+    }
+
     export interface UndefinedFunction extends Leaf {
         type: "UndefinedFunction";
         name: string;
@@ -439,6 +447,8 @@ export namespace P2Pr {
     export interface IPrTransform {
         transform(symbol: Symbol): Symbol;
     }
+
+    export type SupportBracket = P.SupportBracket;
 }
 
 namespace P {
@@ -448,7 +458,7 @@ namespace P {
         Exp1 | ImaginaryUnit | Pi | EulerGamma | Catalan | GoldenRatio | TribonacciConstant |
         NumberSymbol | HBar | Zero | CoordSys3D | Str | BaseVector | BaseScalar | VectorAdd | VectorZero | VectorMul |
         Point | Tuple | BaseDyadic | Derivative | BooleanFalse | BooleanTrue | Relational | List | Dummy | Poly |
-        PolynomialRing | DisplayedDomain | UndefinedFunction | Integral | Not | And | Or | Implies |
+        PolynomialRing | DisplayedDomain | UndefinedFunction | Integral | Not | And | Or | Implies | SingularityFunction |
         UnknownFunc;
     interface FuncArgs {
         args: Basic[];
@@ -654,8 +664,14 @@ namespace P {
         func: "Implies";
     }
 
+    export interface SingularityFunction extends FuncArgs {
+        func: "SingularityFunction";
+    }
+
     export interface UnknownFunc extends FuncArgs {
         func: "";
     }
+
+    export type SupportBracket = "(" | "[" | "<";
 
 }

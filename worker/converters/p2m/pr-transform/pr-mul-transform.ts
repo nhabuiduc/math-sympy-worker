@@ -26,10 +26,10 @@ export class PrMulTransform implements P2Pr.IPrTransform {
             return symbols;
         }
         /**we don't order if symbol start MinusOne */
-        if (symbols[0].type == "NegativeOne") {
+        if (prTh.isNegativeOne(symbols[0])) {
             return symbols;
         }
-        
+
         /**we keep order if unevalated mul */
 
         /**ok if we only have 2 symbols, we priority minus sign */

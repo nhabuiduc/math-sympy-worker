@@ -70,7 +70,10 @@ describe("3: Others", () => {
     });
     
     it.only("SingularityFunction", async () => {
-        expect(await th.run("SingularityFunction(x, 4, 5)")).equal(`[text,[False]]`);
+        expect(await th.run("SingularityFunction(x, 4, 5)")).equal(`<[x-4]>[pow,[5]]`);
+        expect(await th.run("SingularityFunction(x, -3, 4)")).equal(`<[x+3]>[pow,[4]]`);
+        expect(await th.run("SingularityFunction(x, 0, 4)")).equal(`<[x]>[pow,[4]]`);
+        expect(await th.run("SingularityFunction(x, a, n)")).equal(`<[x]>[pow,[4]]`);
         
     })
 

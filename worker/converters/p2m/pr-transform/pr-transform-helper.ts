@@ -264,11 +264,15 @@ class PrTransformHelper {
         return false;
     }
 
+    isNegativeOne(s: Symbol) {
+        return s.type == "NegativeOne" || (s.type == "Integer" && s.value == -1);
+    }
+
     var(text: string): P2Pr.Var {
         return { type: "Var", kind: "Leaf", name: text };
     }
 
-    int(vl:number):P2Pr.Integer {
+    int(vl: number): P2Pr.Integer {
         return { type: "Integer", kind: "Leaf", value: vl }
     }
 

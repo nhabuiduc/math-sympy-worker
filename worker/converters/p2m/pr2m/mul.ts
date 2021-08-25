@@ -19,7 +19,7 @@ export class Mul {
         for (let idx = 0; idx < items.length; idx++) {
             const item = items[idx];
             const curArg = symbols[idx];
-            if (idx == 0 && curArg.type == "NegativeOne") {
+            if (idx == 0 && prTh.isNegativeOne(curArg)) {
                 isNegative = true;
                 continue;
             }

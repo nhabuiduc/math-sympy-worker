@@ -89,6 +89,8 @@ class __McHdl:
         else: 
             return {'func': 'BooleanFalse' } 
 
+    def hdl_SingularityFunction(self, expr):
+        return {'func': 'SingularityFunction', 'args': [self.hdlAll(expr.args[0] - expr.args[1]), self.hdlAll(expr.args[2])] }     
 
     def hdlGenericFunc(name, args):
         dic['func'] = 'GenericFunc' 

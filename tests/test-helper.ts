@@ -26,9 +26,16 @@ json.dumps(rootDic)
     blocksToText(blocks: BlockModel[]): string {
         return blocks.map(b => {
             if (b.type == "single") {
-                if(b.text.length == 1) {
+                if (b.text.length == 1) {
                     return b.text;
                 }
+                if (b.text == "\\left\\angle") {
+                    return "<"
+                }
+                if (b.text == "\\right\\angle") {
+                    return ">"
+                }
+
                 return `[b,${b.text}${this.styleToText(b.style)}]`;
             }
             if (b.type == "composite") {

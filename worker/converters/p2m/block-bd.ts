@@ -2,6 +2,7 @@ import { generator } from "@lib-shared/id-generator";
 import objectHelper from "@lib-shared/object-helper";
 import { tabularKeyInfoHelper } from "@lib-shared/tabular-key-info-helper";
 import { sympyToMcConstantFuncs } from "../mapping/generic-func-map";
+import { P2Pr } from "./p2pr";
 import type { Pr2M } from "./pr2m";
 
 class BlockBd {
@@ -44,7 +45,7 @@ class BlockBd {
         }
         return compositeBlock;
     }
-    bracketBlock(bracket: "(" | "[" | ")" | "]"): BlockModel {
+    bracketBlock(bracket: BlockBd.SupportBracket): BlockModel {
         return { id: generator.nextId(), type: "single", text: bracket }
     }
     hat(text: string, style?: BlockStyle) {
@@ -176,7 +177,7 @@ class BlockBd {
     }
 
     wrapBracketIfOp(rs: Pr2M.CResult): BlockModel[] {
-        return (rs.prUnit == "op" ) ? this.wrapBetweenBrackets(rs.blocks).blocks : rs.blocks;
+        return (rs.prUnit == "op") ? this.wrapBetweenBrackets(rs.blocks).blocks : rs.blocks;
     }
 
     joinBlocks(blockss: BlockModel[][], text: string) {
@@ -194,14 +195,37 @@ class BlockBd {
         return rs;
     }
 
-    wrapBetweenBrackets(blocks: BlockModel[], bracketType: "(" | "[" = "("): Pr2M.CResult {
-        const right = bracketType == "(" ? ")" : "]"
+    wrapBetweenBrackets(blocks: BlockModel[], bracketType: P2Pr.SupportBracket = "("): Pr2M.CResult {
+        const latexLeft = this.leftLatexBracketName(bracketType);
+        const latexRight = this.rightLatexBracketName(bracketType);
         return {
-            blocks: [blockBd.bracketBlock(bracketType)].concat(blocks).concat([blockBd.bracketBlock(right)]),
+            blocks: [blockBd.bracketBlock(latexLeft)].concat(blocks).concat([blockBd.bracketBlock(latexRight)]),
             prUnit: "bracket",
             prBracket: bracketType,
+        }
+    }
+
+    private leftLatexBracketName(bracketType: P2Pr.SupportBracket): BlockBd.SupportLeftBracket {
+        switch (bracketType) {
+            case "(":
+            case "[":
+                return bracketType;
+            case "<": return "\\left\\angle";
+        }
+    }
+    private rightLatexBracketName(bracketType: P2Pr.SupportBracket): BlockBd.SupportRightBracket {
+        switch (bracketType) {
+            case "(": return ")";
+            case "[": return "]";
+            case "<": return "\\right\\angle";
         }
     }
 }
 
 export const blockBd = new BlockBd();
+
+export namespace BlockBd {
+    export type SupportLeftBracket = "(" | "[" | "\\left\\angle";
+    export type SupportRightBracket = ")" | "]" | "\\right\\angle";
+    export type SupportBracket = SupportLeftBracket | SupportRightBracket;
+}
