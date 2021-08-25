@@ -233,6 +233,9 @@ export class P2Pr {
                 const vl: P2Pr.VarList = { type: "VarList", kind: "Container", symbols: listss };
                 return vl;
             }
+            case "Cross": {
+                return { type: "Cross", kind: "Container", symbols: obj.args.map(c => this.innerConvert(c)) }
+            }
         }
 
         if (obj.args) {
@@ -283,7 +286,7 @@ export namespace P2Pr {
     export type Symbol = Mul | Add | One | NegativeOne | Integer | Var | Pow | Matrix | Frac | Float | Half | Sqrt | GenericFunc |
         NaN | ConstantSymbol | CoordSys3D | Str | BaseVector | BaseScalar | VectorZero | Point | Tuple | BaseDyadic |
         Derivative | Zero | Exp | Relational | List | Poly | PolynomialRing | DisplayedDomain | Binomial | UndefinedFunction |
-        VarList | Integral | Discrete | SingularityFunction |
+        VarList | Integral | Discrete | SingularityFunction | Cross |
         UnknownFunc;
 
     export interface VarList extends Container {
@@ -303,6 +306,9 @@ export namespace P2Pr {
     export interface Mul extends Container {
         type: "Mul";
         unevaluatedDetected: boolean;
+    }
+    export interface Cross extends Container {
+        type: "Cross";
     }
 
     export interface Add extends Container {
@@ -340,7 +346,7 @@ export namespace P2Pr {
 
     export interface Float extends Leaf {
         type: "Float";
-        value: string | Mul;
+        value: string;
     }
 
     export interface Var extends Leaf {
@@ -481,7 +487,7 @@ namespace P {
         NumberSymbol | HBar | Zero | CoordSys3D | Str | BaseVector | BaseScalar | VectorAdd | VectorZero | VectorMul |
         Point | Tuple | BaseDyadic | Derivative | BooleanFalse | BooleanTrue | Relational | List | Dummy | Poly |
         PolynomialRing | DisplayedDomain | UndefinedFunction | Integral | Not | And | Or | Implies | SingularityFunction |
-        Cycle |
+        Cycle | Cross |
         UnknownFunc;
     interface FuncArgs {
         args: Basic[];
@@ -694,6 +700,10 @@ namespace P {
     export interface Cycle {
         func: "Cycle";
         perm: number[][];
+    }
+
+    export interface Cross extends FuncArgs {
+        func: "Cross";
     }
 
     export interface UnknownFunc extends FuncArgs {

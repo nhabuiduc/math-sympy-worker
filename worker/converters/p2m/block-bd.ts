@@ -183,7 +183,8 @@ class BlockBd {
     joinBlocks(blockss: BlockModel[][], text: string) {
         let rs: BlockModel[] = [];
         for (let idx = 0; idx < blockss.length; idx++) {
-            const blocks = blockss[idx];
+            let blocks = blockss[idx];
+
             if (idx <= 0) {
                 rs = this.combine2Blockss(rs, blocks);
             } else {

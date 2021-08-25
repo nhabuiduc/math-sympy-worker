@@ -1,10 +1,12 @@
 import { blockBd } from "../block-bd";
 import { P2Pr } from "../p2pr";
 import { Pr2M } from "../pr2m";
+import { Pr2MCommon } from "./pr2m-common";
 
 export class Discrete {
+    private common: Pr2MCommon;
     constructor(private main: { convert(obj: P2Pr.Symbol): Pr2M.CResult }) {
-
+        this.common = new Pr2MCommon(this.main);
     }
 
     convert(obj: P2Pr.Discrete): Pr2M.CResult {
@@ -20,31 +22,15 @@ export class Discrete {
             }
 
             case "And": {
-                return this.discreteJoin(obj.symbols, "∧");
+                return this.common.join(obj.symbols, "∧");
             }
             case "Or": {
-                return this.discreteJoin(obj.symbols, "∨");
+                return this.common.join(obj.symbols, "∨");
             }
             case "Implies": {
-                return this.discreteJoin(obj.symbols, "⇒");
+                return this.common.join(obj.symbols, "⇒");
             }
         }
     }
 
-    private discreteJoin(args: P2Pr.Symbol[], text: string): Pr2M.CResult {
-        let items = args.map(a => this.main.convert(a));
-
-        let blocks: BlockModel[] = [];
-        for (let idx = 0; idx < items.length; idx++) {
-            const item = items[idx];
-            if (idx == 0) {
-                blocks = blockBd.combine2Blockss(blocks, blockBd.wrapBracketIfOp(item));
-                continue;
-            }
-
-            blocks = blockBd.combineMultipleBlocks(blocks, [blockBd.textBlock(text)], blockBd.wrapBracketIfOp(item));
-        }
-
-        return { blocks, prUnit: "op" };
-    }
 }

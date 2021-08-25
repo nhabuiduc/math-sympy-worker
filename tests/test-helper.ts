@@ -41,8 +41,13 @@ json.dumps(rootDic)
             if (b.type == "composite") {
                 const elements = Object.keys((b as CompositeBlockModel).elements)
                     .map(c => this.blocksToText((b as CompositeBlockModel).elements[c].lines[0].blocks))
-                    .join(",");
-                return `[${this.reduceFuncName(b.text.substr(1))},${elements}${this.styleToText(b.style)}]`
+
+                if (b.text == "\\power-index" && elements.length == 1) {
+                    if((b as CompositeBlockModel).elements["indexValue"]) {
+                        (b.text as any) = " ⛏️";
+                    }
+                }
+                return `[${this.reduceFuncName(b.text.substr(1))},${elements.join(",")}${this.styleToText(b.style)}]`
             }
             return `[${b.text}${this.styleToText(b.style)}]`;
         }).join("");

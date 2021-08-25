@@ -107,7 +107,10 @@ describe("3: Others", () => {
     
     it("Vector Expressions", async () => {
         await th.prepare(`A = CoordSys3D('A')`);
-        // expect(await th.run("Cross(A.i, A.j*A.x*3+A.k)")).equal(`[1.0×10][💪,[100]]`);
+        expect(await th.run("Cross(A.i, A.j*A.x*3+A.k)")).equal(`[🎩,[i],bf][⛏️,[A],bf][×]([3][x,bf][⛏️,[A],bf][🎩,[j],bf][⛏️,[A],bf][+][🎩,[k],bf][⛏️,[A],bf])`);
+        expect(await th.run("Cross(A.i, A.j)")).equal(`[🎩,[i],bf][⛏️,[A],bf][×][🎩,[j],bf][⛏️,[A],bf]`);
+        expect(await th.run("x*Cross(A.i, A.j)")).equal(`[x]([🎩,[i],bf][⛏️,[A],bf][×][🎩,[j],bf][⛏️,[A],bf])`);
+        expect(await th.run("Cross(x*A.i, A.j)")).equal(`[-]([🎩,[j],bf][⛏️,[A],bf][×x][🎩,[i],bf][⛏️,[A],bf])`);
 
     })
 

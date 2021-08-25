@@ -11,14 +11,16 @@ import { Float } from "./pr2m/float";
 import { Mul } from "./pr2m/mul";
 import { Discrete } from "./pr2m/discrete";
 import { Add } from "./pr2m/add";
+import { Pr2MCommon } from "./pr2m/pr2m-common";
 
 export class Pr2M {
     private derivative = new Derivative(this);
     private integral = new Integral(this);
-    private float = new Float(this);
+    private float = new Float();
     private mul = new Mul(this);
     private discrete = new Discrete(this);
     private add = new Add(this);
+    private common = new Pr2MCommon(this);
 
     constructor(private constantTextFuncSet: Set<string>) {
     }
@@ -71,6 +73,9 @@ export class Pr2M {
             }
             case "Mul": {
                 return this.mul.convert(obj);
+            }
+            case "Cross": {
+                return this.common.join(obj.symbols, "×");
             }
             case "Pow": {
                 return this.buildPow(obj, obj.symbols, level);
@@ -237,7 +242,7 @@ export class Pr2M {
                     ]
                 }
             }
-            
+
 
             case "UnknownFunc": {
                 return this.convertFullNameFunc(obj.name, obj.symbols);
@@ -428,6 +433,9 @@ export namespace Pr2M {
         prOp?: "mul" | "add";
         prBracket?: P2Pr.SupportBracket;
         prMinusSign?: boolean;
+        prMul?: {
+            allInShortcutForm?: boolean;
+        }
 
         // wrapBrackets?: "[" | "(";
     }

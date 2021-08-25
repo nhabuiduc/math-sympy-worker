@@ -9,6 +9,7 @@ export class Mul {
 
     }
 
+
     convert(obj: P2Pr.Mul): Pr2M.CResult {
         const { symbols } = obj;
         const items = symbols.map(a => this.main.convert(a));
@@ -16,6 +17,7 @@ export class Mul {
         let isNegative = false;
 
         let prevAdjacentArg: Symbol;
+        let allInShortcutForm = true;
         for (let idx = 0; idx < items.length; idx++) {
             const item = items[idx];
             const curArg = symbols[idx];
@@ -25,10 +27,11 @@ export class Mul {
             }
 
 
-            const blocksToAdd = this.shouldWrapBrackets(idx, curArg, item) ? blockBd.wrapBetweenBrackets(item.blocks).blocks : item.blocks;
+            const blocksToAdd = this.shouldWrapBrackets(idx, item) ? blockBd.wrapBetweenBrackets(item.blocks).blocks : item.blocks;
 
-            if (this.shouldSeparateByMulSymbol(prevAdjacentArg, symbols[idx])) {
+            if (idx > 0 && (this.shouldSeparateByMulSymbol(prevAdjacentArg, symbols[idx]))) {
                 blocks = blockBd.combineMultipleBlocks(blocks, [blockBd.textBlock("×")], blocksToAdd);
+                allInShortcutForm = false;
             } else {
                 blocks = blockBd.combine2Blockss(blocks, blocksToAdd);
             }
@@ -37,19 +40,29 @@ export class Mul {
         }
 
         if (isNegative) {
-            return {
-                blocks: blockBd.combine2Blockss([blockBd.textBlock("-")], blocks),
-                prUnit: items.length <= 2 ? undefined : "op",
-                prOp: items.length <= 2 ? undefined : "mul",
-                prMinusSign: true,
-            };
+            return this.makeRs(true, allInShortcutForm, blockBd.combine2Blockss([blockBd.textBlock("-")], blocks), obj);
+
         }
 
-        return {
-            blocks,
-            prUnit: items.length <= 1 ? undefined : "op",
-            prOp: items.length <= 1 ? undefined : "mul"
-        };
+        return this.makeRs(false, allInShortcutForm, blocks, obj);
+    }
+
+    private makeRs(isNegative: boolean, allInShortcutForm: boolean, blocks: BlockModel[], obj: P2Pr.Mul): Pr2M.CResult {
+        let prUnit: Pr2M.CResult["prUnit"] = "op";
+        let prOp: Pr2M.CResult["prOp"] = "mul";
+        let prMulInfo: Pr2M.CResult["prMul"] = { allInShortcutForm };
+        if (isNegative && obj.symbols.length <= 2) {
+            prUnit = undefined;
+            prOp = undefined;
+            prMulInfo = undefined;
+
+        } else if (obj.symbols.length <= 1) {
+            prUnit = undefined;
+            prOp = undefined;
+            prMulInfo = undefined;
+        }
+
+        return { blocks, prMinusSign: isNegative, prUnit, prOp, prMul: prMulInfo }
     }
 
     private shouldSeparateByMulSymbol(prev: Symbol, cur: Symbol) {
@@ -63,16 +76,12 @@ export class Mul {
         return this.firstShouldPosfixMul(prev) && this.secondShouldPrefixMul(cur);
     }
 
-    private shouldWrapBrackets(idx: number, symbol: P2Pr.Symbol, cResult: Pr2M.CResult): boolean {
-        if (idx <= 0) {
-            return false;
-        }
-
+    private shouldWrapBrackets(idx: number, cResult: Pr2M.CResult): boolean {
         if (cResult.prUnit == "op") {
             return true;
         }
 
-        return cResult.prMinusSign;
+        return cResult.prMinusSign && idx > 0;
     }
 
     private secondShouldPrefixMul(s: Symbol): boolean {
