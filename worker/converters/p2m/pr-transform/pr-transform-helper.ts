@@ -317,6 +317,10 @@ class PrTransformHelper {
         return { type: "Index", kind: "Container", symbols: [base, index] };
     }
 
+    brackets(base: Symbol, br: P2Pr.SupportBracket = "("): P2Pr.Symbol {
+        return { type: "Brackets", kind: "Container", symbols: [base], br };
+    }
+
     pow(base: Symbol, root: Symbol, index?: Symbol): P2Pr.Pow {
         const rs: P2Pr.Pow = {
             type: "Pow",

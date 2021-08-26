@@ -100,14 +100,8 @@ export class Pr2M {
                     const genericFunc = obj.symbols[0] as P2Pr.GenericFunc;
                     const { name, args } = this.prCommon.buildGenericFunc(genericFunc);
                     const indexBlock = blockBd.indexBlock(this.innerConvert(obj.symbols[1], level).blocks);
-                    return {
-                        blocks: [
-                            ...name,
-                            indexBlock,
-                            ...args,
-                        ],
-
-                    }
+                    const rsBlocks = obj.symbols[0].powerIndexAfter ? [...name, ...args, indexBlock] : [...name, indexBlock, ...args];
+                    return { blocks: rsBlocks }
                 }
                 return {
                     blocks: [
@@ -306,6 +300,13 @@ export class Pr2M {
                         ...blockBd.wrapBetweenBrackets(this.innerConvert(obj.symbols[0], level).blocks, "<").blocks,
                         blockBd.powerBlock(this.innerConvert(obj.symbols[1], level).blocks)
                     ]
+                }
+            }
+            case "Brackets": {
+                return {
+                    blocks: blockBd.wrapBetweenBrackets(this.innerConvert(obj.symbols[0], level).blocks, obj.br).blocks,
+                    prUnit: "bracket",
+                    prBracket: obj.br,
                 }
             }
 

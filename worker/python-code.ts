@@ -114,7 +114,8 @@ class __McHdl:
     def hdlFunctionClass(self, expr, name):
         return { 'func': 'FunctionClass', 'name': name, 'args': self.argsMap(expr.args) }
 
-    def hdlGenericFunc(name, args):
+    def hdlGenericFunc(self, name, args):
+        dic = {}
         dic['func'] = 'GenericFunc' 
         dic['name'] = name
         dic['args']=self.argsMap(args)

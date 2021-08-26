@@ -239,6 +239,9 @@ class BlockBd {
             case "[":
                 return bracketType;
             case "<": return "\\left\\angle";
+            case "floor": return "\\left\\lfloor";
+            case "ceil": return "\\left\\lceil";
+            case "|": return "\\left|";
         }
     }
     private rightLatexBracketName(bracketType: P2Pr.SupportBracket): BlockBd.SupportRightBracket {
@@ -246,6 +249,9 @@ class BlockBd {
             case "(": return ")";
             case "[": return "]";
             case "<": return "\\right\\angle";
+            case "floor": return "\\right\\rfloor";
+            case "ceil": return "\\right\\rceil";
+            case "|": return "\\right|";
         }
     }
 }
@@ -253,7 +259,7 @@ class BlockBd {
 export const blockBd = new BlockBd();
 
 export namespace BlockBd {
-    export type SupportLeftBracket = "(" | "[" | "\\left\\angle";
-    export type SupportRightBracket = ")" | "]" | "\\right\\angle";
+    export type SupportLeftBracket = "(" | "[" | "\\left\\angle" | "\\left\\lfloor" | "\\left\\lceil" | "\\left|";
+    export type SupportRightBracket = ")" | "]" | "\\right\\angle" | "\\right\\rfloor" | "\\right\\rceil" | "\\right|";
     export type SupportBracket = SupportLeftBracket | SupportRightBracket;
 }

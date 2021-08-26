@@ -50,6 +50,21 @@ json.dumps(rootDic)
                 if (b.text == "\\right\\angle") {
                     return ">"
                 }
+                if (b.text == "\\left\\lfloor") {
+                    return "⌊"
+                }
+                if (b.text == "\\right\\rfloor") {
+                    return "⌋"
+                }
+                if (b.text == "\\left\\lceil") {
+                    return "⌈"
+                }
+                if (b.text == "\\right\\rceil") {
+                    return "⌉"
+                }
+                if (b.text == "\\left|" || b.text == "\\right|") {
+                    return "|"
+                }
 
                 return `[b,${b.text}${this.styleToText(b.style)}]`;
             }
@@ -112,6 +127,7 @@ json.dumps(rootDic)
 const commonFuncReducedMap = {
     "power-index": "💪",
     "small-hat": "🎩",
+    "operatorname": "⚙️",
 }
 
 const constFuncs = [

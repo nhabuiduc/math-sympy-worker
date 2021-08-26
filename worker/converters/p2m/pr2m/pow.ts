@@ -54,12 +54,10 @@ export class Pow {
             powerBlock = blockBd.compositeBlock("\\power-index", ["powerValue"], [power]);
         }
 
+        const rsBlocks = genericFunc.powerIndexAfter ? [...name, ...args, powerBlock] : [...name, powerBlock, ...args];
+
         return {
-            blocks: [
-                ...name,
-                powerBlock,
-                ...args,
-            ],
+            blocks: rsBlocks,
             prUnit: "pow",
         }
     }

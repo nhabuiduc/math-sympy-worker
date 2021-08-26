@@ -180,13 +180,13 @@ tau, Tau, TAU, taU = symbols('tau, Tau, TAU, taU')
         expect(await th.run("h(x, y, z)")).equal(`[h]([x, y, z])`);
         
         await th.prepare(` Li = Function('Li')`);
-        expect(await th.run("Li")).equal(`[operatorname,[Li]]`);
-        expect(await th.run("Li(x)")).equal(`[operatorname,[Li]]([x])`);
+        expect(await th.run("Li")).equal(`[⚙️,[Li]]`);
+        expect(await th.run("Li(x)")).equal(`[⚙️,[Li]]([x])`);
         
         await th.prepare(` mybeta = Function('beta')`);
         expect(await th.run("mybeta(x, y, z)")).equal(`[𝛽]([x, y, z])`);
-        expect(await th.run("beta(x, y)")).equal(`[operatorname,[B]]([x, y])`);
-        expect(await th.run("beta(x, y)**2")).equal(`[operatorname,[B]][💪,[2]]([x, y])`);
+        expect(await th.run("beta(x, y)")).equal(`[⚙️,[B]]([x, y])`);
+        expect(await th.run("beta(x, y)**2")).equal(`[⚙️,[B]][💪,[2]]([x, y])`);
         expect(await th.run("mybeta(x)")).equal(`[𝛽]([x])`);
         expect(await th.run("mybeta")).equal(`[𝛽]`);
         
@@ -225,6 +225,26 @@ tau, Tau, TAU, taU = symbols('tau, Tau, TAU, taU')
 
         expect(await th.run("binomial(2, k)")).equal(`[(🏓)binom,[2],[k]]`);
         expect(await th.run("binomial(2, k)**2")).equal(`[(🏓)binom,[2],[k]][💪,[2]]`);
+        
+        expect(await th.run("FallingFactorial(3, k)")).equal(`([3])[⛏️,[k]]`);
+        expect(await th.run("RisingFactorial(3, k)")).equal(`[3][💪,([k])]`);
+
+        expect(await th.run("floor(x)")).equal(`⌊[x]⌋`);
+        expect(await th.run("ceiling(x)")).equal(`⌈[x]⌉`);
+        expect(await th.run("frac(x)")).equal(`[⚙️,[frac]]([x])`);
+        expect(await th.run("floor(x)**2")).equal(`⌊[x]⌋[💪,[2]]`);
+        expect(await th.run("ceiling(x)**2")).equal(`⌈[x]⌉[💪,[2]]`);
+        expect(await th.run("frac(x)**2")).equal(`[⚙️,[frac]][💪,[2]]([x])`);
+        
+        expect(await th.run("Min(x, 2, x**3)")).equal(`[min,]([2, x, x][💪,[3]])`);
+        expect(await th.run("Min(x, y)**2")).equal(`[min,]([x, y])[💪,[2]]`);
+        expect(await th.run("Max(x, 2, x**3)")).equal(`[max,]([2, x, x][💪,[3]])`);
+        expect(await th.run("Max(x, y)**2")).equal(`[max,]([x, y])[💪,[2]]`);
+        expect(await th.run("Abs(x)")).equal(`|[x]|`);
+        expect(await th.run("Abs(x)**2")).equal(`|[x]|[💪,[2]]`);
+        expect(await th.run("re(x)")).equal(`[⚙️,[re]]([x])`);
+        expect(await th.run("re(x + y)")).equal(`[⚙️,[re]]([x])[+][⚙️,[re]]([y])`);
+        expect(await th.run("im(x)")).equal(`[⚙️,[im]]([x])`);
 
 
     })

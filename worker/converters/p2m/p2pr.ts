@@ -136,11 +136,26 @@ export class P2Pr {
                 if (obj.name == "factorial2") {
                     return { type: "Factorial2", kind: "Container", symbols: obj.args.map(c => this.innerConvert(c)) }
                 }
+                if (obj.name == "floor") {
+                    return { type: "Brackets", kind: "Container", br: "floor", symbols: obj.args.map(c => this.innerConvert(c)) }
+                }
+                if (obj.name == "ceiling") {
+                    return { type: "Brackets", kind: "Container", br: "ceil", symbols: obj.args.map(c => this.innerConvert(c)) }
+                }
+
+
+                if (obj.name == "min" || obj.name == "max") {
+                    return { type: "GenericFunc", kind: "Container", func: obj.name, powerIndexAfter: true, symbols: obj.args.map(c => this.innerConvert(c)) }
+                }
+
 
                 return this.nameParser.parse(obj.name, (cn) => {
                     return { type: "GenericFunc", kind: "Container", func: cn, symbols: obj.args.map(c => this.innerConvert(c)) }
                 })
 
+            }
+            case "Abs": {
+                return { type: "Brackets", kind: "Container", br: "|", symbols: obj.args.map(c => this.innerConvert(c)) }
             }
             case "Str": {
                 return { type: "Str", kind: "Leaf", text: obj.text };
@@ -281,6 +296,12 @@ export class P2Pr {
             case "SpecialFuncClass": {
                 return { type: "GenericFunc", func: obj.name, specialFuncClass: true, kind: "Container", symbols: obj.args.map(c => this.innerConvert(c)) }
             }
+            case "FallingFactorial": {
+                return prTh.index(prTh.brackets(this.innerConvert(obj.args[0])), this.innerConvert(obj.args[1]))
+            }
+            case "RisingFactorial": {
+                return prTh.pow(this.innerConvert(obj.args[0]), prTh.brackets(this.innerConvert(obj.args[1])))
+            }
         }
 
         if (obj.args) {
@@ -320,7 +341,7 @@ export namespace P2Pr {
         L<"NaN"> | ConstantSymbol | C<"CoordSys3D"> | Str | BaseVector | BaseScalar | L<"VectorZero"> | Point | C<"Tuple"> | C<"BaseDyadic"> |
         Derivative | L<"Zero"> | C<"Exp"> | Relational | List | Poly | PolynomialRing | DisplayedDomain | C<"Binomial"> | UndefinedFunction |
         C<"VarList"> | C<"Integral"> | Discrete | SingularityFunction | VecExpr | C<"Index"> | JsonData | C<"Factorial"> | C<"SubFactorial"> |
-        C<"Factorial2"> |
+        C<"Factorial2"> | Brackets |
         UnknownFunc;
 
     export type VarList = C<"VarList">;
@@ -335,6 +356,10 @@ export namespace P2Pr {
     export interface VecExpr extends Container {
         type: "VecExpr";
         op: "Cross" | "Curl" | "Divergence" | "Dot" | "Gradient" | "Laplacian";
+    }
+    export interface Brackets extends Container {
+        type: "Brackets";
+        br: SupportBracket
     }
 
     export interface Discrete extends Container {
@@ -391,6 +416,7 @@ export namespace P2Pr {
         type: "GenericFunc"
         func: string;
         specialFuncClass?: boolean;
+        powerIndexAfter?: boolean;
     }
 
     export interface Str extends Leaf {
@@ -487,9 +513,9 @@ namespace P {
         U<"Exp1"> | U<"ImaginaryUnit"> | U<"Pi"> | U<"EulerGamma"> | U<"Catalan"> | U<"GoldenRatio"> | U<"TribonacciConstant"> |
         NumberSymbol | U<"HBar"> | U<"Zero"> | CoordSys3D | Str | F<"BaseVector"> | F<"BaseScalar"> | F<"VectorAdd"> | U<"VectorZero"> | F<"VectorMul"> |
         F<"Point"> | F<"Tuple"> | F<"BaseDyadic"> | Derivative | U<"BooleanFalse"> | U<"BooleanTrue"> |
-        Relational | List | Dummy | Poly |
+        Relational | List | Dummy | Poly | F<"Abs"> |
         PolynomialRing | DisplayedDomain | UndefinedFunction | F<"Integral"> | F<"Not"> | F<"And"> | F<"Or"> | F<"Implies"> |
-        F<"SingularityFunction"> |
+        F<"SingularityFunction"> | F<"FallingFactorial"> | F<"RisingFactorial"> |
         Cycle | F<"Cross"> | F<"Curl"> | F<"Divergence"> | F<"Dot"> | F<"Gradient"> | F<"Laplacian"> | SpecialFuncClass |
         UnknownFunc;
     interface FuncArgs {
@@ -599,7 +625,7 @@ namespace P {
         func: "";
     }
 
-    export type SupportBracket = "(" | "[" | "<";
+    export type SupportBracket = "(" | "[" | "<" | "floor" | "ceil" | "|";
 
     export interface F<T extends string> extends FuncArgs {
         func: T;
