@@ -6,12 +6,16 @@ import { PrAddTransform } from "./pr-transform/pr-add-transform";
 import { prCreator } from "./pr/pr-creator";
 import { prTh } from "./pr-transform/pr-transform-helper";
 import { float } from "./p2pr/float";
-import { symbol } from "./p2pr/symbol";
+import { Symbol as SymbolP2Pr } from "./p2pr/symbol";
 
 export class P2Pr {
 
     private transforms: P2Pr.IPrTransform[] = [new PrPowerTransform(), new PrFracTransform(), new PrMulTransform(), new PrSqrtTransform(), new PrAddTransform()];
+    private symbol: SymbolP2Pr;
+    constructor(symbolLatexNames: { [key: string]: string }) {
 
+        this.symbol = new SymbolP2Pr(symbolLatexNames);
+    }
     convert(obj: P.Basic, ops?: P2Pr.TransformOptions): Symbol {
         ops = Object.assign({}, { orderAdd: true, orderMul: true } as P2Pr.TransformOptions, ops)
         const rs = this.innerConvert(obj);
@@ -31,7 +35,7 @@ export class P2Pr {
                 // return { type: "Float", kind: "Leaf", value: obj.value };
             }
             case "Symbol": {
-                return symbol.parse(obj.name);
+                return this.symbol.parse(obj.name);
             }
             case "Mul": {
                 const symbols = obj.args.map(c => this.innerConvert(c));
@@ -136,7 +140,7 @@ export class P2Pr {
                 const sName = (system.args[0] as P.Str).text;
                 return {
                     type: "Index",
-                    kind: "Container",                    
+                    kind: "Container",
                     symbols: [
                         { type: "BaseVector", kind: "Leaf", name: vName },
                         { type: "Var", kind: "Leaf", name: sName, bold: true }

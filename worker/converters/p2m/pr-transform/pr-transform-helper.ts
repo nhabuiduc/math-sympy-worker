@@ -1,3 +1,4 @@
+import stringHelper from "@lib-shared/string-helper";
 import type { P2Pr } from "../p2pr";
 
 const enum EnumPosWeight {
@@ -244,7 +245,7 @@ class PrTransformHelper {
     }
 
     isSingleVar(s: Symbol): boolean {
-        return s.type == "Var" && s.name.length == 1;
+        return s.type == "Var" && stringHelper.length(s.name) == 1;
     }
 
     isIntegerValue(s: Symbol): boolean {
@@ -276,12 +277,21 @@ class PrTransformHelper {
         return { type: "Integer", kind: "Leaf", value: vl }
     }
 
-    pow(base: Symbol, root: Symbol): P2Pr.Pow {
-        return {
+    index(base: Symbol, index: Symbol): P2Pr.Index {
+        return { type: "Index", kind: "Container", symbols: [base, index] };
+    }
+
+    pow(base: Symbol, root: Symbol, index?: Symbol): P2Pr.Pow {
+        const rs: P2Pr.Pow = {
             type: "Pow",
             kind: "Container",
             symbols: [base, root]
         }
+        if (index) {
+            rs.symbols.push(index);
+        }
+
+        return rs;
     }
 }
 

@@ -7,8 +7,8 @@ import { P2Pr } from "./p2m/p2pr";
 export class CasConverter {
     private p2m: P2M;
     private m2p: M2P;
-    constructor(constantTextFuncSet: Set<string>) {
-        this.p2m = new P2M(constantTextFuncSet);
+    constructor(constantTextFuncSet: Set<string>, symbolLatexNames: { [key: string]: string }) {
+        this.p2m = new P2M(constantTextFuncSet, symbolLatexNames);
         this.m2p = new M2P(constantTextFuncSet);
     }
 

@@ -11,7 +11,7 @@ export class CasEngineProcess {
         console.log(pythonRunner.runRaw);
 
         const constantTextFuncSet = new Set(iniCtx.constantTextFuncs);
-        this.casConverter = new CasConverter(constantTextFuncSet);
+        this.casConverter = new CasConverter(constantTextFuncSet, iniCtx.symbolLatexNames);
 
     }
 

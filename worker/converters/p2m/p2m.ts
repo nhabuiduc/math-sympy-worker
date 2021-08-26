@@ -5,8 +5,8 @@ export class P2M {
     private p2Pr: P2Pr;
     private pr2m: Pr2M;
 
-    constructor(constantTextFuncSet: Set<string>) {
-        this.p2Pr = new P2Pr();
+    constructor(constantTextFuncSet: Set<string>, symbolLatexNames: { [key: string]: string }) {
+        this.p2Pr = new P2Pr(symbolLatexNames);
         this.pr2m = new Pr2M(constantTextFuncSet)
     }
 

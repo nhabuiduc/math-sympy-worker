@@ -146,6 +146,21 @@ tau, Tau, TAU, taU = symbols('tau, Tau, TAU, taU')
         expect(await th.run("Tau")).equal(`[T]`);
         expect(await th.run("TAU")).equal(`[𝜏]`);
         expect(await th.run("taU")).equal(`[𝜏]`);
+
+        expect(await th.run("Gamma + lmbda")).equal(`[𝛤+𝜆]`);
+        expect(await th.run("Gamma * lmbda")).equal(`[𝛤𝜆]`);
+        expect(await th.run("Symbol('q1')")).equal(`[q][⛏️,[1]]`);
+        expect(await th.run("Symbol('q21')")).equal(`[q][⛏️,[21]]`);
+        expect(await th.run("Symbol('epsilon0')")).equal(`[𝜖][⛏️,[0]]`);
+        expect(await th.run("Symbol('omega1')")).equal(`[𝜔][⛏️,[1]]`);
+        expect(await th.run("Symbol('91')")).equal(`[91]`);
+        expect(await th.run("Symbol('alpha_new')")).equal(`[𝛼][⛏️,[new]]`);
+        expect(await th.run("Symbol('C^orig')")).equal(`[C][💪,[orig]]`);
+        expect(await th.run("Symbol('x^alpha')")).equal(`[x][💪,[𝛼]]`);
+        expect(await th.run("Symbol('beta^alpha')")).equal(`[𝛽][💪,[𝛼]]`);
+        expect(await th.run("Symbol('e^Alpha')")).equal(`[e][💪,[𝛢]]`);
+        expect(await th.run("Symbol('omega_alpha^beta')")).equal(`[𝜔][💪,[𝛽],[𝛼]]`);
+        expect(await th.run("Symbol('omega') ** Symbol('beta')")).equal(`[𝜔][💪,[𝛽]]`);
     })
 
 });
