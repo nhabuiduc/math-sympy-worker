@@ -6,15 +6,18 @@ import { PrAddTransform } from "./pr-transform/pr-add-transform";
 import { prTh } from "./pr-transform/pr-transform-helper";
 import { float } from "./p2pr/float";
 import { Symbol as SymbolP2Pr } from "./p2pr/symbol";
+import { NameParser } from "./p2pr/name-parser";
 
 export class P2Pr {
 
     private transforms: P2Pr.IPrTransform[] = [new PrPowerTransform(), new PrFracTransform(), new PrMulTransform(), new PrSqrtTransform(), new PrAddTransform()];
     private symbol: SymbolP2Pr;
+    private nameParser: NameParser;
     constructor(symbolLatexNames: { [key: string]: string }) {
-
-        this.symbol = new SymbolP2Pr(symbolLatexNames);
+        this.nameParser = new NameParser(symbolLatexNames);
+        this.symbol = new SymbolP2Pr(this.nameParser);
     }
+
     convert(obj: P.Basic, ops?: P2Pr.TransformOptions): Symbol {
         ops = Object.assign({}, { orderAdd: true, orderMul: true } as P2Pr.TransformOptions, ops)
         const rs = this.innerConvert(obj);
@@ -124,7 +127,11 @@ export class P2Pr {
                 if (obj.name == "NoneType") {
                     return { type: "ConstantSymbol", kind: "Leaf", showType: "text", name: "None" }
                 }
-                return { type: "GenericFunc", kind: "Container", func: obj.name, symbols: obj.args.map(c => this.innerConvert(c)) }
+
+                return this.nameParser.parse(obj.name, (cn) => {
+                    return { type: "GenericFunc", kind: "Container", func: cn, symbols: obj.args.map(c => this.innerConvert(c)) }
+                })
+
             }
             case "Str": {
                 return { type: "Str", kind: "Leaf", text: obj.text };
@@ -221,7 +228,7 @@ export class P2Pr {
             }
 
             case "UndefinedFunction": {
-                return { type: "UndefinedFunction", kind: "Leaf", name: obj.name };
+                return this.nameParser.parse(obj.name, cn => ({ type: "UndefinedFunction", kind: "Leaf", name: cn }))
             }
             case "Implies":
             case "Not":
@@ -268,8 +275,9 @@ export class P2Pr {
         }
 
         if (obj.args) {
-            return { type: "UnknownFunc", name: obj.func, kind: "Container", symbols: obj.args.map(c => this.innerConvert(c)) };
+            return this.nameParser.parse(obj.func, cn => ({ type: "UnknownFunc", name: cn, kind: "Container", symbols: obj.args.map(c => this.innerConvert(c)) }))
         }
+        return { type: "Var", kind: "Leaf", name: "?" }
     }
 
     private detectUnevaluatedMul(symbols: Symbol[]): boolean {

@@ -196,11 +196,22 @@ tau, Tau, TAU, taU = symbols('tau, Tau, TAU, taU')
         expect(await th.run("g")).equal(`[𝛾]`);
         
         await th.prepare(`a1 = Function('a_1')`);
-        expect(await th.run("a1")).equal(`[operatorname,[a_1]]`);
-        expect(await th.run("a1(x)")).equal(`[operatorname,[a_1]]([x])`);
+        expect(await th.run("a1")).equal(`[a][⛏️,[1]]`);
+        expect(await th.run("a1(x)")).equal(`[a][⛏️,[1]]([x])`);
         
         await th.prepare(`omega1 = Function('omega1')`);
-        expect(await th.run("omega1")).equal(`[operatorname,[a_1]]([x])`);
+        expect(await th.run("omega1")).equal(`[𝜔][⛏️,[1]]`);
+        expect(await th.run("omega1(x)")).equal(`[𝜔][⛏️,[1]]([x])`);
+
+        expect(await th.run("sin(x)")).equal(`[sin,]([x])`);
+        expect(await th.run("sin(2*x**2)")).equal(`[sin,]([2x][💪,[2]])`);
+        expect(await th.run("sin(x**2)")).equal(`[sin,]([x][💪,[2]])`);
+
+        expect(await th.run("asin(x)**2")).equal(`[asin,][💪,[2]]([x])`);
+        expect(await th.run("acsc(x)")).equal(`[acsc,]([x])`);
+        expect(await th.run("asinh(x)")).equal(`[asinh,]([x])`);
+
+        expect(await th.run("factorial(k)")).equal(`[asinh,]([x])`);
 
 
     })

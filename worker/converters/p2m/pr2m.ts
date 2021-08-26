@@ -148,6 +148,7 @@ export class Pr2M {
                 return { blocks: name.concat(args) }
             }
             case "UndefinedFunction": {
+                
                 if (stringHelper.length(obj.name) == 1) {
                     return { blocks: [blockBd.textBlock(obj.name)] }
                 }
