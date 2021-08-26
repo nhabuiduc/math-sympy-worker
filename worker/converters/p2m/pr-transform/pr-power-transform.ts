@@ -42,7 +42,6 @@ export class PrPowerTransform implements P2Pr.IPrTransform {
                         type: "Pow",
                         kind: "Container",
                         symbols: [symbol.symbols[0], { type: "Integer", kind: "Leaf", value: -root.value }],
-                        indexJson: undefined,
                     })]
                 }
             }
@@ -63,15 +62,15 @@ export class PrPowerTransform implements P2Pr.IPrTransform {
                 return this.powerRationalToSqrt(this.transformSpecialPower(symbol.symbols[0]), root, symbol);
             }
 
-            if (symbol.symbols[0].type == "Var" && symbol.symbols[0].indexJson) {
-                symbol.indexJson = symbol.symbols[0].indexJson;
-                symbol.symbols[0].indexJson = undefined;
+            if (symbol.symbols[0].type == "Index" && !symbol.symbols[2]) {
+                symbol.symbols.push(symbol.symbols[0].symbols[1]);
+                symbol.symbols[0] = symbol.symbols[0].symbols[0];
             }
 
-            if ((symbol.symbols[0].type == "BaseVector" || symbol.symbols[0].type == "BaseScalar") && !!symbol.symbols[0].systemName && !symbol.symbols[2]) {
-                symbol.symbols.push({ type: "Var", kind: "Leaf", name: symbol.symbols[0].systemName, indexJson: undefined, bold: true });
-                symbol.symbols[0].systemName = undefined;
-            }
+            // if ((symbol.symbols[0].type == "BaseVector" || symbol.symbols[0].type == "BaseScalar") && !!symbol.symbols[0].systemName && !symbol.symbols[2]) {
+            //     symbol.symbols.push({ type: "Var", kind: "Leaf", name: symbol.symbols[0].systemName, bold: true });
+            //     symbol.symbols[0].systemName = undefined;
+            // }
 
             return { ...symbol, symbols: symbol.symbols.map(s => this.transformSpecialPower(s)) }
         }

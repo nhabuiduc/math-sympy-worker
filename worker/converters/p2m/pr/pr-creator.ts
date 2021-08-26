@@ -20,7 +20,7 @@ class PrCreator {
     }
 
     power(base: Symbol, vl: number): P2Pr.Pow {
-        return { type: "Pow", kind: "Container", symbols: [base, this.integer(vl)], indexJson: undefined };
+        return { type: "Pow", kind: "Container", symbols: [base, this.integer(vl)] };
     }
 
     frac(num: Symbol, den: Symbol): P2Pr.Frac {

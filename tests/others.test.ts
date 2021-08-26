@@ -13,8 +13,6 @@ describe("3: Others", () => {
     });
 
     it("symbol with multiple characters", async () => {
-
-
         expect(await th.run("x_star**2")).equal(`([x^*])[💪,[2]]`);
         expect(await th.run("Derivative(f(x_star), x_star,2)")).equal(`[frac,[d][💪,[2]],[d]([x^*])[💪,[2]]][f]([x^*])`);
 
@@ -104,38 +102,50 @@ describe("3: Others", () => {
         expect(await th.run("Float('10000.0')")).equal(`[10000.0]`);
         expect(await th.run("Float('0.099999')")).equal(`[0.099999]`);
     });
-    
+
     it("Vector Expressions", async () => {
         await th.prepare(`A = CoordSys3D('A')`);
-        expect(await th.run("Cross(A.i, A.j*A.x*3+A.k)")).equal(`[🎩,[i],bf][⛏️,[A],bf][×]([🎩,[k],bf][⛏️,[A],bf][+3][x,bf][⛏️,[A],bf][🎩,[j],bf][⛏️,[A],bf])`);
-        expect(await th.run("Cross(A.i, A.j)")).equal(`[🎩,[i],bf][⛏️,[A],bf][×][🎩,[j],bf][⛏️,[A],bf]`);
-        expect(await th.run("x*Cross(A.i, A.j)")).equal(`[x]([🎩,[i],bf][⛏️,[A],bf][×][🎩,[j],bf][⛏️,[A],bf])`);
-        expect(await th.run("Cross(x*A.i, A.j)")).equal(`[-]([🎩,[j],bf][⛏️,[A],bf][×]([x][🎩,[i],bf][⛏️,[A],bf]))`);
+        expect(await th.run("Cross(A.i, A.j*A.x*3+A.k)")).equal(`[🎩,[i],bf][⛏️,[A,bf]][×]([🎩,[k],bf][⛏️,[A,bf]][+3][x,bf][⛏️,[A,bf]][🎩,[j],bf][⛏️,[A,bf]])`);
+        expect(await th.run("Cross(A.i, A.j)")).equal(`[🎩,[i],bf][⛏️,[A,bf]][×][🎩,[j],bf][⛏️,[A,bf]]`);
+        expect(await th.run("x*Cross(A.i, A.j)")).equal(`[x]([🎩,[i],bf][⛏️,[A,bf]][×][🎩,[j],bf][⛏️,[A,bf]])`);
+        expect(await th.run("Cross(x*A.i, A.j)")).equal(`[-]([🎩,[j],bf][⛏️,[A,bf]][×]([x][🎩,[i],bf][⛏️,[A,bf]]))`);
 
-        expect(await th.run("Curl(3*A.x*A.j)")).equal(`[∇×]([3][x,bf][⛏️,[A],bf][🎩,[j],bf][⛏️,[A],bf])`);
-        expect(await th.run("Curl(3*A.x*A.j+A.i)")).equal(`[∇×]([🎩,[i],bf][⛏️,[A],bf][+3][x,bf][⛏️,[A],bf][🎩,[j],bf][⛏️,[A],bf])`);
-        expect(await th.run("Curl(3*x*A.x*A.j)")).equal(`[∇×]([3x][x,bf][⛏️,[A],bf][🎩,[j],bf][⛏️,[A],bf])`);
-        expect(await th.run("x*Curl(3*A.x*A.j)")).equal(`[x]([∇×]([3][x,bf][⛏️,[A],bf][🎩,[j],bf][⛏️,[A],bf]))`);
+        expect(await th.run("Curl(3*A.x*A.j)")).equal(`[∇×]([3][x,bf][⛏️,[A,bf]][🎩,[j],bf][⛏️,[A,bf]])`);
+        expect(await th.run("Curl(3*A.x*A.j+A.i)")).equal(`[∇×]([🎩,[i],bf][⛏️,[A,bf]][+3][x,bf][⛏️,[A,bf]][🎩,[j],bf][⛏️,[A,bf]])`);
+        expect(await th.run("Curl(3*x*A.x*A.j)")).equal(`[∇×]([3x][x,bf][⛏️,[A,bf]][🎩,[j],bf][⛏️,[A,bf]])`);
+        expect(await th.run("x*Curl(3*A.x*A.j)")).equal(`[x]([∇×]([3][x,bf][⛏️,[A,bf]][🎩,[j],bf][⛏️,[A,bf]]))`);
 
-        expect(await th.run("Divergence(3*A.x*A.j+A.i)")).equal(`[∇⋅]([🎩,[i],bf][⛏️,[A],bf][+3][x,bf][⛏️,[A],bf][🎩,[j],bf][⛏️,[A],bf])`);
-        expect(await th.run("Divergence(3*A.x*A.j)")).equal(`[∇⋅]([3][x,bf][⛏️,[A],bf][🎩,[j],bf][⛏️,[A],bf])`);
-        expect(await th.run("x*Divergence(3*A.x*A.j)")).equal(`[x]([∇⋅]([3][x,bf][⛏️,[A],bf][🎩,[j],bf][⛏️,[A],bf]))`);
+        expect(await th.run("Divergence(3*A.x*A.j+A.i)")).equal(`[∇⋅]([🎩,[i],bf][⛏️,[A,bf]][+3][x,bf][⛏️,[A,bf]][🎩,[j],bf][⛏️,[A,bf]])`);
+        expect(await th.run("Divergence(3*A.x*A.j)")).equal(`[∇⋅]([3][x,bf][⛏️,[A,bf]][🎩,[j],bf][⛏️,[A,bf]])`);
+        expect(await th.run("x*Divergence(3*A.x*A.j)")).equal(`[x]([∇⋅]([3][x,bf][⛏️,[A,bf]][🎩,[j],bf][⛏️,[A,bf]]))`);
 
-        expect(await th.run("Dot(A.i, A.j*A.x*3+A.k)")).equal(`[🎩,[i],bf][⛏️,[A],bf][⋅]([🎩,[k],bf][⛏️,[A],bf][+3][x,bf][⛏️,[A],bf][🎩,[j],bf][⛏️,[A],bf])`);
-        expect(await th.run("Dot(A.i, A.j)")).equal(`[🎩,[i],bf][⛏️,[A],bf][⋅][🎩,[j],bf][⛏️,[A],bf]`);
-        expect(await th.run("Dot(x*A.i, A.j)")).equal(`[🎩,[j],bf][⛏️,[A],bf][⋅]([x][🎩,[i],bf][⛏️,[A],bf])`);
-        expect(await th.run("x*Dot(A.i, A.j)")).equal(`[x]([🎩,[i],bf][⛏️,[A],bf][⋅][🎩,[j],bf][⛏️,[A],bf])`);
+        expect(await th.run("Dot(A.i, A.j*A.x*3+A.k)")).equal(`[🎩,[i],bf][⛏️,[A,bf]][⋅]([🎩,[k],bf][⛏️,[A,bf]][+3][x,bf][⛏️,[A,bf]][🎩,[j],bf][⛏️,[A,bf]])`);
+        expect(await th.run("Dot(A.i, A.j)")).equal(`[🎩,[i],bf][⛏️,[A,bf]][⋅][🎩,[j],bf][⛏️,[A,bf]]`);
+        expect(await th.run("Dot(x*A.i, A.j)")).equal(`[🎩,[j],bf][⛏️,[A,bf]][⋅]([x][🎩,[i],bf][⛏️,[A,bf]])`);
+        expect(await th.run("x*Dot(A.i, A.j)")).equal(`[x]([🎩,[i],bf][⛏️,[A,bf]][⋅][🎩,[j],bf][⛏️,[A,bf]])`);
 
-        expect(await th.run("Gradient(A.x)")).equal(`[∇][x,bf][⛏️,[A],bf]`);
-        expect(await th.run("Gradient(A.x + 3*A.y)")).equal(`[∇]([3][y,bf][⛏️,[A],bf][+][x,bf][⛏️,[A],bf])`);
-        expect(await th.run("x*Gradient(A.x)")).equal(`[x]([∇][x,bf][⛏️,[A],bf])`);
-        expect(await th.run("Gradient(x*A.x)")).equal(`[∇]([x][x,bf][⛏️,[A],bf])`);
+        expect(await th.run("Gradient(A.x)")).equal(`[∇][x,bf][⛏️,[A,bf]]`);
+        expect(await th.run("Gradient(A.x + 3*A.y)")).equal(`[∇]([3][y,bf][⛏️,[A,bf]][+][x,bf][⛏️,[A,bf]])`);
+        expect(await th.run("x*Gradient(A.x)")).equal(`[x]([∇][x,bf][⛏️,[A,bf]])`);
+        expect(await th.run("Gradient(x*A.x)")).equal(`[∇]([x][x,bf][⛏️,[A,bf]])`);
 
-        expect(await th.run("Laplacian(A.x)")).equal(`[▵][x,bf][⛏️,[A],bf]`);
-        expect(await th.run("Laplacian(A.x + 3*A.y)")).equal(`[▵]([3][y,bf][⛏️,[A],bf][+][x,bf][⛏️,[A],bf])`);
-        expect(await th.run("x*Laplacian(A.x)")).equal(`[x]([▵][x,bf][⛏️,[A],bf])`);
-        expect(await th.run("Laplacian(x*A.x)")).equal(`[▵]([x][x,bf][⛏️,[A],bf])`);
+        expect(await th.run("Laplacian(A.x)")).equal(`[▵][x,bf][⛏️,[A,bf]]`);
+        expect(await th.run("Laplacian(A.x + 3*A.y)")).equal(`[▵]([3][y,bf][⛏️,[A,bf]][+][x,bf][⛏️,[A,bf]])`);
+        expect(await th.run("x*Laplacian(A.x)")).equal(`[x]([▵][x,bf][⛏️,[A,bf]])`);
+        expect(await th.run("Laplacian(x*A.x)")).equal(`[▵]([x][x,bf][⛏️,[A,bf]])`);
+    });
 
+    /**skip handle Latex inside symbol name for now */
+    it.only("Symbols", async () => {
+        await th.prepare(`
+Gamma, lmbda, rho = symbols('Gamma, lambda, rho')
+tau, Tau, TAU, taU = symbols('tau, Tau, TAU, taU')
+        `);
+
+        expect(await th.run("tau")).equal(`[𝜏]`);
+        expect(await th.run("Tau")).equal(`[T]`);
+        expect(await th.run("TAU")).equal(`[𝜏]`);
+        expect(await th.run("taU")).equal(`[𝜏]`);
     })
 
 });

@@ -1,7 +1,5 @@
-import { generator } from "@lib-shared/id-generator";
 import { _l } from "../../light-lodash";
 import { prTh } from "./pr-transform/pr-transform-helper";
-import { symbolIndexSerialize } from "../../symbol-index-serializer";
 import type { P2Pr } from "./p2pr";
 import { tabularKeyInfoHelper } from "@lib-shared/tabular-key-info-helper";
 import { blockBd } from "./block-bd";
@@ -12,6 +10,7 @@ import { Mul } from "./pr2m/mul";
 import { Discrete } from "./pr2m/discrete";
 import { Add } from "./pr2m/add";
 import { Pr2MCommon } from "./pr2m/pr2m-common";
+import { symbolIndexSerialize } from "@sympy-worker/symbol-index-serializer";
 
 export class Pr2M {
     private derivative = new Derivative(this);
@@ -87,7 +86,19 @@ export class Pr2M {
                 // return this.common.join(obj.symbols, "×");
             }
             case "Pow": {
-                return this.buildPow(obj, obj.symbols, level);
+                return this.buildPow(obj.symbols, level);
+            }
+            case "Index": {
+
+                return {
+                    blocks: [
+                        ...this.innerConvert(obj.symbols[0], level).blocks,
+                        blockBd.indexBlock(this.innerConvert(obj.symbols[1], level).blocks)
+                    ]
+                }
+            }
+            case "JsonData": {
+                return { blocks: symbolIndexSerialize.parseJson(obj.data).lines[0].blocks }
             }
             case "Frac": {
                 return this.buildFrac(obj.symbols);
@@ -149,20 +160,16 @@ export class Pr2M {
                 return this.convertFullNameFunc(obj.type, obj.symbols);
             }
             case "BaseVector": {
-                const systemNameBlocks = obj.systemName ? [blockBd.indexBlock(obj.systemName, { mathType: "\\mathbf" })] : [];
                 return {
                     blocks: [
                         blockBd.hat(obj.name, { mathType: "\\mathbf" }),
-                        ...systemNameBlocks,
                     ]
                 }
             }
             case "BaseScalar": {
-                const systemNameBlocks = obj.systemName ? [blockBd.indexBlock(obj.systemName, { mathType: "\\mathbf" })] : [];
                 return {
                     blocks: [
                         blockBd.textBlock(obj.name, { mathType: "\\mathbf" }),
-                        ...systemNameBlocks,
                     ]
                 }
             }
@@ -295,16 +302,6 @@ export class Pr2M {
     }
 
     private convertVarSymbol(obj: P2Pr.Var): CResult {
-        if (obj.indexJson) {
-            const { lines } = symbolIndexSerialize.parseJson(obj.indexJson);
-
-            return {
-                blocks: [
-                    blockBd.textBlock(obj.name),
-                    blockBd.indexBlock(lines),
-                ]
-            }
-        }
         return { blocks: [blockBd.textBlock(obj.name, obj.bold ? { mathType: "\\mathbf" } : undefined)], }
     }
 
@@ -349,7 +346,7 @@ export class Pr2M {
 
 
 
-    private buildPow(pow: { indexJson: string }, args: P2Pr.Symbol[], level: number): CResult {
+    private buildPow(args: P2Pr.Symbol[], level: number): CResult {
         if (args.length > 3) {
             throw new Error("Unsupported power with different than 2,3 arguments");
         }
@@ -365,15 +362,16 @@ export class Pr2M {
         }
 
         const power = this.innerConvert(args[1], 0).blocks;
-        if (pow.indexJson) {
-            const cBlock = blockBd.compositeBlock("\\power-index", ["powerValue"], [power]);
-            (cBlock.elements["indexValue"] as EditorModel) = {
-                id: generator.nextId(),
-                lines: symbolIndexSerialize.parseJson(pow.indexJson).lines,
-            }
+        // if (pow.indexJson) {
+        //     const cBlock = blockBd.compositeBlock("\\power-index", ["powerValue"], [power]);
+        //     (cBlock.elements["indexValue"] as EditorModel) = {
+        //         id: generator.nextId(),
+        //         lines: symbolIndexSerialize.parseJson(pow.indexJson).lines,
+        //     }
 
-            return { blocks: base.concat([cBlock]), }
-        } else if (args[2]) {
+        //     return { blocks: base.concat([cBlock]), }
+        // } else 
+        if (args[2]) {
             const index = this.innerConvert(args[2], 0).blocks;
             const cBlock = blockBd.compositeBlock("\\power-index", ["powerValue", "indexValue"], [power, index]);
             return { blocks: base.concat([cBlock]), };

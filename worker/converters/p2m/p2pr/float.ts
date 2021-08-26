@@ -22,7 +22,6 @@ class Float {
             }, {
                 type: "Pow",
                 kind: "Container",
-                indexJson: undefined,
                 symbols: [{
                     type: "Integer",
                     kind: "Leaf",

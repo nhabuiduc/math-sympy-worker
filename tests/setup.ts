@@ -9,7 +9,7 @@ exports.mochaGlobalSetup = async function () {
     const loader = new ServicePyodideLoader();
     const pyodide = await loader.load(() => { }, 4893);
     console.log(pyodide.runRaw);
-    const casEngineProcess = new CasEngineProcess(pyodide, { constantTextFuncs: [] })
+    const casEngineProcess = new CasEngineProcess(pyodide, { constantTextFuncs: [], symbolLatexNames: {} })
     global.XMLHttpRequest = XMLHttpRequest;
     global.casEngineProcess = casEngineProcess;
     global.pyodide = pyodide;

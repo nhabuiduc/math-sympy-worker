@@ -280,7 +280,6 @@ class PrTransformHelper {
         return {
             type: "Pow",
             kind: "Container",
-            indexJson: undefined,
             symbols: [base, root]
         }
     }

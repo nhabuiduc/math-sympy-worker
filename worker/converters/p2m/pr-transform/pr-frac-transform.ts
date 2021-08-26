@@ -30,7 +30,6 @@ export class PrFracTransform implements P2Pr.IPrTransform {
                 return {
                     type: "Pow",
                     kind: "Container",
-                    indexJson: undefined,
                     symbols: [{
                         type: "Frac",
                         kind: "Container",

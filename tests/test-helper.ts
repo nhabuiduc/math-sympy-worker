@@ -4,7 +4,7 @@ declare const pyodide: PyodideNs.PythonRunner;
 
 
 class TestHelper {
-    private casEngineProcess = new CasEngineProcess(pyodide, { constantTextFuncs: constFuncs })
+    private casEngineProcess = new CasEngineProcess(pyodide, { constantTextFuncs: constFuncs, symbolLatexNames: {} })
     async prepare(statement: string): Promise<void> {
         this.casEngineProcess.processRaw(statement, false);
     }

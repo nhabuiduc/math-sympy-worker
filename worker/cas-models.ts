@@ -58,5 +58,6 @@ export namespace CasMd {
 
     export interface WorkerInitCtx {
         constantTextFuncs: string[];
+        symbolLatexNames: { [key: string]: string };
     }
 }

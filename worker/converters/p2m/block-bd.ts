@@ -26,24 +26,25 @@ class BlockBd {
         return this.compositeBlock("\\power-index", ["powerValue"], [text], style);
     }
 
-    indexBlock(linesOrText: LineModel[] | string, style?: BlockStyle): BlockModel {
-        if (typeof linesOrText == "string") {
-            return this.compositeBlock("\\power-index", ["indexValue"], [[this.textBlock(linesOrText)]], style);
+    indexBlock(blocksOrText: BlockModel[] | string, style?: BlockStyle): BlockModel {
+        if (typeof blocksOrText == "string") {
+            return this.compositeBlock("\\power-index", ["indexValue"], [[this.textBlock(blocksOrText)]], style);
         }
 
-        const compositeBlock: CompositeBlockModel = {
-            id: generator.nextId(),
-            type: "composite",
-            text: "\\power-index",
-            elements: {
-                indexValue: {
-                    id: generator.nextId(),
-                    lines: linesOrText,
-                }
-            },
-            style
-        }
-        return compositeBlock;
+        return this.compositeBlock("\\power-index", ["indexValue"], [blocksOrText])
+        // const compositeBlock: CompositeBlockModel = {
+        //     id: generator.nextId(),
+        //     type: "composite",
+        //     text: "\\power-index",
+        //     elements: {
+        //         indexValue: {
+        //             id: generator.nextId(),
+        //             lines: blocksOrText,
+        //         }
+        //     },
+        //     style
+        // }
+        // return compositeBlock;
     }
     bracketBlock(bracket: BlockBd.SupportBracket): BlockModel {
         return { id: generator.nextId(), type: "single", text: bracket }

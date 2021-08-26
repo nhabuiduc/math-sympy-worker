@@ -6,6 +6,7 @@ import { PrAddTransform } from "./pr-transform/pr-add-transform";
 import { prCreator } from "./pr/pr-creator";
 import { prTh } from "./pr-transform/pr-transform-helper";
 import { float } from "./p2pr/float";
+import { symbol } from "./p2pr/symbol";
 
 export class P2Pr {
 
@@ -30,7 +31,7 @@ export class P2Pr {
                 // return { type: "Float", kind: "Leaf", value: obj.value };
             }
             case "Symbol": {
-                return this.parseSymbol(obj);
+                return symbol.parse(obj.name);
             }
             case "Mul": {
                 const symbols = obj.args.map(c => this.innerConvert(c));
@@ -42,8 +43,9 @@ export class P2Pr {
                 }
             }
             case "Pow": {
-                return { type: "Pow", kind: "Container", symbols: obj.args.map(c => this.innerConvert(c)), indexJson: undefined }
+                return { type: "Pow", kind: "Container", symbols: obj.args.map(c => this.innerConvert(c)) }
             }
+
             case "NegativeOne": {
                 return { type: "NegativeOne", kind: "Leaf" }
             }
@@ -132,7 +134,14 @@ export class P2Pr {
                 const system = obj.args[1] as P.CoordSys3D;
                 const vName = system.vectorNames[vIdx];
                 const sName = (system.args[0] as P.Str).text;
-                return { type: "BaseVector", kind: "Leaf", name: vName, systemName: sName }
+                return {
+                    type: "Index",
+                    kind: "Container",                    
+                    symbols: [
+                        { type: "BaseVector", kind: "Leaf", name: vName },
+                        { type: "Var", kind: "Leaf", name: sName, bold: true }
+                    ]
+                }
             }
 
             case "BaseScalar": {
@@ -140,7 +149,14 @@ export class P2Pr {
                 const system = obj.args[1] as P.CoordSys3D;
                 const vName = system.variableNames[vIdx];
                 const sName = (system.args[0] as P.Str).text;
-                return { type: "BaseScalar", kind: "Leaf", name: vName, systemName: sName }
+                return {
+                    type: "Index",
+                    kind: "Container",
+                    symbols: [
+                        { type: "BaseScalar", kind: "Leaf", name: vName },
+                        { type: "Var", kind: "Leaf", name: sName, bold: true }
+                    ]
+                }
             }
             case "VectorAdd": {
                 return { type: "Add", kind: "Container", symbols: obj.args.map(c => this.innerConvert(c)) }
@@ -263,19 +279,6 @@ export class P2Pr {
 
         throw new Error("Unsupported symbol for parsing integer");
     }
-
-    private parseSymbol(s: P.Symbol): P2Pr.Var {
-        const splitIdx = s.name.indexOf("|");
-        if (splitIdx < 0) {
-            return { type: "Var", kind: "Leaf", name: s.name, indexJson: undefined };
-        }
-
-        return { type: "Var", kind: "Leaf", name: s.name.substr(0, splitIdx), indexJson: s.name.substr(splitIdx + 1) };
-    }
-
-    // transform(symbol: Symbol): Symbol {
-    //     return this.transforms.reduce((prev, cur) => cur.transform(prev), symbol);
-    // }
 }
 
 type Symbol = P2Pr.Symbol;
@@ -293,7 +296,7 @@ export namespace P2Pr {
     export type Symbol = Mul | C<"Add"> | L<"One"> | L<"NegativeOne"> | Integer | Var | Pow | Matrix | C<"Frac"> | Float | L<"Half"> | C<"Sqrt"> | GenericFunc |
         L<"NaN"> | ConstantSymbol | C<"CoordSys3D"> | Str | BaseVector | BaseScalar | L<"VectorZero"> | Point | C<"Tuple"> | C<"BaseDyadic"> |
         Derivative | L<"Zero"> | C<"Exp"> | Relational | List | Poly | PolynomialRing | DisplayedDomain | C<"Binomial"> | UndefinedFunction |
-        C<"VarList"> | C<"Integral"> | Discrete | SingularityFunction | VecExpr |
+        C<"VarList"> | C<"Integral"> | Discrete | SingularityFunction | VecExpr | C<"Index"> | JsonData |
         UnknownFunc;
 
     export type VarList = C<"VarList">;
@@ -303,6 +306,7 @@ export namespace P2Pr {
     export type Add = C<"Add">;
     export type Sqrt = C<"Sqrt">;
     export type NegativeOne = L<"NegativeOne">;
+    export type Index = C<"Index">;
 
     export interface VecExpr extends Container {
         type: "VecExpr";
@@ -339,13 +343,17 @@ export namespace P2Pr {
     export interface Var extends Leaf {
         type: "Var";
         name: string;
-        indexJson?: string;
         bold?: boolean;
     }
 
+    export interface JsonData extends Leaf {
+        type: "JsonData";
+        data: string;
+    }
+
+
     export interface Pow extends Container {
         type: "Pow";
-        indexJson: string;
     }
 
 
@@ -370,12 +378,10 @@ export namespace P2Pr {
     export interface BaseVector extends Leaf {
         type: "BaseVector",
         name: string;
-        systemName: string;
     }
     export interface BaseScalar extends Leaf {
         type: "BaseScalar",
         name: string;
-        systemName: string;
     }
 
     export interface Point extends Container {
