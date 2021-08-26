@@ -9,19 +9,26 @@ import { Float } from "./pr2m/float";
 import { Mul } from "./pr2m/mul";
 import { Discrete } from "./pr2m/discrete";
 import { Add } from "./pr2m/add";
+import { Pow } from "./pr2m/pow";
+
 import { Pr2MCommon } from "./pr2m/pr2m-common";
 import { symbolIndexSerialize } from "@sympy-worker/symbol-index-serializer";
+import stringHelper from "@lib-shared/string-helper";
 
 export class Pr2M {
     private derivative = new Derivative(this);
     private integral = new Integral(this);
     private float = new Float();
     private mul = new Mul(this);
-    private discrete = new Discrete(this);
+    private discrete: Discrete;
     private add = new Add(this);
-    private common = new Pr2MCommon(this);
+    private pow: Pow;
+    private prCommon: Pr2MCommon;
 
-    constructor(private constantTextFuncSet: Set<string>) {
+    constructor(private constantTextFuncSet: Set<string>, private symbolLatexNames: { [key: string]: string }) {
+        this.prCommon = new Pr2MCommon(this, constantTextFuncSet, symbolLatexNames);
+        this.pow = new Pow(this, this.prCommon);
+        this.discrete = new Discrete(this, this.prCommon);
     }
 
     convert(obj: P2Pr.Symbol, level = 0): CResult {
@@ -75,21 +82,33 @@ export class Pr2M {
             }
             case "VecExpr": {
                 switch (obj.op) {
-                    case "Cross": return this.common.join(obj.symbols, "×");
-                    case "Curl": return this.common.join([prTh.var("∇") as Symbol].concat(obj.symbols), "×");
-                    case "Divergence": return this.common.join([prTh.var("∇") as Symbol].concat(obj.symbols), "⋅");
-                    case "Dot": return this.common.join(obj.symbols, "⋅");
-                    case "Gradient": return this.common.join([prTh.var("∇") as Symbol].concat(obj.symbols));
-                    case "Laplacian": return this.common.join([prTh.var("▵") as Symbol].concat(obj.symbols));
+                    case "Cross": return this.prCommon.join(obj.symbols, "×");
+                    case "Curl": return this.prCommon.join([prTh.var("∇") as Symbol].concat(obj.symbols), "×");
+                    case "Divergence": return this.prCommon.join([prTh.var("∇") as Symbol].concat(obj.symbols), "⋅");
+                    case "Dot": return this.prCommon.join(obj.symbols, "⋅");
+                    case "Gradient": return this.prCommon.join([prTh.var("∇") as Symbol].concat(obj.symbols));
+                    case "Laplacian": return this.prCommon.join([prTh.var("▵") as Symbol].concat(obj.symbols));
                 }
 
                 // return this.common.join(obj.symbols, "×");
             }
             case "Pow": {
-                return this.buildPow(obj.symbols, level);
+                return this.pow.convert(obj);
             }
             case "Index": {
+                if (obj.symbols[0].type == "GenericFunc") {
+                    const genericFunc = obj.symbols[0] as P2Pr.GenericFunc;
+                    const { name, args } = this.prCommon.buildGenericFunc(genericFunc);
+                    const indexBlock = blockBd.indexBlock(this.innerConvert(obj.symbols[1], level).blocks);
+                    return {
+                        blocks: [
+                            ...name,
+                            indexBlock,
+                            ...args,
+                        ],
 
+                    }
+                }
                 return {
                     blocks: [
                         ...this.innerConvert(obj.symbols[0], level).blocks,
@@ -125,15 +144,15 @@ export class Pr2M {
                 return { blocks: [blockBd.compositeBlock("\\sqrt", ["value", "sub1"], [this.innerConvert(obj.symbols[0], 0).blocks, this.innerConvert(obj.symbols[1], 0).blocks])] }
             }
             case "GenericFunc": {
-                const { name, args, index } = this.buildToGenericFunc(obj);
-                return { blocks: name.concat(index).concat(args) }
+                const { name, args } = this.prCommon.buildGenericFunc(obj);
+                return { blocks: name.concat(args) }
             }
             case "UndefinedFunction": {
-                return {
-                    blocks: [
-                        blockBd.textBlock(obj.name)
-                    ]
+                if (stringHelper.length(obj.name) == 1) {
+                    return { blocks: [blockBd.textBlock(obj.name)] }
                 }
+
+                return { blocks: [blockBd.operatorFuncBlock(obj.name, this.constantTextFuncSet, this.symbolLatexNames)] }
             }
             case "Matrix": {
                 const matrixBlock = blockBd.compositeBlock("\\matrix", [], []) as MatrixLikeBlockModel;
@@ -208,7 +227,7 @@ export class Pr2M {
             case "Exp": {
                 return {
                     blocks: [
-                        blockBd.textBlock("𝑒"),
+                        blockBd.textBlock("e"),
                         blockBd.powerBlock(this.innerConvert(obj.symbols[0], 0).blocks)
                     ]
                 }
@@ -285,41 +304,19 @@ export class Pr2M {
     private convertFullNameFunc(name: string, symbbol: Symbol[]): CResult {
         return {
             blocks: [
-                blockBd.normalText(name),
+                blockBd.operatorFuncBlock(name, this.constantTextFuncSet, this.symbolLatexNames),
                 ...blockBd.wrapBetweenBrackets(this.joinBy(symbbol, ", ")).blocks,
             ]
         }
     }
 
-    private buildToGenericFunc(obj: P2Pr.GenericFunc): GenericFuncResult {
-        const args = this.buildGenericFuncArgs(obj, obj.symbols);
 
-        return {
-            name: [blockBd.operationFuncBlock(obj.func, this.constantTextFuncSet)],
-            index: args.index,
-            args: args.args,
-        }
-    }
 
     private convertVarSymbol(obj: P2Pr.Var): CResult {
         return { blocks: [blockBd.textBlock(obj.name, obj.bold ? { mathType: "\\mathbf" } : undefined)], }
     }
 
-    private buildGenericFuncArgs(container: { indexExist?: boolean }, symbols: Symbol[]): GenericFuncArgsResult {
-        let argSymbols = symbols;
-        let idx: [BlockModel?] = [];
-        if (container.indexExist) {
-            idx = [blockBd.compositeBlock("\\power-index", ["indexValue"], [this.innerConvert(symbols[0], 0).blocks])];
-            argSymbols = symbols.slice(1);
-        }
 
-        return {
-            index: idx,
-            args: blockBd.wrapBetweenBrackets(
-                blockBd.joinBlocks(argSymbols.map(s => this.innerConvert(s, 0).blocks), ", ")
-            ).blocks
-        };
-    }
 
     private frac(numerator: BlockModel[], denominator: BlockModel[]): CResult {
         return {
@@ -344,65 +341,6 @@ export class Pr2M {
         return { blocks: [fracBlock], }
     }
 
-
-
-    private buildPow(args: P2Pr.Symbol[], level: number): CResult {
-        if (args.length > 3) {
-            throw new Error("Unsupported power with different than 2,3 arguments");
-        }
-
-        if (args[0].type == "GenericFunc") {
-            return this.handlePowToGenericFunc(args, level);
-        }
-
-        let { blocks: base, prUnit } = this.innerConvert(args[0], level + 1);
-        // if (args[0].type == "Pow" || args[0].type == "Frac" || args[0].type == "Sqrt") {
-        if (!(prUnit == "bracket" || prTh.isSingleVar(args[0]) || prTh.isIntegerValue(args[0]))) {
-            base = blockBd.wrapBetweenBrackets(base).blocks;
-        }
-
-        const power = this.innerConvert(args[1], 0).blocks;
-        // if (pow.indexJson) {
-        //     const cBlock = blockBd.compositeBlock("\\power-index", ["powerValue"], [power]);
-        //     (cBlock.elements["indexValue"] as EditorModel) = {
-        //         id: generator.nextId(),
-        //         lines: symbolIndexSerialize.parseJson(pow.indexJson).lines,
-        //     }
-
-        //     return { blocks: base.concat([cBlock]), }
-        // } else 
-        if (args[2]) {
-            const index = this.innerConvert(args[2], 0).blocks;
-            const cBlock = blockBd.compositeBlock("\\power-index", ["powerValue", "indexValue"], [power, index]);
-            return { blocks: base.concat([cBlock]), };
-
-        }
-        return { blocks: base.concat([blockBd.compositeBlock("\\power-index", ["powerValue"], [power])]), }
-    }
-
-    private handlePowToGenericFunc(powArgs: P2Pr.Symbol[], level: number): CResult {
-        const power = this.innerConvert(powArgs[1], level + 1).blocks;
-        const genericFunc = powArgs[0] as P2Pr.GenericFunc;
-        const { name, index, args } = this.buildToGenericFunc(genericFunc);
-
-        let powerBlock: CompositeBlockModel;
-        if (index.length > 0) {
-            const innerIdx = (index[0] as CompositeBlockModel).elements["indexValue"].lines[0].blocks;
-            powerBlock = blockBd.compositeBlock("\\power-index", ["powerValue", "indexValue"], [power, innerIdx]);
-        } else {
-            powerBlock = blockBd.compositeBlock("\\power-index", ["powerValue"], [power]);
-        }
-
-        return {
-            blocks: [
-                ...name,
-                powerBlock,
-                ...args,
-            ],
-
-        }
-    }
-
     private joinBy(args: P2Pr.Symbol[], text: string): BlockModel[] {
         const items = args.map(a => this.innerConvert(a, 0));
         let blocks: BlockModel[] = [];
@@ -420,16 +358,7 @@ export class Pr2M {
 
 }
 
-interface GenericFuncArgsResult {
-    index: [BlockModel?];
-    args: BlockModel[];
-}
 
-interface GenericFuncResult {
-    name: BlockModel[];
-    index: [BlockModel?];
-    args: BlockModel[];
-}
 
 type Symbol = P2Pr.Symbol;
 type CResult = Pr2M.CResult;

@@ -7,14 +7,15 @@ class TestHelper {
     private casEngineProcess = new CasEngineProcess(pyodide, { constantTextFuncs: constFuncs, symbolLatexNames: {
         "Alpha":"𝛢",
         "Gamma":"𝛤",
+        "gamma":"𝛾",
         "lambda":"𝜆",
         "epsilon":"𝜖",
         "omega":"𝜔",
         "alpha":"𝛼",
         "beta":"𝛽",
-    } })
+    } });
     async prepare(statement: string): Promise<void> {
-        this.casEngineProcess.processRaw(statement, false);
+        await this.casEngineProcess.processRaw(statement, false);
     }
 
     async run(statement: string) {

@@ -1,5 +1,6 @@
 import { generator } from "@lib-shared/id-generator";
 import objectHelper from "@lib-shared/object-helper";
+import stringHelper from "@lib-shared/string-helper";
 import { tabularKeyInfoHelper } from "@lib-shared/tabular-key-info-helper";
 import { sympyToMcConstantFuncs } from "../mapping/generic-func-map";
 import { P2Pr } from "./p2pr";
@@ -57,19 +58,26 @@ class BlockBd {
         return this.compositeBlock("\\text", ["textValue"], [[this.textBlock(text)]]);
     }
 
-    operationFuncBlock(name: string, constantTextFuncSet: Set<string>): BlockModel {
-        const mappedMcFuncName = sympyToMcConstantFuncs[name] || name;
+
+
+    operatorFuncBlock(name: string, constantTextFuncSet: Set<string>, symbolLatexNames: { [key: string]: string }): BlockModel {
+        let mappedMcFuncName = sympyToMcConstantFuncs[name] || name;
         if (constantTextFuncSet.has(mappedMcFuncName)) {
             return this.opConstantBlock(name);
         }
-        if (mappedMcFuncName.length <= 1) {
+
+        if (symbolLatexNames[mappedMcFuncName]) {
+            mappedMcFuncName = symbolLatexNames[mappedMcFuncName];
+        }
+
+        if (stringHelper.length(mappedMcFuncName) == 1) {
             return blockBd.textBlock(mappedMcFuncName);
         }
 
         return blockBd.operatorNameBlock(mappedMcFuncName)
     }
 
-    private operatorNameBlock(name: string) {
+     operatorNameBlock(name: string) {
         return this.compositeBlock("\\operatorname", ["value"], [[this.textBlock(name)]]);
     }
 

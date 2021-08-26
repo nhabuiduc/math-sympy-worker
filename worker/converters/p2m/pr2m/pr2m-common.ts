@@ -3,7 +3,11 @@ import { P2Pr } from "../p2pr";
 import { Pr2M } from "../pr2m";
 
 export class Pr2MCommon {
-    constructor(private main: { convert(obj: P2Pr.Symbol): Pr2M.CResult }) {
+    constructor(
+        private main: { convert(obj: P2Pr.Symbol): Pr2M.CResult },
+        private constantTextFuncSet: Set<string>,
+        private symbolLatexNames: { [key: string]: string }
+    ) {
 
     }
 
@@ -36,6 +40,62 @@ export class Pr2MCommon {
         return this.ifOpDeprecate;
     }
 
+    buildGenericFunc(obj: P2Pr.GenericFunc): GenericFuncResult {
+        const args = this.buildGenericFuncArgs(obj.symbols);
+
+        let nameBlock: BlockModel;
+        if (obj.specialFuncClass) {
+            // let nameText = obj.func;
+            switch (obj.func) {
+                case "KroneckerDelta": {
+                    nameBlock = blockBd.textBlock("𝛿");
+                    break;
+                }
+                case "gamma": {
+                    nameBlock = blockBd.textBlock("𝛤");
+                    break;
+                }
+                case "lowergamma": {
+                    nameBlock = blockBd.textBlock("𝛾");
+                    break;
+                }
+                case "beta": {
+                    nameBlock = blockBd.operatorNameBlock("B");
+                    break;
+                }
+                case "DiracDelta": {
+                    nameBlock = blockBd.textBlock("𝛿");
+                    break;
+                }
+                case "Chi": {
+                    nameBlock = blockBd.operatorNameBlock("Chi");
+                    break;
+                }
+            }
+        } else {
+            nameBlock = blockBd.operatorFuncBlock(obj.func, this.constantTextFuncSet, this.symbolLatexNames);
+        }
+        return {
+            name: [nameBlock],
+            args: args.args,
+        }
+    }
+
+    private buildGenericFuncArgs(symbols: Symbol[]): GenericFuncArgsResult {
+        let argSymbols = symbols;
+        // let idx: [BlockModel?] = [];
+        // if (container.indexExist) {
+        //     idx = [blockBd.compositeBlock("\\power-index", ["indexValue"], [this.innerConvert(symbols[0], 0).blocks])];
+        //     argSymbols = symbols.slice(1);
+        // }
+
+        return {
+            args: blockBd.wrapBetweenBrackets(
+                blockBd.joinBlocks(argSymbols.map(s => this.main.convert(s).blocks), ", ")
+            ).blocks
+        };
+    }
+
     join(args: P2Pr.Symbol[], text?: string, options?: Pr2MCommon.JoinOptions): Pr2M.CResult {
         options = options || { wrapBracket: "if-op" }
         let items = args.map(a => this.main.convert(a));
@@ -64,3 +124,14 @@ export namespace Pr2MCommon {
         wrapBracket: "if-op" | "if-op-exclude-mul-shortcut";
     }
 }
+
+interface GenericFuncArgsResult {
+    args: BlockModel[];
+}
+
+interface GenericFuncResult {
+    name: BlockModel[];
+    args: BlockModel[];
+}
+
+type Symbol = P2Pr.Symbol;

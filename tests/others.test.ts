@@ -135,8 +135,8 @@ describe("3: Others", () => {
         expect(await th.run("Laplacian(x*A.x)")).equal(`[▵]([x][x,bf][⛏️,[A,bf]])`);
     });
 
-    /**skip handle Latex inside symbol name for now */
-    it.only("Symbols", async () => {
+
+    it("Symbols", async () => {
         await th.prepare(`
 Gamma, lmbda, rho = symbols('Gamma, lambda, rho')
 tau, Tau, TAU, taU = symbols('tau, Tau, TAU, taU')
@@ -161,6 +161,48 @@ tau, Tau, TAU, taU = symbols('tau, Tau, TAU, taU')
         expect(await th.run("Symbol('e^Alpha')")).equal(`[e][💪,[𝛢]]`);
         expect(await th.run("Symbol('omega_alpha^beta')")).equal(`[𝜔][💪,[𝛽],[𝛼]]`);
         expect(await th.run("Symbol('omega') ** Symbol('beta')")).equal(`[𝜔][💪,[𝛽]]`);
+    })
+
+    it.only("functions", async () => {
+        expect(await th.run("exp(x)")).equal(`[e][💪,[x]]`);
+        expect(await th.run("exp(1) + exp(2)")).equal(`[e+e][💪,[2]]`);
+
+        await th.prepare(`f = Function('f')`);
+
+        expect(await th.run("f(x)")).equal(`[f]([x])`);
+        expect(await th.run("f")).equal(`[f]`);
+
+        await th.prepare(`g = Function('g')`);
+        expect(await th.run("g(x, y)")).equal(`[g]([x, y])`);
+        expect(await th.run("g")).equal(`[g]`);
+        
+        await th.prepare(`  h = Function('h')`);
+        expect(await th.run("h(x, y, z)")).equal(`[h]([x, y, z])`);
+        
+        await th.prepare(` Li = Function('Li')`);
+        expect(await th.run("Li")).equal(`[operatorname,[Li]]`);
+        expect(await th.run("Li(x)")).equal(`[operatorname,[Li]]([x])`);
+        
+        await th.prepare(` mybeta = Function('beta')`);
+        expect(await th.run("mybeta(x, y, z)")).equal(`[𝛽]([x, y, z])`);
+        expect(await th.run("beta(x, y)")).equal(`[operatorname,[B]]([x, y])`);
+        expect(await th.run("beta(x, y)**2")).equal(`[operatorname,[B]][💪,[2]]([x, y])`);
+        expect(await th.run("mybeta(x)")).equal(`[𝛽]([x])`);
+        expect(await th.run("mybeta")).equal(`[𝛽]`);
+        
+        await th.prepare(`g = Function('gamma')`);
+        expect(await th.run("g(x, y, z)")).equal(`[𝛾]([x, y, z])`);
+        expect(await th.run("g(x)")).equal(`[𝛾]([x])`);
+        expect(await th.run("g")).equal(`[𝛾]`);
+        
+        await th.prepare(`a1 = Function('a_1')`);
+        expect(await th.run("a1")).equal(`[operatorname,[a_1]]`);
+        expect(await th.run("a1(x)")).equal(`[operatorname,[a_1]]([x])`);
+        
+        await th.prepare(`omega1 = Function('omega1')`);
+        expect(await th.run("omega1")).equal(`[operatorname,[a_1]]([x])`);
+
+
     })
 
 });

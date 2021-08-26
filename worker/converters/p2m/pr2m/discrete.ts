@@ -4,9 +4,11 @@ import { Pr2M } from "../pr2m";
 import { Pr2MCommon } from "./pr2m-common";
 
 export class Discrete {
-    private common: Pr2MCommon;
-    constructor(private main: { convert(obj: P2Pr.Symbol): Pr2M.CResult }) {
-        this.common = new Pr2MCommon(this.main);
+
+    constructor(
+        private main: { convert(obj: P2Pr.Symbol): Pr2M.CResult },
+        private common: Pr2MCommon
+    ) {
     }
 
     convert(obj: P2Pr.Discrete): Pr2M.CResult {

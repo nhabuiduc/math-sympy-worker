@@ -3,7 +3,6 @@ import { PrFracTransform } from "./pr-transform/pr-frac-transform";
 import { PrMulTransform } from "./pr-transform/pr-mul-transform";
 import { PrSqrtTransform } from "./pr-transform/pr-sqrt-transform";
 import { PrAddTransform } from "./pr-transform/pr-add-transform";
-import { prCreator } from "./pr/pr-creator";
 import { prTh } from "./pr-transform/pr-transform-helper";
 import { float } from "./p2pr/float";
 import { Symbol as SymbolP2Pr } from "./p2pr/symbol";
@@ -69,7 +68,7 @@ export class P2Pr {
                 return { type: "ConstantSymbol", kind: "Leaf", showType: "symbol", name: "∞̃" }
             }
             case "Exp1": {
-                return { type: "ConstantSymbol", kind: "Leaf", showType: "symbol", name: "𝑒" }
+                return { type: "ConstantSymbol", kind: "Leaf", showType: "symbol", name: "e" }
             }
             case "ImaginaryUnit": {
                 return { type: "ConstantSymbol", kind: "Leaf", showType: "symbol", name: "i" }
@@ -105,11 +104,11 @@ export class P2Pr {
             }
 
             case "Half": {
-                return prCreator.frac(prCreator.integer(1), prCreator.integer(2));
+                return prTh.frac(prTh.integer(1), prTh.integer(2));
             }
             case "Rational": {
                 // return prCreator.frac(prCreator.integer(obj.p), prCreator.integer(obj.q));
-                return prCreator.frac(prCreator.integerOrSpecial(obj.p), prCreator.integerOrSpecial(obj.q));
+                return prTh.frac(prTh.integerOrSpecial(obj.p), prTh.integerOrSpecial(obj.q));
             }
             case "Matrix": {
                 return { type: "Matrix", kind: "Container", row: obj.row, col: obj.col, symbols: obj.args.map(c => this.innerConvert(c)) }
@@ -263,6 +262,9 @@ export class P2Pr {
             case "Cross": {
                 return { type: "VecExpr", op: obj.func, kind: "Container", symbols: obj.args.map(c => this.innerConvert(c)) }
             }
+            case "SpecialFuncClass": {
+                return { type: "GenericFunc", func: obj.name, specialFuncClass: true, kind: "Container", symbols: obj.args.map(c => this.innerConvert(c)) }
+            }
         }
 
         if (obj.args) {
@@ -369,8 +371,8 @@ export namespace P2Pr {
 
     export interface GenericFunc extends Container {
         type: "GenericFunc"
-        func: string; /** real function will be handled in sympy-models.ts */
-        indexExist?: boolean;
+        func: string;
+        specialFuncClass?: boolean;
     }
 
     export interface Str extends Leaf {
@@ -470,7 +472,7 @@ namespace P {
         Relational | List | Dummy | Poly |
         PolynomialRing | DisplayedDomain | UndefinedFunction | F<"Integral"> | F<"Not"> | F<"And"> | F<"Or"> | F<"Implies"> |
         F<"SingularityFunction"> |
-        Cycle | F<"Cross"> | F<"Curl"> | F<"Divergence"> | F<"Dot"> | F<"Gradient"> | F<"Laplacian"> |
+        Cycle | F<"Cross"> | F<"Curl"> | F<"Divergence"> | F<"Dot"> | F<"Gradient"> | F<"Laplacian"> | SpecialFuncClass |
         UnknownFunc;
     interface FuncArgs {
         args: Basic[];
@@ -569,6 +571,10 @@ namespace P {
     export interface Cycle {
         func: "Cycle";
         perm: number[][];
+    }
+    export interface SpecialFuncClass extends FuncArgs {
+        func: "SpecialFuncClass";
+        name: string;
     }
 
     export interface UnknownFunc extends FuncArgs {

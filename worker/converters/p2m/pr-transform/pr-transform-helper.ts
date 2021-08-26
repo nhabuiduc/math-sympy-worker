@@ -132,16 +132,16 @@ class PrTransformHelper {
 
     mul(s1: Symbol, s2: Symbol): P2Pr.Mul {
         if (s1.type == "Mul" && s2.type == "Mul") {
-            return { ...s1, symbols: s1.symbols.concat(s2.symbols) }
+            return { ...s1, symbols: s1.symbols.concat(s2.symbols), unevaluatedDetected: false }
         }
         if (s1.type == "Mul") {
-            return { ...s1, symbols: s1.symbols.concat([s2]) }
+            return { ...s1, symbols: s1.symbols.concat([s2]), unevaluatedDetected: false }
         }
         if (s2.type == "Mul") {
-            return { ...s2, symbols: [s1 as Symbol].concat(s2.symbols) }
+            return { ...s2, symbols: [s1 as Symbol].concat(s2.symbols), unevaluatedDetected: false }
         }
 
-        return { type: "Mul", unevaluatedDetected: true, kind: "Container", symbols: [s1, s2] };
+        return { type: "Mul", unevaluatedDetected: false, kind: "Container", symbols: [s1, s2] };
     }
 
 
@@ -292,6 +292,48 @@ class PrTransformHelper {
         }
 
         return rs;
+    }
+
+    integer(vl: number): P2Pr.Integer {
+        return { type: "Integer", kind: "Leaf", value: vl };
+    }
+
+    integerOrSpecial(vl: number): P2Pr.Symbol {
+        if (vl == 0) {
+            return { type: "Zero", kind: "Leaf" }
+        }
+        if (vl == 1) {
+            return { type: "One", kind: "Leaf" }
+        }
+        if (vl == -1) {
+            return { type: "NegativeOne", kind: "Leaf" }
+        }
+
+        return { type: "Integer", kind: "Leaf", value: vl };
+    }
+
+    power(base: Symbol, vl: number): P2Pr.Pow {
+        return { type: "Pow", kind: "Container", symbols: [base, this.integer(vl)] };
+    }
+
+    frac(num: Symbol, den: Symbol): P2Pr.Frac {
+        return {
+            type: "Frac",
+            kind: "Container",
+            symbols: [num, den]
+        }
+    }
+    // mul(...symbols: Symbol[]): P2Pr.Mul {
+    //     return {
+    //         type: "Mul",
+    //         kind: "Container",
+    //         symbols: symbols,
+    //         unevaluatedDetected: false,
+    //     }
+    // }
+
+    negativeOne(): P2Pr.NegativeOne {
+        return { type: "NegativeOne", kind: "Leaf" };
     }
 }
 

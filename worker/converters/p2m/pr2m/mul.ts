@@ -21,11 +21,11 @@ export class Mul {
         for (let idx = 0; idx < items.length; idx++) {
             const item = items[idx];
             const curArg = symbols[idx];
+            console.log(obj);
             if (idx == 0 && prTh.isNegativeOne(curArg) && !obj.unevaluatedDetected) {
                 isNegative = true;
                 continue;
             }
-
 
             const blocksToAdd = this.shouldWrapBrackets(idx, item) ? blockBd.wrapBetweenBrackets(item.blocks).blocks : item.blocks;
 

@@ -108,6 +108,12 @@ class __McHdl:
     def hdl_Permutation(self, expr):
         return self.hdl_Cycle(expr)
 
+    def hdl_Exp1(self, expr):
+        return { 'func': 'Exp1' }
+
+    def hdlFunctionClass(self, expr, name):
+        return { 'func': 'FunctionClass', 'name': name, 'args': self.argsMap(expr.args) }
+
     def hdlGenericFunc(name, args):
         dic['func'] = 'GenericFunc' 
         dic['name'] = name
@@ -118,6 +124,11 @@ class __McHdl:
     def hdlOthers(self, expr):
         dic = { 'args':[] }
         dic['func']='GenericFunc'
+
+        if hasattr(expr.__class__, '__class__') and expr.__class__.__class__.__name__ == 'FunctionClass':
+            funcName = expr.__class__.__name__
+            if funcName in ['KroneckerDelta','gamma','lowergamma','beta','DiracDelta','Chi']:
+                return { 'func': 'SpecialFuncClass', 'name': funcName, 'args': self.argsMap(expr.args) }
         
         if hasattr(expr, 'func'):
             funcName = expr.func.__name__

@@ -1,5 +1,4 @@
 import type { P2Pr } from "../p2pr";
-import { prCreator } from "../pr/pr-creator";
 import { prTh } from "./pr-transform-helper";
 
 export class PrPowerTransform implements P2Pr.IPrTransform {
@@ -96,7 +95,7 @@ export class PrPowerTransform implements P2Pr.IPrTransform {
             return {
                 type: "Sqrt",
                 kind: "Container",
-                symbols: [base, prCreator.integer(denominator)]
+                symbols: [base, prTh.integer(denominator)]
             }
         }
 
@@ -104,7 +103,7 @@ export class PrPowerTransform implements P2Pr.IPrTransform {
             return {
                 type: "Sqrt",
                 kind: "Container",
-                symbols: [prCreator.power(base, enumerator), prCreator.integer(denominator)]
+                symbols: [prTh.power(base, enumerator), prTh.integer(denominator)]
             }
         }
 

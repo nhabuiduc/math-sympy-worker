@@ -1,7 +1,6 @@
 import { _l } from "../../../light-lodash";
 import type { P2Pr } from "../p2pr";
 import fEqual from "fast-deep-equal";
-import { prCreator } from "../pr/pr-creator";
 import { prTh } from "./pr-transform-helper";
 
 
@@ -77,13 +76,21 @@ export class PrFracTransform implements P2Pr.IPrTransform {
             const [num, den] = children;
             if (num.type == "GenericFunc" && num.func == "log" && den.type == "GenericFunc" && den.func == "log") {
                 if (den.symbols.length == 1 && den.symbols[0].type == "Integer") {
-                    return {
-                        type: "GenericFunc",
-                        kind: "Container",
-                        func: "log",
-                        indexExist: true,
-                        symbols: [den.symbols[0], num.symbols[0]],
-                    }
+                    return prTh.index(
+                        {
+                            type: "GenericFunc",
+                            kind: "Container",
+                            func: "log",
+                            symbols: [num.symbols[0]],
+                        },
+                        den.symbols[0],
+                    )
+                    // return {
+                    //     type: "GenericFunc",
+                    //     kind: "Container",
+                    //     func: "log",
+                    //     symbols: [den.symbols[0], num.symbols[0]],
+                    // }
                 }
             }
 
@@ -132,11 +139,11 @@ export class PrFracTransform implements P2Pr.IPrTransform {
             const [num, den] = children;
             if (this.isFracPartNegative(num) && !this.isFracPartNegative(den)) {
                 ctx.applyFound = true;
-                return prCreator.mul(prCreator.negativeOne(), prCreator.frac(this.removeNegativePart(num), den));
+                return prTh.mul(prTh.negativeOne(), prTh.frac(this.removeNegativePart(num), den));
 
             } else if (!this.isFracPartNegative(num) && this.isFracPartNegative(den)) {
                 ctx.applyFound = true;
-                return prCreator.mul(prCreator.negativeOne(), prCreator.frac(num, this.removeNegativePart(den)));
+                return prTh.mul(prTh.negativeOne(), prTh.frac(num, this.removeNegativePart(den)));
             }
 
             return { ...symbol, symbols: children }

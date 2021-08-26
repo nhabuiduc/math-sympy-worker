@@ -7,7 +7,7 @@ export class P2M {
 
     constructor(constantTextFuncSet: Set<string>, symbolLatexNames: { [key: string]: string }) {
         this.p2Pr = new P2Pr(symbolLatexNames);
-        this.pr2m = new Pr2M(constantTextFuncSet)
+        this.pr2m = new Pr2M(constantTextFuncSet, symbolLatexNames)
     }
 
     convert(data: PyodideNs.DummyPythonRunnerResult, ops?: P2Pr.TransformOptions): BlockModel[] {
