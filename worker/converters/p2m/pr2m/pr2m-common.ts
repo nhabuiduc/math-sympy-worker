@@ -11,7 +11,7 @@ export class Pr2MCommon {
 
     }
 
-    private ifOpDeprecate = (item: Pr2M.CResult): boolean => {
+    private ifOpPowDeprecate = (item: Pr2M.CResult): boolean => {
         return item.prUnit == "op";
     }
     private ifOpExcludeMulShortcutDeprecate = (item: Pr2M.CResult): boolean => {
@@ -37,7 +37,7 @@ export class Pr2MCommon {
         if (type == "if-op-exclude-mul-shortcut") {
             return this.ifOpExcludeMulShortcutDeprecate;
         }
-        return this.ifOpDeprecate;
+        return this.ifOpPowDeprecate;
     }
 
     buildGenericFunc(obj: P2Pr.GenericFunc): GenericFuncResult {
@@ -83,11 +83,6 @@ export class Pr2MCommon {
 
     private buildGenericFuncArgs(symbols: Symbol[]): GenericFuncArgsResult {
         let argSymbols = symbols;
-        // let idx: [BlockModel?] = [];
-        // if (container.indexExist) {
-        //     idx = [blockBd.compositeBlock("\\power-index", ["indexValue"], [this.innerConvert(symbols[0], 0).blocks])];
-        //     argSymbols = symbols.slice(1);
-        // }
 
         return {
             args: blockBd.wrapBetweenBrackets(

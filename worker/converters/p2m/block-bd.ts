@@ -16,7 +16,7 @@ class BlockBd {
         return this.compositeBlock("\\frac", ["value", "sub1"], [num, den]);
     }
     binomBlock(first: BlockModel[], second: BlockModel[]) {
-        return this.compositeBlock("\\binom", ["0_0", "1_0"], [first, second]);
+        return this.tabular("\\binom", ["0_0", "1_0"], [first, second], "(");
     }
 
     powerBlock(text: string | BlockModel[], style?: BlockStyle): BlockModel {
@@ -77,7 +77,7 @@ class BlockBd {
         return blockBd.operatorNameBlock(mappedMcFuncName)
     }
 
-     operatorNameBlock(name: string) {
+    operatorNameBlock(name: string) {
         return this.compositeBlock("\\operatorname", ["value"], [[this.textBlock(name)]]);
     }
 
@@ -108,10 +108,28 @@ class BlockBd {
         return matrixBlock
     }
 
+    tabular(name: "\\binom", elementNames: (`${number}_${number}`)[], innerBlocks: BlockModel[][], bracket?: P2Pr.SupportBracket) {
+        const cblock = this.compositeBlock(name as any, elementNames as any, innerBlocks) as TabularBlockModel;
+        let maxRow = 0;
+        let maxCol = 0;
+        elementNames.forEach(key => {
+            const { row, column } = tabularKeyInfoHelper.getTabularCellIndexFromKey(key);
+            maxRow = Math.max(maxRow, row);
+            maxCol = Math.max(maxCol, column);
+        });
+        cblock.row = maxRow + 1;
+        cblock.column = maxCol + 1;
+        if (bracket) {
+            (cblock as MatrixLikeBlockModel).bracket = bracket;
+        }
+
+        return cblock;
+    }
+
     compositeBlock(
         name: "\\power-index" | "\\frac" | "\\sqrt" | "\\matrix" | "\\text" | "\\small-tilde" | "\\small-hat" | "\\middle|" |
-            "\\operatorname" | "\\binom" | `\\${"i" | "ii" | "iii" | "iii"}nt`,
-        elementNames: ("powerValue" | "indexValue" | "value" | "sub1" | "textValue" | `${number}_${number}`)[] = [],
+            "\\operatorname" | `\\${"i" | "ii" | "iii" | "iii"}nt`,
+        elementNames: ("powerValue" | "indexValue" | "value" | "sub1" | "textValue")[] = [],
         innerBlocks: BlockModel[][] = [],
         style?: BlockStyle): CompositeBlockModel {
         const block: CompositeBlockModel = {
@@ -189,12 +207,12 @@ class BlockBd {
         return (rs.prUnit == "op") ? this.wrapBetweenBrackets(rs.blocks).blocks : rs.blocks;
     }
 
-    joinBlocks(blockss: BlockModel[][], text: string) {
+    joinBlocks(blockss: BlockModel[][], text?: string) {
         let rs: BlockModel[] = [];
         for (let idx = 0; idx < blockss.length; idx++) {
             let blocks = blockss[idx];
 
-            if (idx <= 0) {
+            if (idx <= 0 || !text) {
                 rs = this.combine2Blockss(rs, blocks);
             } else {
                 rs = this.combineMultipleBlocks(rs, [this.textBlock(text)], blocks);

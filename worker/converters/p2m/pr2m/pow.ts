@@ -23,9 +23,10 @@ export class Pow {
             return this.handlePowToGenericFunc(args);
         }
 
-        let { blocks: base, prUnit } = this.main.convert(args[0]);
-        // if (args[0].type == "Pow" || args[0].type == "Frac" || args[0].type == "Sqrt") {
-        if (!(prUnit == "bracket" || prTh.isSingleVar(args[0]) || prTh.isIntegerValue(args[0]))) {
+        let arg0Cr = this.main.convert(args[0]);
+        let { blocks: base } = arg0Cr;
+
+        if (!prTh.considerPresentAsSingleUnit(args[0], arg0Cr)) {
             base = blockBd.wrapBetweenBrackets(base).blocks;
         }
 
@@ -34,10 +35,10 @@ export class Pow {
         if (args[2]) {
             const index = this.main.convert(args[2]).blocks;
             const cBlock = blockBd.compositeBlock("\\power-index", ["powerValue", "indexValue"], [power, index]);
-            return { blocks: base.concat([cBlock]), };
+            return { blocks: base.concat([cBlock]), prUnit: "pow", };
 
         }
-        return { blocks: base.concat([blockBd.compositeBlock("\\power-index", ["powerValue"], [power])]), }
+        return { blocks: base.concat([blockBd.compositeBlock("\\power-index", ["powerValue"], [power])]), prUnit: "pow", }
     }
 
     private handlePowToGenericFunc(powArgs: P2Pr.Symbol[]): Pr2M.CResult {
@@ -59,7 +60,7 @@ export class Pow {
                 powerBlock,
                 ...args,
             ],
-
+            prUnit: "pow",
         }
     }
 }

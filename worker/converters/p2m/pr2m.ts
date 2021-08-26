@@ -147,8 +147,37 @@ export class Pr2M {
                 const { name, args } = this.prCommon.buildGenericFunc(obj);
                 return { blocks: name.concat(args) }
             }
+            case "Factorial": {
+                const rsArg0 = this.innerConvert(obj.symbols[0], level);
+                return {
+                    blocks: blockBd.joinBlocks([
+                        prTh.considerPresentAsSingleUnit(obj.symbols[0], rsArg0) ? rsArg0.blocks : blockBd.wrapBetweenBrackets(rsArg0.blocks).blocks,
+                        [blockBd.textBlock("!")],
+                    ]),
+                    prUnit: "factorial"
+                }
+            }
+            case "Factorial2": {
+                const rsArg0 = this.innerConvert(obj.symbols[0], level);
+                return {
+                    blocks: blockBd.joinBlocks([
+                        prTh.considerPresentAsSingleUnit(obj.symbols[0], rsArg0) ? rsArg0.blocks : blockBd.wrapBetweenBrackets(rsArg0.blocks).blocks,
+                        [blockBd.textBlock("!!")],
+                    ]),
+                    prUnit: "factorial"
+                }
+            }
+            case "SubFactorial": {
+                const rsArg0 = this.innerConvert(obj.symbols[0], level);
+                return {
+                    blocks: blockBd.joinBlocks([
+                        [blockBd.textBlock("!")],
+                        prTh.considerPresentAsSingleUnit(obj.symbols[0], rsArg0) ? rsArg0.blocks : blockBd.wrapBetweenBrackets(rsArg0.blocks).blocks,
+                    ]),
+                }
+            }
             case "UndefinedFunction": {
-                
+
                 if (stringHelper.length(obj.name) == 1) {
                     return { blocks: [blockBd.textBlock(obj.name)] }
                 }
@@ -170,7 +199,7 @@ export class Pr2M {
                         cellIdx++;
                     }
                 }
-                return { blocks: [matrixBlock] };
+                return { blocks: [matrixBlock], prUnit: "matrix-like" };
             }
             case "Str": {
                 return { blocks: [blockBd.normalText(obj.text)] }
@@ -237,7 +266,8 @@ export class Pr2M {
                 return {
                     blocks: [
                         blockBd.binomBlock(this.innerConvert(obj.symbols[0], 0).blocks, this.innerConvert(obj.symbols[1], 0).blocks)
-                    ]
+                    ],
+                    prUnit: "matrix-like"
                 }
             }
             case "Relational": {
@@ -366,7 +396,7 @@ type CResult = Pr2M.CResult;
 export namespace Pr2M {
     export interface CResult {
         blocks: BlockModel[];
-        prUnit?: "bracket" | "op" | "not" | undefined;
+        prUnit?: "bracket" | "op" | "not" | undefined | "pow" | "factorial" | "matrix-like";
         prOp?: "mul" | "add";
         prBracket?: P2Pr.SupportBracket;
         prMinusSign?: boolean;

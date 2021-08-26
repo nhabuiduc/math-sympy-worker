@@ -127,6 +127,15 @@ export class P2Pr {
                 if (obj.name == "NoneType") {
                     return { type: "ConstantSymbol", kind: "Leaf", showType: "text", name: "None" }
                 }
+                if (obj.name == "factorial") {
+                    return { type: "Factorial", kind: "Container", symbols: obj.args.map(c => this.innerConvert(c)) }
+                }
+                if (obj.name == "subfactorial") {
+                    return { type: "SubFactorial", kind: "Container", symbols: obj.args.map(c => this.innerConvert(c)) }
+                }
+                if (obj.name == "factorial2") {
+                    return { type: "Factorial2", kind: "Container", symbols: obj.args.map(c => this.innerConvert(c)) }
+                }
 
                 return this.nameParser.parse(obj.name, (cn) => {
                     return { type: "GenericFunc", kind: "Container", func: cn, symbols: obj.args.map(c => this.innerConvert(c)) }
@@ -310,7 +319,8 @@ export namespace P2Pr {
     export type Symbol = Mul | C<"Add"> | L<"One"> | L<"NegativeOne"> | Integer | Var | Pow | Matrix | C<"Frac"> | Float | L<"Half"> | C<"Sqrt"> | GenericFunc |
         L<"NaN"> | ConstantSymbol | C<"CoordSys3D"> | Str | BaseVector | BaseScalar | L<"VectorZero"> | Point | C<"Tuple"> | C<"BaseDyadic"> |
         Derivative | L<"Zero"> | C<"Exp"> | Relational | List | Poly | PolynomialRing | DisplayedDomain | C<"Binomial"> | UndefinedFunction |
-        C<"VarList"> | C<"Integral"> | Discrete | SingularityFunction | VecExpr | C<"Index"> | JsonData |
+        C<"VarList"> | C<"Integral"> | Discrete | SingularityFunction | VecExpr | C<"Index"> | JsonData | C<"Factorial"> | C<"SubFactorial"> |
+        C<"Factorial2"> |
         UnknownFunc;
 
     export type VarList = C<"VarList">;

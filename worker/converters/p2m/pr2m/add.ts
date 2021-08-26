@@ -14,7 +14,7 @@ export class Add {
         let blocks: BlockModel[] = [];
         for (let idx = 0; idx < items.length; idx++) {
             const item = items[idx];
-            const blocksToAdd = (item.prUnit == "op" && item.prOp != "add" && item.prOp != "mul") ? blockBd.wrapBetweenBrackets(item.blocks).blocks : item.blocks;
+            const blocksToAdd = this.shouldWrapBracketItem(item) ? blockBd.wrapBetweenBrackets(item.blocks).blocks : item.blocks;
             if (idx == 0) {
                 blocks = blockBd.combine2Blockss(blocks, blocksToAdd);
                 continue;
@@ -29,5 +29,13 @@ export class Add {
         }
 
         return { blocks, prUnit: "op", prOp: "add" };
+    }
+
+    private shouldWrapBracketItem(cr: Pr2M.CResult): boolean {
+        if (cr.prUnit == "op") {
+            return cr.prOp != "add" && cr.prOp != "mul"
+        }
+
+        return false;
     }
 }

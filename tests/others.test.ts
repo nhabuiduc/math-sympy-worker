@@ -211,7 +211,20 @@ tau, Tau, TAU, taU = symbols('tau, Tau, TAU, taU')
         expect(await th.run("acsc(x)")).equal(`[acsc,]([x])`);
         expect(await th.run("asinh(x)")).equal(`[asinh,]([x])`);
 
-        expect(await th.run("factorial(k)")).equal(`[asinh,]([x])`);
+        expect(await th.run("factorial(k)")).equal(`[k!]`);
+        expect(await th.run("factorial(-k)")).equal(`([-k])[!]`);
+        expect(await th.run("factorial(k)**2")).equal(`[k!][💪,[2]]`);
+
+        expect(await th.run("subfactorial(k)")).equal(`[!k]`);
+        expect(await th.run("subfactorial(-k)")).equal(`[!]([-k])`);
+        expect(await th.run("subfactorial(k)**2")).equal(`([!k])[💪,[2]]`);
+        
+        expect(await th.run("factorial2(k)")).equal(`[k!!]`);
+        expect(await th.run("factorial2(-k)")).equal(`([-k])[!!]`);
+        expect(await th.run("factorial2(k)**2")).equal(`[k!!][💪,[2]]`);
+
+        expect(await th.run("binomial(2, k)")).equal(`[(🏓)binom,[2],[k]]`);
+        expect(await th.run("binomial(2, k)**2")).equal(`[(🏓)binom,[2],[k]][💪,[2]]`);
 
 
     })

@@ -4,16 +4,18 @@ declare const pyodide: PyodideNs.PythonRunner;
 
 
 class TestHelper {
-    private casEngineProcess = new CasEngineProcess(pyodide, { constantTextFuncs: constFuncs, symbolLatexNames: {
-        "Alpha":"𝛢",
-        "Gamma":"𝛤",
-        "gamma":"𝛾",
-        "lambda":"𝜆",
-        "epsilon":"𝜖",
-        "omega":"𝜔",
-        "alpha":"𝛼",
-        "beta":"𝛽",
-    } });
+    private casEngineProcess = new CasEngineProcess(pyodide, {
+        constantTextFuncs: constFuncs, symbolLatexNames: {
+            "Alpha": "𝛢",
+            "Gamma": "𝛤",
+            "gamma": "𝛾",
+            "lambda": "𝜆",
+            "epsilon": "𝜖",
+            "omega": "𝜔",
+            "alpha": "𝛼",
+            "beta": "𝛽",
+        }
+    });
     async prepare(statement: string): Promise<void> {
         await this.casEngineProcess.processRaw(statement, false);
     }
@@ -60,10 +62,26 @@ json.dumps(rootDic)
                         (b.text as any) = " ⛏️";
                     }
                 }
-                return `[${this.reduceFuncName(b.text.substr(1))},${elements.join(",")}${this.styleToText(b.style)}]`
+                let prefix = "";
+                if ((b as TabularBlockModel).row) {
+                    prefix = "🏓";
+                }
+                if ((b as MatrixLikeBlockModel).bracket) {
+                    prefix = `${(b as MatrixLikeBlockModel).bracket}${prefix}${this.rightBracketOf((b as MatrixLikeBlockModel).bracket)}`
+                }
+                return `[${prefix}${this.reduceFuncName(b.text.substr(1))},${elements.join(",")}${this.styleToText(b.style)}]`
             }
             return `[${b.text}${this.styleToText(b.style)}]`;
         }).join("");
+    }
+
+    private rightBracketOf(br: string) {
+        switch (br) {
+            case "(": return ")";
+            case "[": return "]";
+            case "{": return "}";
+        }
+        return "";
     }
 
     private styleToText(bs: BlockStyle): string {

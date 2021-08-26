@@ -1,5 +1,6 @@
 import stringHelper from "@lib-shared/string-helper";
 import type { P2Pr } from "../p2pr";
+import { Pr2M } from "../pr2m";
 
 const enum EnumPosWeight {
     ConstantInAddCtx = 30000,
@@ -246,6 +247,41 @@ class PrTransformHelper {
 
     isSingleVar(s: Symbol): boolean {
         return s.type == "Var" && stringHelper.length(s.name) == 1;
+    }
+
+    considerPresentAsSingleUnit(s: Symbol, cr: Pr2M.CResult) {
+        if (cr.prUnit == "bracket" || cr.prUnit == "factorial" || cr.prUnit == "matrix-like") {
+            return true;
+        }
+
+        if (this.isSingleVar(s)) {
+            return true;
+        }
+
+        if (this.isPositiveOrZeroIntegerValue(s) || this.isPositiveOrZeroFloatValue(s)) {
+            return true;
+        }
+
+    }
+
+    isPositiveOrZeroFloatValue(s: Symbol): boolean {
+        if (s.type == "Float") {
+            return s.value[0] != "-";
+        }
+
+    }
+
+    isPositiveOrZeroIntegerValue(s: Symbol): boolean {
+        if (s.type == "Zero") {
+            return true;
+        }
+        if (s.type == "One") {
+            return true;
+        }
+
+        if (s.type == "Integer") {
+            return s.value >= 0;
+        }
     }
 
     isIntegerValue(s: Symbol): boolean {
