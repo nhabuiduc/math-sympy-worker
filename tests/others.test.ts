@@ -27,7 +27,7 @@ describe("3: Others", () => {
         expect(await th.run("x**Rational(1, 3)")).equal(`[sqrt,[x],[3]]`);
         expect(await th.run("sqrt(x)**3")).equal(`[x][💪,[frac,[3],[2]]]`);
         expect(await th.run("x**Rational(3, 4)")).equal(`[x][💪,[frac,[3],[4]]]`);
-        expect(await th.run("(x + 1)**Rational(3, 4)")).equal(`([x+1])[💪,[frac,[3],[4]]]`);
+        expect(await th.run("(x + 1)**Rational(3, 4)")).equal(`([1+x])[💪,[frac,[3],[4]]]`);
     });
 
     it("tini float value", async () => {
@@ -70,18 +70,18 @@ describe("3: Others", () => {
     });
 
     it("SingularityFunction", async () => {
-        expect(await th.run("SingularityFunction(x, 4, 5)")).equal(`<[x-4]>[💪,[5]]`);
-        expect(await th.run("SingularityFunction(x, -3, 4)")).equal(`<[x+3]>[💪,[4]]`);
+        expect(await th.run("SingularityFunction(x, 4, 5)")).equal(`<[-4+x]>[💪,[5]]`);
+        expect(await th.run("SingularityFunction(x, -3, 4)")).equal(`<[3+x]>[💪,[4]]`);
         expect(await th.run("SingularityFunction(x, 0, 4)")).equal(`<[x]>[💪,[4]]`);
         expect(await th.run("SingularityFunction(x, a, n)")).equal(`<[x-a]>[💪,[n]]`);
-        expect(await th.run("SingularityFunction(x, 4, -2)")).equal(`<[x-4]>[💪,[-2]]`);
-        expect(await th.run("SingularityFunction(x, 4, -1)")).equal(`<[x-4]>[💪,[-1]]`);
-        expect(await th.run("SingularityFunction(x, 4, 5)**3")).equal(`(<[x-4]>[💪,[5]])[💪,[3]]`);
-        expect(await th.run("SingularityFunction(x, -3, 4)**3")).equal(`(<[x+3]>[💪,[4]])[💪,[3]]`);
+        expect(await th.run("SingularityFunction(x, 4, -2)")).equal(`<[-4+x]>[💪,[-2]]`);
+        expect(await th.run("SingularityFunction(x, 4, -1)")).equal(`<[-4+x]>[💪,[-1]]`);
+        expect(await th.run("SingularityFunction(x, 4, 5)**3")).equal(`(<[-4+x]>[💪,[5]])[💪,[3]]`);
+        expect(await th.run("SingularityFunction(x, -3, 4)**3")).equal(`(<[3+x]>[💪,[4]])[💪,[3]]`);
         expect(await th.run("SingularityFunction(x, 0, 4)**3")).equal(`(<[x]>[💪,[4]])[💪,[3]]`);
         expect(await th.run("SingularityFunction(x, a, n)**3")).equal(`(<[x-a]>[💪,[n]])[💪,[3]]`);
-        expect(await th.run("SingularityFunction(x, 4, -2)**3")).equal(`(<[x-4]>[💪,[-2]])[💪,[3]]`);
-        expect(await th.run("(SingularityFunction(x, 4, -1)**3)**3")).equal(`(<[x-4]>[💪,[-1]])[💪,[9]]`);
+        expect(await th.run("SingularityFunction(x, 4, -2)**3")).equal(`(<[-4+x]>[💪,[-2]])[💪,[3]]`);
+        expect(await th.run("(SingularityFunction(x, 4, -1)**3)**3")).equal(`(<[-4+x]>[💪,[-1]])[💪,[9]]`);
     })
 
     it("cycle", async () => {
@@ -105,23 +105,23 @@ describe("3: Others", () => {
         expect(await th.run("Float('0.099999')")).equal(`[0.099999]`);
     });
     
-    it.only("Vector Expressions", async () => {
+    it("Vector Expressions", async () => {
         await th.prepare(`A = CoordSys3D('A')`);
-        expect(await th.run("Cross(A.i, A.j*A.x*3+A.k)")).equal(`[🎩,[i],bf][⛏️,[A],bf][×]([3][x,bf][⛏️,[A],bf][🎩,[j],bf][⛏️,[A],bf][+][🎩,[k],bf][⛏️,[A],bf])`);
+        expect(await th.run("Cross(A.i, A.j*A.x*3+A.k)")).equal(`[🎩,[i],bf][⛏️,[A],bf][×]([🎩,[k],bf][⛏️,[A],bf][+3][x,bf][⛏️,[A],bf][🎩,[j],bf][⛏️,[A],bf])`);
         expect(await th.run("Cross(A.i, A.j)")).equal(`[🎩,[i],bf][⛏️,[A],bf][×][🎩,[j],bf][⛏️,[A],bf]`);
         expect(await th.run("x*Cross(A.i, A.j)")).equal(`[x]([🎩,[i],bf][⛏️,[A],bf][×][🎩,[j],bf][⛏️,[A],bf])`);
         expect(await th.run("Cross(x*A.i, A.j)")).equal(`[-]([🎩,[j],bf][⛏️,[A],bf][×]([x][🎩,[i],bf][⛏️,[A],bf]))`);
 
         expect(await th.run("Curl(3*A.x*A.j)")).equal(`[∇×]([3][x,bf][⛏️,[A],bf][🎩,[j],bf][⛏️,[A],bf])`);
-        expect(await th.run("Curl(3*A.x*A.j+A.i)")).equal(`[∇×]([3][x,bf][⛏️,[A],bf][🎩,[j],bf][⛏️,[A],bf][+][🎩,[i],bf][⛏️,[A],bf])`);
+        expect(await th.run("Curl(3*A.x*A.j+A.i)")).equal(`[∇×]([🎩,[i],bf][⛏️,[A],bf][+3][x,bf][⛏️,[A],bf][🎩,[j],bf][⛏️,[A],bf])`);
         expect(await th.run("Curl(3*x*A.x*A.j)")).equal(`[∇×]([3x][x,bf][⛏️,[A],bf][🎩,[j],bf][⛏️,[A],bf])`);
         expect(await th.run("x*Curl(3*A.x*A.j)")).equal(`[x]([∇×]([3][x,bf][⛏️,[A],bf][🎩,[j],bf][⛏️,[A],bf]))`);
 
-        expect(await th.run("Divergence(3*A.x*A.j+A.i)")).equal(`[∇⋅]([3][x,bf][⛏️,[A],bf][🎩,[j],bf][⛏️,[A],bf][+][🎩,[i],bf][⛏️,[A],bf])`);
+        expect(await th.run("Divergence(3*A.x*A.j+A.i)")).equal(`[∇⋅]([🎩,[i],bf][⛏️,[A],bf][+3][x,bf][⛏️,[A],bf][🎩,[j],bf][⛏️,[A],bf])`);
         expect(await th.run("Divergence(3*A.x*A.j)")).equal(`[∇⋅]([3][x,bf][⛏️,[A],bf][🎩,[j],bf][⛏️,[A],bf])`);
         expect(await th.run("x*Divergence(3*A.x*A.j)")).equal(`[x]([∇⋅]([3][x,bf][⛏️,[A],bf][🎩,[j],bf][⛏️,[A],bf]))`);
 
-        expect(await th.run("Dot(A.i, A.j*A.x*3+A.k)")).equal(`[🎩,[i],bf][⛏️,[A],bf][⋅]([3][x,bf][⛏️,[A],bf][🎩,[j],bf][⛏️,[A],bf][+][🎩,[k],bf][⛏️,[A],bf])`);
+        expect(await th.run("Dot(A.i, A.j*A.x*3+A.k)")).equal(`[🎩,[i],bf][⛏️,[A],bf][⋅]([🎩,[k],bf][⛏️,[A],bf][+3][x,bf][⛏️,[A],bf][🎩,[j],bf][⛏️,[A],bf])`);
         expect(await th.run("Dot(A.i, A.j)")).equal(`[🎩,[i],bf][⛏️,[A],bf][⋅][🎩,[j],bf][⛏️,[A],bf]`);
         expect(await th.run("Dot(x*A.i, A.j)")).equal(`[🎩,[j],bf][⛏️,[A],bf][⋅]([x][🎩,[i],bf][⛏️,[A],bf])`);
         expect(await th.run("x*Dot(A.i, A.j)")).equal(`[x]([🎩,[i],bf][⛏️,[A],bf][⋅][🎩,[j],bf][⛏️,[A],bf])`);

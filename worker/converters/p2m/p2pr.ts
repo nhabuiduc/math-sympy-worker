@@ -11,9 +11,10 @@ export class P2Pr {
 
     private transforms: P2Pr.IPrTransform[] = [new PrPowerTransform(), new PrFracTransform(), new PrMulTransform(), new PrSqrtTransform(), new PrAddTransform()];
 
-    convert(obj: P.Basic, _transformOps: {}): Symbol {
+    convert(obj: P.Basic, ops?: P2Pr.TransformOptions): Symbol {
+        ops = Object.assign({}, { orderAdd: true, orderMul: true } as P2Pr.TransformOptions, ops)
         const rs = this.innerConvert(obj);
-        return this.transforms.reduce((prev, cur) => cur.transform(prev), rs);
+        return this.transforms.reduce((prev, cur) => cur.transform(prev, ops), rs);
     }
 
     private innerConvert(obj: P.Basic): Symbol {
@@ -431,7 +432,7 @@ export namespace P2Pr {
     }
 
     export interface IPrTransform {
-        transform(symbol: Symbol): Symbol;
+        transform(symbol: Symbol, ops: P2Pr.TransformOptions): Symbol;
     }
 
     export type SupportBracket = P.SupportBracket;
@@ -441,6 +442,11 @@ export namespace P2Pr {
     }
     export interface L<T extends string> extends Leaf {
         type: T;
+    }
+
+    export interface TransformOptions {
+        orderMul?: boolean;
+        orderAdd?: boolean;
     }
 }
 

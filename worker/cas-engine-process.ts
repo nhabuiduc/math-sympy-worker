@@ -2,6 +2,7 @@ import { CasEngineNs } from "./cas-engine-ns";
 import { PyodideNs } from "./pyodide-models";
 import { CasConverter } from "./converters/cas-converter";
 import { CasMd } from "./cas-models";
+import { P2Pr } from "./converters/p2m/p2pr";
 
 export class CasEngineProcess {
     private casConverter: CasConverter;
@@ -25,7 +26,7 @@ export class CasEngineProcess {
         })
     }
 
-    async processRaw(code: string, dump: boolean): Promise<[string, BlockModel[]]> {
+    async processRaw(code: string, dump: boolean, ops?: P2Pr.TransformOptions): Promise<[string, BlockModel[]]> {
         console.log(this.pythonRunner.runRaw);
         return this.pythonRunner.runRaw(code).then(runResult => {
             if (!dump) {
@@ -35,7 +36,7 @@ export class CasEngineProcess {
             const parsedOutput = this.tryParseJson(runResult);
             if (parsedOutput) {
                 try {
-                    return [runResult, this.casConverter.toModel(parsedOutput)]
+                    return [runResult, this.casConverter.toModel(parsedOutput, ops)]
                 } catch (e) {
                     console.error(e);
                     return [`${runResult}"\n\n"Error: ${e.message}`, undefined];

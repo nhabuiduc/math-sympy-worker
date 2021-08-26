@@ -3,8 +3,12 @@ import type { P2Pr } from "../p2pr";
 import { prTh } from "./pr-transform-helper";
 
 export class PrAddTransform implements P2Pr.IPrTransform {
-    transform(symbol: Symbol): Symbol {
-        return this.orderTransform(symbol);
+    transform(symbol: Symbol, ops: P2Pr.TransformOptions): Symbol {
+        if (ops.orderAdd) {
+            return this.orderTransform(symbol);
+        }
+
+        return symbol;
     }
 
     private orderTransform(symbol: Symbol): P2Pr.Symbol {

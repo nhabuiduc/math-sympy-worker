@@ -2,9 +2,12 @@ import type { P2Pr } from "../p2pr";
 import { prTh } from "./pr-transform-helper";
 
 export class PrMulTransform implements P2Pr.IPrTransform {
-    transform(symbol: P2Pr.Symbol): P2Pr.Symbol {
+    transform(symbol: P2Pr.Symbol, ops: P2Pr.TransformOptions): P2Pr.Symbol {
         symbol = this.flattenMul(symbol);
-        symbol = this.orderTransform(symbol);
+        if (ops.orderMul) {
+            symbol = this.orderTransform(symbol);
+        }
+        
         return symbol;
     }
 

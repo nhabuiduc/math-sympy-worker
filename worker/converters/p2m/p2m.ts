@@ -10,8 +10,8 @@ export class P2M {
         this.pr2m = new Pr2M(constantTextFuncSet)
     }
 
-    convert(data: PyodideNs.DummyPythonRunnerResult): BlockModel[] {
-        const pr = this.p2Pr.convert(data as any, {});
+    convert(data: PyodideNs.DummyPythonRunnerResult, ops?: P2Pr.TransformOptions): BlockModel[] {
+        const pr = this.p2Pr.convert(data as any, ops);
         const md = this.pr2m.convert(pr);
         return md.blocks;
     }

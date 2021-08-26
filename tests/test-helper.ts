@@ -15,7 +15,11 @@ expr=${statement}
 rootDic = ___mcSympyExprDump(expr)
 json.dumps(rootDic)
 `;
-        const [, blocks] = await this.casEngineProcess.processRaw(code, true);
+
+        const [, blocks] = await this.casEngineProcess.processRaw(code, true, {
+            orderAdd: false, /** the order algorithm will change frequently, we don't want to test fail all */
+            orderMul: false, /** the order algorithm will change frequently, we don't want to test fail all */
+        });
         let blocksText = "";
         if (blocks) {
             blocksText = this.blocksToText(blocks);
@@ -43,7 +47,7 @@ json.dumps(rootDic)
                     .map(c => this.blocksToText((b as CompositeBlockModel).elements[c].lines[0].blocks))
 
                 if (b.text == "\\power-index" && elements.length == 1) {
-                    if((b as CompositeBlockModel).elements["indexValue"]) {
+                    if ((b as CompositeBlockModel).elements["indexValue"]) {
                         (b.text as any) = " ⛏️";
                     }
                 }
