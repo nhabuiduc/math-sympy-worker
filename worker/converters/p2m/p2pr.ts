@@ -283,15 +283,19 @@ export namespace P2Pr {
         kind: "Leaf"
     }
 
-    export type Symbol = Mul | Add | One | NegativeOne | Integer | Var | Pow | Matrix | Frac | Float | Half | Sqrt | GenericFunc |
-        NaN | ConstantSymbol | CoordSys3D | Str | BaseVector | BaseScalar | VectorZero | Point | Tuple | BaseDyadic |
-        Derivative | Zero | Exp | Relational | List | Poly | PolynomialRing | DisplayedDomain | Binomial | UndefinedFunction |
-        VarList | Integral | Discrete | SingularityFunction | Cross |
+    export type Symbol = Mul | C<"Add"> | L<"One"> | L<"NegativeOne"> | Integer | Var | Pow | Matrix | C<"Frac"> | Float | L<"Half"> | C<"Sqrt"> | GenericFunc |
+        L<"NaN"> | ConstantSymbol | C<"CoordSys3D"> | Str | BaseVector | BaseScalar | L<"VectorZero"> | Point | C<"Tuple"> | C<"BaseDyadic"> |
+        Derivative | L<"Zero"> | C<"Exp"> | Relational | List | Poly | PolynomialRing | DisplayedDomain | C<"Binomial"> | UndefinedFunction |
+        C<"VarList"> | C<"Integral"> | Discrete | SingularityFunction | C<"Cross"> |
         UnknownFunc;
 
-    export interface VarList extends Container {
-        type: "VarList";
-    }
+    export type VarList = C<"VarList">;
+    export type Frac = C<"Frac">;
+    export type Tuple = C<"Tuple">;
+    export type Integral = C<"Integral">;
+    export type Add = C<"Add">;
+    export type Sqrt = C<"Sqrt">;
+    export type NegativeOne = L<"NegativeOne">;
 
     export interface Discrete extends Container {
         type: "Discrete";
@@ -299,38 +303,9 @@ export namespace P2Pr {
     }
 
 
-    export interface Integral extends Container {
-        type: "Integral";
-    }
-
     export interface Mul extends Container {
         type: "Mul";
         unevaluatedDetected: boolean;
-    }
-    export interface Cross extends Container {
-        type: "Cross";
-    }
-
-    export interface Add extends Container {
-        type: "Add";
-    }
-
-    export interface NegativeOne extends Leaf {
-        type: "NegativeOne";
-    }
-
-    export interface One extends Leaf {
-        type: "One";
-    }
-    export interface Zero extends Leaf {
-        type: "Zero";
-    }
-
-    export interface Half extends Leaf {
-        type: "Half";
-    }
-    export interface NaN extends Leaf {
-        type: "NaN";
     }
 
     export interface ConstantSymbol extends Leaf {
@@ -361,13 +336,6 @@ export namespace P2Pr {
         indexJson: string;
     }
 
-    export interface Frac extends Container {
-        type: "Frac";
-    }
-
-    export interface Sqrt extends Container {
-        type: "Sqrt";
-    }
 
     export interface Matrix extends Container {
         type: "Matrix"
@@ -386,9 +354,6 @@ export namespace P2Pr {
         text: string;
     }
 
-    export interface CoordSys3D extends Container {
-        type: "CoordSys3D",
-    }
 
     export interface BaseVector extends Leaf {
         type: "BaseVector",
@@ -401,17 +366,9 @@ export namespace P2Pr {
         systemName: string;
     }
 
-    export interface VectorZero extends Leaf {
-        type: "VectorZero",
-    }
-
     export interface Point extends Container {
         type: "Point";
         name: string;
-    }
-
-    export interface Tuple extends Container {
-        type: "Tuple";
     }
 
     export interface Derivative extends Container {
@@ -424,17 +381,7 @@ export namespace P2Pr {
         name: string;
     }
 
-    export interface BaseDyadic extends Container {
-        type: "BaseDyadic";
-    }
 
-    export interface Exp extends Container {
-        type: "Exp";
-    }
-
-    export interface Binomial extends Container {
-        type: "Binomial";
-    }
 
     export interface Relational extends Container {
         type: "Relational";
@@ -477,36 +424,29 @@ export namespace P2Pr {
     }
 
     export type SupportBracket = P.SupportBracket;
+
+    export interface C<T extends string> extends Container {
+        type: T;
+    }
+    export interface L<T extends string> extends Leaf {
+        type: T;
+    }
 }
 
 namespace P {
 
-    export type Basic = Add | Mul | Pow | Symbol | Integer | Float | NegativeOne |
-        One | Rational | Matrix | Half | GenericFunc | NaN | Infinity | NegativeInfinity | ComplexInfinity |
-        Exp1 | ImaginaryUnit | Pi | EulerGamma | Catalan | GoldenRatio | TribonacciConstant |
-        NumberSymbol | HBar | Zero | CoordSys3D | Str | BaseVector | BaseScalar | VectorAdd | VectorZero | VectorMul |
-        Point | Tuple | BaseDyadic | Derivative | BooleanFalse | BooleanTrue | Relational | List | Dummy | Poly |
-        PolynomialRing | DisplayedDomain | UndefinedFunction | Integral | Not | And | Or | Implies | SingularityFunction |
-        Cycle | Cross |
+    export type Basic = F<"Add"> | F<"Mul"> | F<"Pow"> | Symbol | Integer | Float | U<"NegativeOne"> |
+        U<"One"> | Rational | Matrix | U<"Half"> | GenericFunc | U<"NaN"> | U<"Infinity"> | U<"NegativeInfinity"> | U<"ComplexInfinity"> |
+        U<"Exp1"> | U<"ImaginaryUnit"> | U<"Pi"> | U<"EulerGamma"> | U<"Catalan"> | U<"GoldenRatio"> | U<"TribonacciConstant"> |
+        NumberSymbol | U<"HBar"> | U<"Zero"> | CoordSys3D | Str | F<"BaseVector"> | F<"BaseScalar"> | F<"VectorAdd"> | U<"VectorZero"> | F<"VectorMul"> |
+        F<"Point"> | F<"Tuple"> | F<"BaseDyadic"> | Derivative | U<"BooleanFalse"> | U<"BooleanTrue"> |
+        Relational | List | Dummy | Poly |
+        PolynomialRing | DisplayedDomain | UndefinedFunction | F<"Integral"> | F<"Not"> | F<"And"> | F<"Or"> | F<"Implies"> |
+        F<"SingularityFunction"> |
+        Cycle | F<"Cross"> |
         UnknownFunc;
     interface FuncArgs {
         args: Basic[];
-    }
-
-    export interface Add extends FuncArgs {
-        func: "Add";
-    }
-
-    export interface Integral extends FuncArgs {
-        func: "Integral";
-    }
-
-    export interface Mul extends FuncArgs {
-        func: "Mul";
-    }
-
-    export interface Pow extends FuncArgs {
-        func: "Pow";
     }
 
     export interface Symbol {
@@ -525,62 +465,11 @@ namespace P {
         value: string;
     }
 
-    export interface NegativeOne {
-        func: "NegativeOne";
-    }
-    export interface One {
-        func: "One";
-    }
-
-    export interface Half {
-        func: "Half";
-    }
 
     export interface Rational {
         func: "Rational";
         p: number;
         q: number;
-    }
-
-    export interface NaN {
-        func: "NaN";
-    }
-    export interface Infinity {
-        func: "Infinity";
-    }
-    export interface NegativeInfinity {
-        func: "NegativeInfinity";
-    }
-    export interface ComplexInfinity {
-        func: "ComplexInfinity";
-    }
-
-    export interface Exp1 {
-        func: "Exp1";
-    }
-    export interface ImaginaryUnit {
-        func: "ImaginaryUnit";
-    }
-    export interface Pi {
-        func: "Pi";
-    }
-    export interface EulerGamma {
-        func: "EulerGamma";
-    }
-    export interface Catalan {
-        func: "Catalan";
-    }
-    export interface GoldenRatio {
-        func: "GoldenRatio";
-    }
-    export interface TribonacciConstant {
-        func: "TribonacciConstant";
-    }
-    export interface Zero {
-        func: "Zero";
-    }
-    export interface HBar {
-        func: "HBar";
     }
 
     export interface NumberSymbol {
@@ -610,43 +499,12 @@ namespace P {
         vectorNames: string[];
     }
 
-    export interface BaseVector extends FuncArgs {
-        func: "BaseVector";
-    }
 
-    export interface BaseScalar extends FuncArgs {
-        func: "BaseScalar";
-    }
-
-    export interface VectorAdd extends FuncArgs {
-        func: "VectorAdd";
-    }
-    export interface VectorMul extends FuncArgs {
-        func: "VectorMul";
-    }
-    export interface VectorZero {
-        func: "VectorZero";
-    }
-    export interface BooleanTrue {
-        func: "BooleanTrue";
-    }
-    export interface BooleanFalse {
-        func: "BooleanFalse";
-    }
     export interface Dummy {
         func: "Dummy";
         name: string;
     }
 
-    export interface Point extends FuncArgs {
-        func: "Point";
-    }
-    export interface Tuple extends FuncArgs {
-        func: "Tuple";
-    }
-    export interface BaseDyadic extends FuncArgs {
-        func: "BaseDyadic";
-    }
 
     export interface Derivative extends FuncArgs {
         func: "Derivative";
@@ -680,30 +538,10 @@ namespace P {
         name: string;
     }
 
-    export interface Not extends FuncArgs {
-        func: "Not";
-    }
-    export interface And extends FuncArgs {
-        func: "And";
-    }
-    export interface Or extends FuncArgs {
-        func: "Or";
-    }
-    export interface Implies extends FuncArgs {
-        func: "Implies";
-    }
-
-    export interface SingularityFunction extends FuncArgs {
-        func: "SingularityFunction";
-    }
 
     export interface Cycle {
         func: "Cycle";
         perm: number[][];
-    }
-
-    export interface Cross extends FuncArgs {
-        func: "Cross";
     }
 
     export interface UnknownFunc extends FuncArgs {
@@ -712,4 +550,10 @@ namespace P {
 
     export type SupportBracket = "(" | "[" | "<";
 
+    export interface F<T extends string> extends FuncArgs {
+        func: T;
+    }
+    export interface U<T extends string> {
+        func: T;
+    }
 }
