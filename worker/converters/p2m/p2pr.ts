@@ -233,8 +233,14 @@ export class P2Pr {
                 const vl: P2Pr.VarList = { type: "VarList", kind: "Container", symbols: listss };
                 return vl;
             }
+
+            case "Divergence":
+            case "Dot":
+            case "Gradient":
+            case "Laplacian":
+            case "Curl":
             case "Cross": {
-                return { type: "Cross", kind: "Container", symbols: obj.args.map(c => this.innerConvert(c)) }
+                return { type: "VecExpr", op: obj.func, kind: "Container", symbols: obj.args.map(c => this.innerConvert(c)) }
             }
         }
 
@@ -286,7 +292,7 @@ export namespace P2Pr {
     export type Symbol = Mul | C<"Add"> | L<"One"> | L<"NegativeOne"> | Integer | Var | Pow | Matrix | C<"Frac"> | Float | L<"Half"> | C<"Sqrt"> | GenericFunc |
         L<"NaN"> | ConstantSymbol | C<"CoordSys3D"> | Str | BaseVector | BaseScalar | L<"VectorZero"> | Point | C<"Tuple"> | C<"BaseDyadic"> |
         Derivative | L<"Zero"> | C<"Exp"> | Relational | List | Poly | PolynomialRing | DisplayedDomain | C<"Binomial"> | UndefinedFunction |
-        C<"VarList"> | C<"Integral"> | Discrete | SingularityFunction | C<"Cross"> |
+        C<"VarList"> | C<"Integral"> | Discrete | SingularityFunction | VecExpr |
         UnknownFunc;
 
     export type VarList = C<"VarList">;
@@ -296,6 +302,11 @@ export namespace P2Pr {
     export type Add = C<"Add">;
     export type Sqrt = C<"Sqrt">;
     export type NegativeOne = L<"NegativeOne">;
+
+    export interface VecExpr extends Container {
+        type: "VecExpr";
+        op: "Cross" | "Curl" | "Divergence" | "Dot" | "Gradient" | "Laplacian";
+    }
 
     export interface Discrete extends Container {
         type: "Discrete";
@@ -443,7 +454,7 @@ namespace P {
         Relational | List | Dummy | Poly |
         PolynomialRing | DisplayedDomain | UndefinedFunction | F<"Integral"> | F<"Not"> | F<"And"> | F<"Or"> | F<"Implies"> |
         F<"SingularityFunction"> |
-        Cycle | F<"Cross"> |
+        Cycle | F<"Cross"> | F<"Curl"> | F<"Divergence"> | F<"Dot"> | F<"Gradient"> | F<"Laplacian"> |
         UnknownFunc;
     interface FuncArgs {
         args: Basic[];

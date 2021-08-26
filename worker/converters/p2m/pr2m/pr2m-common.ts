@@ -36,8 +36,8 @@ export class Pr2MCommon {
         return this.ifOpDeprecate;
     }
 
-    join(args: P2Pr.Symbol[], text: string, options?: Pr2MCommon.JoinOptions): Pr2M.CResult {
-        options = options || { wrapBracket: "if-op-exclude-mul-shortcut" }
+    join(args: P2Pr.Symbol[], text?: string, options?: Pr2MCommon.JoinOptions): Pr2M.CResult {
+        options = options || { wrapBracket: "if-op" }
         let items = args.map(a => this.main.convert(a));
 
         let blocks: BlockModel[] = [];
@@ -46,7 +46,7 @@ export class Pr2MCommon {
             const item = items[idx];
             let curBlocks = (deprecate && deprecate(item)) ? blockBd.wrapBracketIfOp(item) : item.blocks;
 
-            if (idx == 0) {
+            if (idx == 0 || !text) {
                 blocks = blockBd.combine2Blockss(blocks, curBlocks);
                 continue;
             }

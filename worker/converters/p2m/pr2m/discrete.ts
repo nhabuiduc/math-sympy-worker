@@ -22,13 +22,13 @@ export class Discrete {
             }
 
             case "And": {
-                return this.common.join(obj.symbols, "∧");
+                return this.common.join(obj.symbols, "∧", { wrapBracket: "if-op-exclude-mul-shortcut" });
             }
             case "Or": {
-                return this.common.join(obj.symbols, "∨");
+                return this.common.join(obj.symbols, "∨", { wrapBracket: "if-op-exclude-mul-shortcut" });
             }
             case "Implies": {
-                return this.common.join(obj.symbols, "⇒");
+                return this.common.join(obj.symbols, "⇒", { wrapBracket: "if-op-exclude-mul-shortcut" });
             }
         }
     }

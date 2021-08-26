@@ -74,8 +74,17 @@ export class Pr2M {
             case "Mul": {
                 return this.mul.convert(obj);
             }
-            case "Cross": {
-                return this.common.join(obj.symbols, "×");
+            case "VecExpr": {
+                switch (obj.op) {
+                    case "Cross": return this.common.join(obj.symbols, "×");
+                    case "Curl": return this.common.join([prTh.var("∇") as Symbol].concat(obj.symbols), "×");
+                    case "Divergence": return this.common.join([prTh.var("∇") as Symbol].concat(obj.symbols), "⋅");
+                    case "Dot": return this.common.join(obj.symbols, "⋅");
+                    case "Gradient": return this.common.join([prTh.var("∇") as Symbol].concat(obj.symbols));
+                    case "Laplacian": return this.common.join([prTh.var("▵") as Symbol].concat(obj.symbols));
+                }
+
+                // return this.common.join(obj.symbols, "×");
             }
             case "Pow": {
                 return this.buildPow(obj, obj.symbols, level);
