@@ -340,6 +340,10 @@ class PrTransformHelper {
         return rs;
     }
 
+    genFunc(name: string, ss: Symbol[], more?: Partial<P2Pr.GenericFunc>): P2Pr.GenericFunc {
+        return { type: "GenericFunc", func: name, kind: "Container", symbols: ss, ...more }
+    }
+
     integer(vl: number): P2Pr.Integer {
         return { type: "Integer", kind: "Leaf", value: vl };
     }
@@ -369,8 +373,8 @@ class PrTransformHelper {
             symbols: [num, den]
         }
     }
-    
-    
+
+
 
     negativeOne(): P2Pr.NegativeOne {
         return { type: "NegativeOne", kind: "Leaf" };

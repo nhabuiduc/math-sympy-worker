@@ -199,7 +199,14 @@ export class P2Pr {
                     obj.name = "𝛱";
                     genOps.argSeparator = obj.args.length <= 2 ? "|" : ";|";
                 }
-
+                if (obj.name == "primenu") {
+                    obj.name = "𝜈";
+                    genOps.powerIndexPos = "wrap-all";
+                }
+                if (obj.name == "primeomega") {
+                    obj.name = "𝛺";
+                    genOps.powerIndexPos = "wrap-all";
+                }
 
                 if (obj.name == "uppergamma") {
                     obj.name = "𝛤";
@@ -236,10 +243,32 @@ export class P2Pr {
                     return this.indexPowerBracketGenericFunc(obj, 1);
                 }
 
+                if (obj.name == "divisor_sigma") {
+                    obj.name = "𝜎";
+
+                    if (obj.args.length == 2) {
+                        return this.secondArgAsIndexOfGenericFunc(obj);
+                    }
+                }
+
+                if (obj.name == "udivisor_sigma") {
+                    obj.name = "𝜎";
+                    if (obj.args.length == 1) {
+                        return prTh.pow(prTh.genFunc(obj.name, this.mapArgs(obj.args), { allowAncesstorPowerAtEnd: false }), prTh.var("*"));
+                    }
+
+                    if (obj.args.length == 2) {
+                        return prTh.pow(prTh.genFunc(obj.name, [this.innerConvert(obj.args[0])], { allowAncesstorPowerAtEnd: false }), prTh.var("*"), this.innerConvert(obj.args[1]));
+                    }
+
+                }
+
                 let ignoreParseName = false;
                 if (obj.name == "polar_lift") {
                     ignoreParseName = true;
                 }
+
+
 
                 if (ignoreParseName) {
                     return { type: "GenericFunc", kind: "Container", func: obj.name, symbols: obj.args.map(c => this.innerConvert(c)), ...genOps }
@@ -418,6 +447,20 @@ export class P2Pr {
         return { type: "Var", kind: "Leaf", name: "?" }
     }
 
+    private secondArgAsIndexOfGenericFunc(obj: P.GenericFunc, options?: Partial<P2Pr.GenericFunc>): P2Pr.Index {
+        if (obj.args.length != 2) {
+            throw new Error("args length must be 2")
+        }
+        return {
+            type: "Index",
+            kind: "Container",
+            symbols: [
+                { type: "GenericFunc", kind: "Container", func: obj.name, symbols: [this.innerConvert(obj.args[0])], ...options },
+                this.innerConvert(obj.args[1])
+            ]
+        }
+    }
+
     private indexOfGenericFunc(obj: P.GenericFunc, options?: Partial<P2Pr.GenericFunc>): P2Pr.Index {
         return {
             type: "Index",
@@ -459,6 +502,10 @@ export class P2Pr {
                 this.innerConvert(obj.args[0]),
             ]
         }
+    }
+
+    mapArgs(args: P.Basic[]): Symbol[] {
+        return args.map(c => this.innerConvert(c));
     }
 
     private detectUnevaluatedMul(symbols: Symbol[]): boolean {
