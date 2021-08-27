@@ -15,13 +15,15 @@ class TestHelper {
             "alpha": "𝛼",
             "beta": "𝛽",
             "zeta": "𝜁",
+            "theta": "𝜃",
+            "phi": "𝜙",
         }
     });
     async prepare(statement: string): Promise<void> {
         await this.casEngineProcess.processRaw(statement, false);
     }
 
-    async run(statement: string) {
+    async run(statement: string, log?: boolean) {
         const code = `
 expr=${statement}
 rootDic = ___mcSympyExprDump(expr)
@@ -35,6 +37,9 @@ json.dumps(rootDic)
         let blocksText = "";
         if (blocks) {
             blocksText = this.blocksToText(blocks);
+        }
+        if (log) {
+            console.log(blocks);
         }
         return blocksText
     }

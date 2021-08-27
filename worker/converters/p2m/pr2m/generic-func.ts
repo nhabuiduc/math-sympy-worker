@@ -69,7 +69,7 @@ export class GenericFunc {
                 join = blockBd.joinBlocks([first, secondJoin], ";");
             }
         } else {
-            const separator = argSeparator == "," ? ", " : () => blockBd.compositeBlock("\\middle|")
+            const separator = argSeparator == "," ? "," : () => blockBd.compositeBlock("\\middle|")
             join = blockBd.joinBlocks(argSymbols.map(s => this.main.convert(s).blocks), separator);
         }
 

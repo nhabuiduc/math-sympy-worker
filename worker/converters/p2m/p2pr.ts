@@ -182,21 +182,22 @@ export class P2Pr {
                     obj.name = "H";
                     return this.indexOfGenericFunc(obj, { powerIndexPos: "wrap-all" });
                 }
-                let argSeparator: P2Pr.GenericFunc["argSeparator"] = ",";
+                const genOps: Partial<P2Pr.GenericFunc> = {};
+                // let argSeparator: P2Pr.GenericFunc["argSeparator"] = ",";
                 if (obj.name == "elliptic_k") {
                     obj.name = "K";
                 }
                 if (obj.name == "elliptic_f") {
                     obj.name = "F";
-                    argSeparator = "|";
+                    genOps.argSeparator = "|";
                 }
                 if (obj.name == "elliptic_e") {
                     obj.name = "E";
-                    argSeparator = "|";
+                    genOps.argSeparator = "|";
                 }
                 if (obj.name == "elliptic_pi") {
                     obj.name = "𝛱";
-                    argSeparator = obj.args.length <= 2 ? "|" : ";|";
+                    genOps.argSeparator = obj.args.length <= 2 ? "|" : ";|";
                 }
 
 
@@ -209,28 +210,51 @@ export class P2Pr {
                 if (obj.name == "lerchphi") {
                     obj.name = "𝛷";
                 }
+                if (obj.name == "totient") {
+                    obj.name = "𝜙";
+                    genOps.powerIndexPos = "wrap-all";
+                }
+                if (obj.name == "reduced_totient") {
+                    obj.name = "𝜆";
+                    genOps.powerIndexPos = "wrap-all";
+                }
+
                 if (obj.name == "jacobi") {
                     obj.name = "P";
-                    return this.indexPowerGenericFunc(obj, 2, { allowAncesstorPowerAtEnd: true });
+                    return this.indexPowerBracketGenericFunc(obj, 2, { allowAncesstorPowerAtEnd: true });
                 }
                 if (obj.name == "gegenbauer") {
                     obj.name = "C";
-                    return this.indexPowerGenericFunc(obj, 1, { allowAncesstorPowerAtEnd: true });
+                    return this.indexPowerBracketGenericFunc(obj, 1, { allowAncesstorPowerAtEnd: true });
                 }
                 if (obj.name == "assoc_legendre") {
                     obj.name = "P";
-                    return this.indexPowerGenericFunc(obj, 1);
+                    return this.indexPowerBracketGenericFunc(obj, 1);
                 }
                 if (obj.name == "assoc_laguerre") {
                     obj.name = "L";
-                    return this.indexPowerGenericFunc(obj, 1);
+                    return this.indexPowerBracketGenericFunc(obj, 1);
                 }
 
+                let ignoreParseName = false;
+                if (obj.name == "polar_lift") {
+                    ignoreParseName = true;
+                }
+
+                if (ignoreParseName) {
+                    return { type: "GenericFunc", kind: "Container", func: obj.name, symbols: obj.args.map(c => this.innerConvert(c)), ...genOps }
+                }
 
                 return this.nameParser.parse(obj.name, (cn) => {
-                    return { type: "GenericFunc", kind: "Container", func: cn, symbols: obj.args.map(c => this.innerConvert(c)), argSeparator }
+                    return { type: "GenericFunc", kind: "Container", func: cn, symbols: obj.args.map(c => this.innerConvert(c)), ...genOps }
                 })
 
+            }
+            case "Ynm": {
+                return this.indexPowerGenericFunc({ name: "Y", args: obj.args, func: "GenericFunc" });
+            }
+            case "Znm": {
+                return this.indexPowerGenericFunc({ name: "Z", args: obj.args, func: "GenericFunc" });
             }
             case "Abs": {
                 return { type: "Brackets", kind: "Container", br: "|", symbols: obj.args.map(c => this.innerConvert(c)) }
@@ -387,13 +411,14 @@ export class P2Pr {
             }
         }
 
+
         if (obj.args) {
             return this.nameParser.parse(obj.func, (cn) => ({ type: "GenericFunc", kind: "Container", func: cn, symbols: obj.args.map(c => this.innerConvert(c)), noBracketIfArgEmpty: true }))
         }
         return { type: "Var", kind: "Leaf", name: "?" }
     }
 
-    indexOfGenericFunc(obj: P.GenericFunc, options?: Partial<P2Pr.GenericFunc>): P2Pr.Index {
+    private indexOfGenericFunc(obj: P.GenericFunc, options?: Partial<P2Pr.GenericFunc>): P2Pr.Index {
         return {
             type: "Index",
             kind: "Container",
@@ -404,7 +429,23 @@ export class P2Pr {
         }
     }
 
-    indexPowerGenericFunc(obj: P.GenericFunc, powConsumeCount: number, options?: Partial<P2Pr.GenericFunc>): P2Pr.Pow {
+    private indexPowerGenericFunc(obj: P.GenericFunc, options?: Partial<P2Pr.GenericFunc>): P2Pr.Pow {
+        if (obj.args.length < 2) {
+            throw new Error("not enough params");
+        }
+
+        return {
+            type: "Pow",
+            kind: "Container",
+            symbols: [
+                { type: "GenericFunc", kind: "Container", func: obj.name, symbols: obj.args.slice(2).map(c => this.innerConvert(c)), ...options },
+                this.innerConvert(obj.args[1]),
+                this.innerConvert(obj.args[0]),
+            ]
+        }
+    }
+
+    private indexPowerBracketGenericFunc(obj: P.GenericFunc, powConsumeCount: number, options?: Partial<P2Pr.GenericFunc>): P2Pr.Pow {
         if (obj.args.length < powConsumeCount + 1) {
             throw new Error("not enough params");
         }
@@ -616,7 +657,7 @@ namespace P {
         U<"Exp1"> | U<"ImaginaryUnit"> | U<"Pi"> | U<"EulerGamma"> | U<"Catalan"> | U<"GoldenRatio"> | U<"TribonacciConstant"> |
         NumberSymbol | U<"HBar"> | U<"Zero"> | CoordSys3D | Str | F<"BaseVector"> | F<"BaseScalar"> | F<"VectorAdd"> | U<"VectorZero"> | F<"VectorMul"> |
         F<"Point"> | F<"Tuple"> | F<"BaseDyadic"> | Derivative | U<"BooleanFalse"> | U<"BooleanTrue"> |
-        Relational | List | Dummy | Poly | F<"Abs"> | F<"Order"> |
+        Relational | List | Dummy | Poly | F<"Abs"> | F<"Order"> | F<"Ynm"> | F<"Znm"> |
         PolynomialRing | DisplayedDomain | UndefinedFunction | F<"Integral"> | F<"Not"> | F<"And"> | F<"Or"> | F<"Implies"> |
         F<"SingularityFunction"> | F<"FallingFactorial"> | F<"RisingFactorial"> |
         Cycle | F<"Cross"> | F<"Curl"> | F<"Divergence"> | F<"Dot"> | F<"Gradient"> | F<"Laplacian"> | SpecialFuncClass |
