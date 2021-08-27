@@ -302,7 +302,7 @@ export class Pr2M {
             }
             case "Brackets": {
                 return {
-                    blocks: blockBd.wrapBetweenBrackets(this.innerConvert(obj.symbols[0], level).blocks, obj.br).blocks,
+                    blocks: blockBd.wrapBetweenBrackets(blockBd.joinBlocks(obj.symbols.map(c => this.innerConvert(c, level).blocks),","), obj.br).blocks,
                     prUnit: "bracket",
                     prBracket: obj.br,
                 }

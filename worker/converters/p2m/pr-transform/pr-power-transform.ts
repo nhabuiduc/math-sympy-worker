@@ -61,15 +61,14 @@ export class PrPowerTransform implements P2Pr.IPrTransform {
                 return this.powerRationalToSqrt(this.transformSpecialPower(symbol.symbols[0]), root, symbol);
             }
 
-            if (symbol.symbols[0].type == "Index" && !symbol.symbols[2]) {
+            let allowMergeIdx = true;
+            if (symbol.symbols[0].type == "Index" && symbol.symbols[0].symbols[0].type == "GenericFunc" && symbol.symbols[0].symbols[0].powerIndexPos == "wrap-all") {
+                allowMergeIdx = false;
+            }
+            if (symbol.symbols[0].type == "Index" && !symbol.symbols[2] && allowMergeIdx) {
                 symbol.symbols.push(symbol.symbols[0].symbols[1]);
                 symbol.symbols[0] = symbol.symbols[0].symbols[0];
             }
-
-            // if ((symbol.symbols[0].type == "BaseVector" || symbol.symbols[0].type == "BaseScalar") && !!symbol.symbols[0].systemName && !symbol.symbols[2]) {
-            //     symbol.symbols.push({ type: "Var", kind: "Leaf", name: symbol.symbols[0].systemName, bold: true });
-            //     symbol.symbols[0].systemName = undefined;
-            // }
 
             return { ...symbol, symbols: symbol.symbols.map(s => this.transformSpecialPower(s)) }
         }

@@ -162,6 +162,26 @@ export class P2Pr {
                     obj.name = "E";
                     return this.indexOfGenericFunc(obj);
                 }
+                if (obj.name == "chebyshevt") {
+                    obj.name = "T";
+                    return this.indexOfGenericFunc(obj, { powerIndexPos: "wrap-all" });
+                }
+                if (obj.name == "chebyshevu") {
+                    obj.name = "U";
+                    return this.indexOfGenericFunc(obj, { powerIndexPos: "wrap-all" });
+                }
+                if (obj.name == "legendre") {
+                    obj.name = "P";
+                    return this.indexOfGenericFunc(obj, { powerIndexPos: "wrap-all" });
+                }
+                if (obj.name == "laguerre") {
+                    obj.name = "L";
+                    return this.indexOfGenericFunc(obj, { powerIndexPos: "wrap-all" });
+                }
+                if (obj.name == "hermite") {
+                    obj.name = "H";
+                    return this.indexOfGenericFunc(obj, { powerIndexPos: "wrap-all" });
+                }
                 let argSeparator: P2Pr.GenericFunc["argSeparator"] = ",";
                 if (obj.name == "elliptic_k") {
                     obj.name = "K";
@@ -189,6 +209,23 @@ export class P2Pr {
                 if (obj.name == "lerchphi") {
                     obj.name = "𝛷";
                 }
+                if (obj.name == "jacobi") {
+                    obj.name = "P";
+                    return this.indexPowerGenericFunc(obj, 2, { allowAncesstorPowerAtEnd: true });
+                }
+                if (obj.name == "gegenbauer") {
+                    obj.name = "C";
+                    return this.indexPowerGenericFunc(obj, 1, { allowAncesstorPowerAtEnd: true });
+                }
+                if (obj.name == "assoc_legendre") {
+                    obj.name = "P";
+                    return this.indexPowerGenericFunc(obj, 1);
+                }
+                if (obj.name == "assoc_laguerre") {
+                    obj.name = "L";
+                    return this.indexPowerGenericFunc(obj, 1);
+                }
+
 
                 return this.nameParser.parse(obj.name, (cn) => {
                     return { type: "GenericFunc", kind: "Container", func: cn, symbols: obj.args.map(c => this.innerConvert(c)), argSeparator }
@@ -367,6 +404,22 @@ export class P2Pr {
         }
     }
 
+    indexPowerGenericFunc(obj: P.GenericFunc, powConsumeCount: number, options?: Partial<P2Pr.GenericFunc>): P2Pr.Pow {
+        if (obj.args.length < powConsumeCount + 1) {
+            throw new Error("not enough params");
+        }
+
+        return {
+            type: "Pow",
+            kind: "Container",
+            symbols: [
+                { type: "GenericFunc", kind: "Container", func: obj.name, symbols: obj.args.slice(powConsumeCount + 1).map(c => this.innerConvert(c)), ...options },
+                { type: "Brackets", br: "(", kind: "Container", symbols: obj.args.slice(1, powConsumeCount + 1).map(c => this.innerConvert(c)) },
+                this.innerConvert(obj.args[0]),
+            ]
+        }
+    }
+
     private detectUnevaluatedMul(symbols: Symbol[]): boolean {
         return symbols[0].type == "One" || symbols.some((c, idx) => idx > 0 && prTh.isConstant(c));
     }
@@ -472,10 +525,11 @@ export namespace P2Pr {
         type: "GenericFunc"
         func: string;
         specialFuncClass?: boolean;
-        powerIndexPos?: "all-after" | "power-after";
+        powerIndexPos?: "all-after" | "power-after" | "wrap-all";
         noBracketIfArgEmpty?: boolean;
         argSeparator?: "," | "|" | ";|";
         forceUsingOperatorName?: boolean;
+        allowAncesstorPowerAtEnd?: boolean;
     }
 
     export interface Str extends Leaf {

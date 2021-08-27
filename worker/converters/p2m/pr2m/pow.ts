@@ -19,18 +19,22 @@ export class Pow {
             throw new Error("Unsupported power with different than 2,3 arguments");
         }
 
-        if (args[0].type == "GenericFunc") {
+        if (args[0].type == "GenericFunc" && args[0].powerIndexPos != "wrap-all") {
             return this.handlePowToGenericFunc(args);
         }
 
         let arg0Cr = this.main.convert(args[0]);
         let { blocks: base } = arg0Cr;
+        const power = this.main.convert(args[1]).blocks;
 
-        if (!prTh.considerPresentAsSingleUnit(args[0], arg0Cr)) {
-            base = blockBd.wrapBetweenBrackets(base).blocks;
+        let preventWrapBracket = false;
+        if (args[0].type == "Pow" && args[0].symbols[0].type == "GenericFunc" && args[0].symbols[0].allowAncesstorPowerAtEnd) {
+            preventWrapBracket = true;
         }
 
-        const power = this.main.convert(args[1]).blocks;
+        if (!prTh.considerPresentAsSingleUnit(args[0], arg0Cr) && !preventWrapBracket) {
+            base = blockBd.wrapBetweenBrackets(base).blocks;
+        }
 
         if (args[2]) {
             const index = this.main.convert(args[2]).blocks;
