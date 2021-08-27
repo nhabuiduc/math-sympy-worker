@@ -46,15 +46,25 @@ export class Pow {
         const { name, args } = this.prCommon.buildGenericFunc(genericFunc);
 
         let powerBlock: CompositeBlockModel;
+
         const power = this.main.convert(powArgs[1]).blocks;
+
+        if (powArgs[2] && genericFunc.powerIndexPos == "power-after" && (!genericFunc.noBracketIfArgEmpty || genericFunc.symbols.length > 0)) {
+            const index = this.main.convert(powArgs[2]).blocks;
+            powerBlock = blockBd.compositeBlock("\\power-index", ["powerValue"], [power]);
+            const indexBlock = blockBd.compositeBlock("\\power-index", ["indexValue"], [index]);
+            return { blocks: [...name, indexBlock, ...args, powerBlock], prUnit: "pow" }
+        }
+
         if (powArgs[2]) {
             const index = this.main.convert(powArgs[2]).blocks;
             powerBlock = blockBd.compositeBlock("\\power-index", ["powerValue", "indexValue"], [power, index]);
+
         } else {
             powerBlock = blockBd.compositeBlock("\\power-index", ["powerValue"], [power]);
         }
 
-        const rsBlocks = genericFunc.powerIndexAfter ? [...name, ...args, powerBlock] : [...name, powerBlock, ...args];
+        const rsBlocks = genericFunc.powerIndexPos ? [...name, ...args, powerBlock] : [...name, powerBlock, ...args];
 
         return {
             blocks: rsBlocks,

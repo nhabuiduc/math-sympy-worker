@@ -100,7 +100,7 @@ export class Pr2M {
                     const genericFunc = obj.symbols[0] as P2Pr.GenericFunc;
                     const { name, args } = this.prCommon.buildGenericFunc(genericFunc);
                     const indexBlock = blockBd.indexBlock(this.innerConvert(obj.symbols[1], level).blocks);
-                    const rsBlocks = obj.symbols[0].powerIndexAfter ? [...name, ...args, indexBlock] : [...name, indexBlock, ...args];
+                    const rsBlocks = obj.symbols[0].powerIndexPos == "all-after" ? [...name, ...args, indexBlock] : [...name, indexBlock, ...args];
                     return { blocks: rsBlocks }
                 }
                 return {
@@ -309,6 +309,41 @@ export class Pr2M {
                     prBracket: obj.br,
                 }
             }
+            case "Conjugate": {
+                return {
+                    blocks: [blockBd.compositeBlock("\\overline", ["value"], [this.innerConvert(obj.symbols[0], level).blocks])],
+                    prUnit: "conjugate"
+                }
+            }
+            case "Order": {
+                const exp = this.innerConvert(obj.symbols[0], level);
+                const runs = obj.symbols.slice(1) as P2Pr.Tuple[];
+                if (runs.length <= 1 && (!runs[0] || prTh.isZero(runs[0].symbols[1]))) {
+                    return { blocks: [blockBd.textBlock("O"), ...blockBd.wrapBetweenBrackets(exp.blocks).blocks] }
+                }
+                let runsRs: BlockModel[]
+                if (runs.length == 1) {
+                    runsRs = blockBd.joinBlocks(this.convertMaps(runs[0].symbols), blockBd.compositeBlock("\\rightarrow"))
+                } else {
+                    const forms = prTh.list(runs.map(r => r.symbols[0]));
+                    const tos = prTh.list(runs.map(r => r.symbols[1]));
+                    runsRs = blockBd.joinBlocks(this.convertMaps([forms, tos]), blockBd.compositeBlock("\\rightarrow"))
+                }
+
+
+                return {
+                    blocks: [
+                        blockBd.textBlock("O"),
+                        ...blockBd.wrapBetweenBrackets(
+                            blockBd.joinBlocks([
+                                exp.blocks,
+                                [blockBd.textBlock(";")],
+                                runsRs
+                            ])
+                        ).blocks
+                    ]
+                }
+            }
 
 
             case "UnknownFunc": {
@@ -317,6 +352,10 @@ export class Pr2M {
         }
 
         return { blocks: [] };
+    }
+
+    private convertMaps(ss: Symbol[], level = 0): BlockModel[][] {
+        return ss.map(s => this.innerConvert(s, level).blocks);
     }
 
     private relationalOpMap(opIn: P2Pr.Relational["relOp"]): string {
@@ -397,7 +436,7 @@ type CResult = Pr2M.CResult;
 export namespace Pr2M {
     export interface CResult {
         blocks: BlockModel[];
-        prUnit?: "bracket" | "op" | "not" | undefined | "pow" | "factorial" | "matrix-like";
+        prUnit?: "bracket" | "op" | "not" | undefined | "pow" | "factorial" | "matrix-like" | "conjugate";
         prOp?: "mul" | "add";
         prBracket?: P2Pr.SupportBracket;
         prMinusSign?: boolean;

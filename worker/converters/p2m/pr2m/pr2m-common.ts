@@ -41,7 +41,8 @@ export class Pr2MCommon {
     }
 
     buildGenericFunc(obj: P2Pr.GenericFunc): GenericFuncResult {
-        const args = this.buildGenericFuncArgs(obj.symbols);
+
+        const args = this.buildGenericFuncArgs(obj.symbols, obj.noBracketIfArgEmpty);
 
         let nameBlock: BlockModel;
         if (obj.specialFuncClass) {
@@ -81,8 +82,11 @@ export class Pr2MCommon {
         }
     }
 
-    private buildGenericFuncArgs(symbols: Symbol[]): GenericFuncArgsResult {
+    private buildGenericFuncArgs(symbols: Symbol[], noBracketIfArgEmpty?: boolean): GenericFuncArgsResult {
         let argSymbols = symbols;
+        if (argSymbols.length <= 0 && noBracketIfArgEmpty) {
+            return { args: [] }
+        }
 
         return {
             args: blockBd.wrapBetweenBrackets(

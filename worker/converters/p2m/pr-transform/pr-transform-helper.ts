@@ -131,6 +131,9 @@ class PrTransformHelper {
         return EnumPosWeight.Unknown;
     }
 
+    list(ss: Symbol[]): P2Pr.List {
+        return { type: "List", bracket: "(", kind: "Container", separator: ",", symbols: ss };
+    }
     mul(s1: Symbol, s2: Symbol): P2Pr.Mul {
         if (s1.type == "Mul" && s2.type == "Mul") {
             return { ...s1, symbols: s1.symbols.concat(s2.symbols), unevaluatedDetected: false }
@@ -250,7 +253,7 @@ class PrTransformHelper {
     }
 
     considerPresentAsSingleUnit(s: Symbol, cr: Pr2M.CResult) {
-        if (cr.prUnit == "bracket" || cr.prUnit == "factorial" || cr.prUnit == "matrix-like") {
+        if (cr.prUnit == "bracket" || cr.prUnit == "factorial" || cr.prUnit == "matrix-like" || cr.prUnit == "conjugate") {
             return true;
         }
 
@@ -303,6 +306,9 @@ class PrTransformHelper {
 
     isNegativeOne(s: Symbol) {
         return s.type == "NegativeOne" || (s.type == "Integer" && s.value == -1);
+    }
+    isZero(s: Symbol) {
+        return s.type == "Zero" || (s.type == "Integer" && s.value == 0);
     }
 
     var(text: string): P2Pr.Var {

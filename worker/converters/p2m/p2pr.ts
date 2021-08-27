@@ -143,11 +143,43 @@ export class P2Pr {
                     return { type: "Brackets", kind: "Container", br: "ceil", symbols: obj.args.map(c => this.innerConvert(c)) }
                 }
 
-
                 if (obj.name == "min" || obj.name == "max") {
-                    return { type: "GenericFunc", kind: "Container", func: obj.name, powerIndexAfter: true, symbols: obj.args.map(c => this.innerConvert(c)) }
+                    return { type: "GenericFunc", kind: "Container", func: obj.name, powerIndexPos: "all-after", symbols: obj.args.map(c => this.innerConvert(c)) }
+                }
+                if (obj.name == "conjugate") {
+                    return { type: "Conjugate", kind: "Container", symbols: obj.args.map(c => this.innerConvert(c)) };
+                }
+                if (obj.name == "polylog") {
+                    return {
+                        type: "Index",
+                        kind: "Container",
+                        symbols: [
+                            { type: "GenericFunc", kind: "Container", func: "Li", symbols: obj.args.slice(1).map(c => this.innerConvert(c)) },
+                            this.innerConvert(obj.args[0])
+                        ]
+                    }
+                }
+                if (obj.name == "stieltjes") {
+                    return {
+                        type: "Index",
+                        kind: "Container",
+                        symbols: [
+                            { type: "GenericFunc", kind: "Container", func: "𝛾", symbols: obj.args.slice(1).map(c => this.innerConvert(c)), noBracketIfArgEmpty: true, powerIndexPos: "power-after" },
+                            this.innerConvert(obj.args[0])
+                        ]
+                    }
                 }
 
+
+                if (obj.name == "uppergamma") {
+                    obj.name = "𝛤";
+                }
+                if (obj.name == "dirichlet_eta") {
+                    obj.name = "𝜂";
+                }
+                if (obj.name == "lerchphi") {
+                    obj.name = "𝛷";
+                }
 
                 return this.nameParser.parse(obj.name, (cn) => {
                     return { type: "GenericFunc", kind: "Container", func: cn, symbols: obj.args.map(c => this.innerConvert(c)) }
@@ -160,9 +192,8 @@ export class P2Pr {
             case "Str": {
                 return { type: "Str", kind: "Leaf", text: obj.text };
             }
-            case "CoordSys3D": {
-                return { type: "CoordSys3D", kind: "Container", symbols: obj.args.map(c => this.innerConvert(c)) };
-            }
+
+
             case "BaseVector": {
                 const vIdx = P2Pr.parseIntegerConstant(obj.args[0]);
                 const system = obj.args[1] as P.CoordSys3D;
@@ -192,6 +223,14 @@ export class P2Pr {
                     ]
                 }
             }
+
+            case "Order":
+            case "CoordSys3D":
+            case "BaseDyadic":
+            case "Tuple": {
+                return { type: obj.func, kind: "Container", symbols: obj.args.map(c => this.innerConvert(c)) }
+            }
+
             case "VectorAdd": {
                 return { type: "Add", kind: "Container", symbols: obj.args.map(c => this.innerConvert(c)) }
             }
@@ -202,15 +241,14 @@ export class P2Pr {
                 return { type: "VectorZero", kind: "Leaf" }
             }
             case "Point": {
-                // return 
                 return { type: "Point", kind: "Container", name: (obj.args[0] as P.Str).text, symbols: obj.args.map(c => this.innerConvert(c)) }
             }
-            case "Tuple": {
-                return { type: "Tuple", kind: "Container", symbols: obj.args.map(c => this.innerConvert(c)) }
+
+
+            case "PolynomialRing": {
+                return { type: "PolynomialRing", kind: "Container", symbols: obj.args.map(c => this.innerConvert(c)), domain: this.innerConvert(obj.domain) }
             }
-            case "BaseDyadic": {
-                return { type: "BaseDyadic", kind: "Container", symbols: obj.args.map(c => this.innerConvert(c)) }
-            }
+
             case "Derivative": {
                 return { type: "Derivative", kind: "Container", partial: obj.partial, symbols: obj.args.map(c => this.innerConvert(c)) }
             }
@@ -240,9 +278,7 @@ export class P2Pr {
             case "Poly": {
                 return { type: "Poly", kind: "Container", symbols: obj.args.map(c => this.innerConvert(c)), domain: this.innerConvert(obj.domain) }
             }
-            case "PolynomialRing": {
-                return { type: "PolynomialRing", kind: "Container", symbols: obj.args.map(c => this.innerConvert(c)), domain: this.innerConvert(obj.domain) }
-            }
+
             case "DisplayedDomain": {
                 return { type: "DisplayedDomain", kind: "Leaf", name: obj.name }
             }
@@ -341,7 +377,7 @@ export namespace P2Pr {
         L<"NaN"> | ConstantSymbol | C<"CoordSys3D"> | Str | BaseVector | BaseScalar | L<"VectorZero"> | Point | C<"Tuple"> | C<"BaseDyadic"> |
         Derivative | L<"Zero"> | C<"Exp"> | Relational | List | Poly | PolynomialRing | DisplayedDomain | C<"Binomial"> | UndefinedFunction |
         C<"VarList"> | C<"Integral"> | Discrete | SingularityFunction | VecExpr | C<"Index"> | JsonData | C<"Factorial"> | C<"SubFactorial"> |
-        C<"Factorial2"> | Brackets |
+        C<"Factorial2"> | Brackets | C<"Conjugate"> | C<"Order"> |
         UnknownFunc;
 
     export type VarList = C<"VarList">;
@@ -416,7 +452,8 @@ export namespace P2Pr {
         type: "GenericFunc"
         func: string;
         specialFuncClass?: boolean;
-        powerIndexAfter?: boolean;
+        powerIndexPos?: "all-after" | "power-after";
+        noBracketIfArgEmpty?: boolean;
     }
 
     export interface Str extends Leaf {
@@ -513,7 +550,7 @@ namespace P {
         U<"Exp1"> | U<"ImaginaryUnit"> | U<"Pi"> | U<"EulerGamma"> | U<"Catalan"> | U<"GoldenRatio"> | U<"TribonacciConstant"> |
         NumberSymbol | U<"HBar"> | U<"Zero"> | CoordSys3D | Str | F<"BaseVector"> | F<"BaseScalar"> | F<"VectorAdd"> | U<"VectorZero"> | F<"VectorMul"> |
         F<"Point"> | F<"Tuple"> | F<"BaseDyadic"> | Derivative | U<"BooleanFalse"> | U<"BooleanTrue"> |
-        Relational | List | Dummy | Poly | F<"Abs"> |
+        Relational | List | Dummy | Poly | F<"Abs"> | F<"Order"> |
         PolynomialRing | DisplayedDomain | UndefinedFunction | F<"Integral"> | F<"Not"> | F<"And"> | F<"Or"> | F<"Implies"> |
         F<"SingularityFunction"> | F<"FallingFactorial"> | F<"RisingFactorial"> |
         Cycle | F<"Cross"> | F<"Curl"> | F<"Divergence"> | F<"Dot"> | F<"Gradient"> | F<"Laplacian"> | SpecialFuncClass |

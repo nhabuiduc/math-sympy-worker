@@ -128,7 +128,7 @@ class BlockBd {
 
     compositeBlock(
         name: "\\power-index" | "\\frac" | "\\sqrt" | "\\matrix" | "\\text" | "\\small-tilde" | "\\small-hat" | "\\middle|" |
-            "\\operatorname" | `\\${"i" | "ii" | "iii" | "iii"}nt`,
+            "\\operatorname" | `\\${"i" | "ii" | "iii" | "iii"}nt` | "\\overline" | "\\rightarrow",
         elementNames: ("powerValue" | "indexValue" | "value" | "sub1" | "textValue")[] = [],
         innerBlocks: BlockModel[][] = [],
         style?: BlockStyle): CompositeBlockModel {
@@ -207,15 +207,16 @@ class BlockBd {
         return (rs.prUnit == "op") ? this.wrapBetweenBrackets(rs.blocks).blocks : rs.blocks;
     }
 
-    joinBlocks(blockss: BlockModel[][], text?: string) {
+    /**Fix to have deepclone block */
+    joinBlocks(blockss: BlockModel[][], textOrBlock?: string | BlockModel) {
         let rs: BlockModel[] = [];
         for (let idx = 0; idx < blockss.length; idx++) {
             let blocks = blockss[idx];
 
-            if (idx <= 0 || !text) {
+            if (idx <= 0 || !textOrBlock) {
                 rs = this.combine2Blockss(rs, blocks);
             } else {
-                rs = this.combineMultipleBlocks(rs, [this.textBlock(text)], blocks);
+                rs = this.combineMultipleBlocks(rs, typeof textOrBlock == "string" ? [this.textBlock(textOrBlock)] : [ textOrBlock], blocks);
             }
 
         }

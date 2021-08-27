@@ -14,6 +14,7 @@ class TestHelper {
             "omega": "𝜔",
             "alpha": "𝛼",
             "beta": "𝛽",
+            "zeta": "𝜁",
         }
     });
     async prepare(statement: string): Promise<void> {
