@@ -369,14 +369,8 @@ class PrTransformHelper {
             symbols: [num, den]
         }
     }
-    // mul(...symbols: Symbol[]): P2Pr.Mul {
-    //     return {
-    //         type: "Mul",
-    //         kind: "Container",
-    //         symbols: symbols,
-    //         unevaluatedDetected: false,
-    //     }
-    // }
+    
+    
 
     negativeOne(): P2Pr.NegativeOne {
         return { type: "NegativeOne", kind: "Leaf" };

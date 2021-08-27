@@ -208,7 +208,7 @@ class BlockBd {
     }
 
     /**Fix to have deepclone block */
-    joinBlocks(blockss: BlockModel[][], textOrBlock?: string | BlockModel) {
+    joinBlocks(blockss: BlockModel[][], textOrBlock?: string | (() => BlockModel)) {
         let rs: BlockModel[] = [];
         for (let idx = 0; idx < blockss.length; idx++) {
             let blocks = blockss[idx];
@@ -216,7 +216,7 @@ class BlockBd {
             if (idx <= 0 || !textOrBlock) {
                 rs = this.combine2Blockss(rs, blocks);
             } else {
-                rs = this.combineMultipleBlocks(rs, typeof textOrBlock == "string" ? [this.textBlock(textOrBlock)] : [ textOrBlock], blocks);
+                rs = this.combineMultipleBlocks(rs, typeof textOrBlock == "string" ? [this.textBlock(textOrBlock)] : [textOrBlock()], blocks);
             }
 
         }

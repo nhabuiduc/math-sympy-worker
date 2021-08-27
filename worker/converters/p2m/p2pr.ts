@@ -150,24 +150,33 @@ export class P2Pr {
                     return { type: "Conjugate", kind: "Container", symbols: obj.args.map(c => this.innerConvert(c)) };
                 }
                 if (obj.name == "polylog") {
-                    return {
-                        type: "Index",
-                        kind: "Container",
-                        symbols: [
-                            { type: "GenericFunc", kind: "Container", func: "Li", symbols: obj.args.slice(1).map(c => this.innerConvert(c)) },
-                            this.innerConvert(obj.args[0])
-                        ]
-                    }
+                    obj.name = "Li";
+                    return this.indexOfGenericFunc(obj);
+
                 }
                 if (obj.name == "stieltjes") {
-                    return {
-                        type: "Index",
-                        kind: "Container",
-                        symbols: [
-                            { type: "GenericFunc", kind: "Container", func: "𝛾", symbols: obj.args.slice(1).map(c => this.innerConvert(c)), noBracketIfArgEmpty: true, powerIndexPos: "power-after" },
-                            this.innerConvert(obj.args[0])
-                        ]
-                    }
+                    obj.name = "𝛾";
+                    return this.indexOfGenericFunc(obj, { noBracketIfArgEmpty: true, powerIndexPos: "power-after" });
+                }
+                if (obj.name == "expint") {
+                    obj.name = "E";
+                    return this.indexOfGenericFunc(obj);
+                }
+                let argSeparator: P2Pr.GenericFunc["argSeparator"] = ",";
+                if (obj.name == "elliptic_k") {
+                    obj.name = "K";
+                }
+                if (obj.name == "elliptic_f") {
+                    obj.name = "F";
+                    argSeparator = "|";
+                }
+                if (obj.name == "elliptic_e") {
+                    obj.name = "E";
+                    argSeparator = "|";
+                }
+                if (obj.name == "elliptic_pi") {
+                    obj.name = "𝛱";
+                    argSeparator = obj.args.length <= 2 ? "|" : ";|";
                 }
 
 
@@ -182,7 +191,7 @@ export class P2Pr {
                 }
 
                 return this.nameParser.parse(obj.name, (cn) => {
-                    return { type: "GenericFunc", kind: "Container", func: cn, symbols: obj.args.map(c => this.innerConvert(c)) }
+                    return { type: "GenericFunc", kind: "Container", func: cn, symbols: obj.args.map(c => this.innerConvert(c)), argSeparator }
                 })
 
             }
@@ -241,7 +250,8 @@ export class P2Pr {
                 return { type: "VectorZero", kind: "Leaf" }
             }
             case "Point": {
-                return { type: "Point", kind: "Container", name: (obj.args[0] as P.Str).text, symbols: obj.args.map(c => this.innerConvert(c)) }
+                return { type: "GenericFunc", kind: "Container", func: (obj.args[0] as P.Str).text, symbols: obj.args.map(c => this.innerConvert(c)) }
+                // return { type: "Point", kind: "Container", name: (obj.args[0] as P.Str).text, symbols: obj.args.map(c => this.innerConvert(c)) }
             }
 
 
@@ -288,7 +298,7 @@ export class P2Pr {
             }
 
             case "UndefinedFunction": {
-                return this.nameParser.parse(obj.name, cn => ({ type: "UndefinedFunction", kind: "Leaf", name: cn }))
+                return this.nameParser.parse(obj.name, (cn) => ({ type: "GenericFunc", kind: "Container", func: cn, symbols: obj.args.map(c => this.innerConvert(c)), noBracketIfArgEmpty: true }))
             }
             case "Implies":
             case "Not":
@@ -341,9 +351,20 @@ export class P2Pr {
         }
 
         if (obj.args) {
-            return this.nameParser.parse(obj.func, cn => ({ type: "UnknownFunc", name: cn, kind: "Container", symbols: obj.args.map(c => this.innerConvert(c)) }))
+            return this.nameParser.parse(obj.func, (cn) => ({ type: "GenericFunc", kind: "Container", func: cn, symbols: obj.args.map(c => this.innerConvert(c)), noBracketIfArgEmpty: true }))
         }
         return { type: "Var", kind: "Leaf", name: "?" }
+    }
+
+    indexOfGenericFunc(obj: P.GenericFunc, options?: Partial<P2Pr.GenericFunc>): P2Pr.Index {
+        return {
+            type: "Index",
+            kind: "Container",
+            symbols: [
+                { type: "GenericFunc", kind: "Container", func: obj.name, symbols: obj.args.slice(1).map(c => this.innerConvert(c)), ...options },
+                this.innerConvert(obj.args[0])
+            ]
+        }
     }
 
     private detectUnevaluatedMul(symbols: Symbol[]): boolean {
@@ -374,11 +395,10 @@ export namespace P2Pr {
     }
 
     export type Symbol = Mul | C<"Add"> | L<"One"> | L<"NegativeOne"> | Integer | Var | Pow | Matrix | C<"Frac"> | Float | L<"Half"> | C<"Sqrt"> | GenericFunc |
-        L<"NaN"> | ConstantSymbol | C<"CoordSys3D"> | Str | BaseVector | BaseScalar | L<"VectorZero"> | Point | C<"Tuple"> | C<"BaseDyadic"> |
-        Derivative | L<"Zero"> | C<"Exp"> | Relational | List | Poly | PolynomialRing | DisplayedDomain | C<"Binomial"> | UndefinedFunction |
+        L<"NaN"> | ConstantSymbol | C<"CoordSys3D"> | Str | BaseVector | BaseScalar | L<"VectorZero"> | C<"Tuple"> | C<"BaseDyadic"> |
+        Derivative | L<"Zero"> | C<"Exp"> | Relational | List | Poly | PolynomialRing | DisplayedDomain | C<"Binomial"> |
         C<"VarList"> | C<"Integral"> | Discrete | SingularityFunction | VecExpr | C<"Index"> | JsonData | C<"Factorial"> | C<"SubFactorial"> |
-        C<"Factorial2"> | Brackets | C<"Conjugate"> | C<"Order"> |
-        UnknownFunc;
+        C<"Factorial2"> | Brackets | C<"Conjugate"> | C<"Order">
 
     export type VarList = C<"VarList">;
     export type Frac = C<"Frac">;
@@ -454,6 +474,8 @@ export namespace P2Pr {
         specialFuncClass?: boolean;
         powerIndexPos?: "all-after" | "power-after";
         noBracketIfArgEmpty?: boolean;
+        argSeparator?: "," | "|" | ";|";
+        forceUsingOperatorName?: boolean;
     }
 
     export interface Str extends Leaf {
@@ -471,10 +493,10 @@ export namespace P2Pr {
         name: string;
     }
 
-    export interface Point extends Container {
-        type: "Point";
-        name: string;
-    }
+    // export interface Point extends Container {
+    //     type: "Point";
+    //     name: string;
+    // }
 
     export interface Derivative extends Container {
         type: "Derivative";
@@ -513,16 +535,6 @@ export namespace P2Pr {
         type: "SingularityFunction";
     }
 
-    export interface UndefinedFunction extends Leaf {
-        type: "UndefinedFunction";
-        name: string;
-    }
-
-
-    export interface UnknownFunc extends Container {
-        type: "UnknownFunc";
-        name: string;
-    }
 
     export interface IPrTransform {
         transform(symbol: Symbol, ops: P2Pr.TransformOptions): Symbol;
@@ -643,7 +655,7 @@ namespace P {
         func: "PolynomialRing";
         domain: Basic,
     }
-    export interface UndefinedFunction {
+    export interface UndefinedFunction extends FuncArgs {
         func: "UndefinedFunction";
         name: string;
     }

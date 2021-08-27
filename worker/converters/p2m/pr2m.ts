@@ -13,7 +13,7 @@ import { Pow } from "./pr2m/pow";
 
 import { Pr2MCommon } from "./pr2m/pr2m-common";
 import { symbolIndexSerialize } from "@sympy-worker/symbol-index-serializer";
-import stringHelper from "@lib-shared/string-helper";
+import { GenericFunc } from "./pr2m/generic-func";
 
 export class Pr2M {
     private derivative = new Derivative(this);
@@ -24,10 +24,12 @@ export class Pr2M {
     private add = new Add(this);
     private pow: Pow;
     private prCommon: Pr2MCommon;
+    private genericFunc: GenericFunc;
 
-    constructor(private constantTextFuncSet: Set<string>, private symbolLatexNames: { [key: string]: string }) {
-        this.prCommon = new Pr2MCommon(this, constantTextFuncSet, symbolLatexNames);
-        this.pow = new Pow(this, this.prCommon);
+    constructor(constantTextFuncSet: Set<string>, symbolLatexNames: { [key: string]: string }) {
+        this.prCommon = new Pr2MCommon(this);
+        this.genericFunc = new GenericFunc(this, constantTextFuncSet, symbolLatexNames)
+        this.pow = new Pow(this, this.genericFunc);
         this.discrete = new Discrete(this, this.prCommon);
     }
 
@@ -98,7 +100,7 @@ export class Pr2M {
             case "Index": {
                 if (obj.symbols[0].type == "GenericFunc") {
                     const genericFunc = obj.symbols[0] as P2Pr.GenericFunc;
-                    const { name, args } = this.prCommon.buildGenericFunc(genericFunc);
+                    const { name, args } = this.genericFunc.buildGenericFunc(genericFunc);
                     const indexBlock = blockBd.indexBlock(this.innerConvert(obj.symbols[1], level).blocks);
                     const rsBlocks = obj.symbols[0].powerIndexPos == "all-after" ? [...name, ...args, indexBlock] : [...name, indexBlock, ...args];
                     return { blocks: rsBlocks }
@@ -138,7 +140,7 @@ export class Pr2M {
                 return { blocks: [blockBd.compositeBlock("\\sqrt", ["value", "sub1"], [this.innerConvert(obj.symbols[0], 0).blocks, this.innerConvert(obj.symbols[1], 0).blocks])] }
             }
             case "GenericFunc": {
-                const { name, args } = this.prCommon.buildGenericFunc(obj);
+                const { name, args } = this.genericFunc.buildGenericFunc(obj);
                 return { blocks: name.concat(args) }
             }
             case "Factorial": {
@@ -170,14 +172,7 @@ export class Pr2M {
                     ]),
                 }
             }
-            case "UndefinedFunction": {
 
-                if (stringHelper.length(obj.name) == 1) {
-                    return { blocks: [blockBd.textBlock(obj.name)] }
-                }
-
-                return { blocks: [blockBd.operatorFuncBlock(obj.name, this.constantTextFuncSet, this.symbolLatexNames)] }
-            }
             case "Matrix": {
                 const matrixBlock = blockBd.compositeBlock("\\matrix", [], []) as MatrixLikeBlockModel;
                 matrixBlock.bracket = "[";
@@ -200,7 +195,10 @@ export class Pr2M {
             }
 
             case "CoordSys3D": {
-                return this.convertFullNameFunc(obj.type, obj.symbols);
+                const { name, args } = this.genericFunc.buildGenericFunc({
+                    type: "GenericFunc", func: "CoordSys3D", kind: "Container", symbols: obj.symbols
+                })
+                return { blocks: name.concat(args) }
             }
             case "BaseVector": {
                 return {
@@ -223,10 +221,10 @@ export class Pr2M {
                     ]
                 }
             }
-            case "Point": {
-                return this.convertFullNameFunc(obj.type, obj.symbols);
-                // return { blocks: [blockBd.textBlock(obj.name)] }
-            }
+            // case "Point": {
+            //     return this.convertFullNameFunc(obj.type, obj.symbols);
+            //     // return { blocks: [blockBd.textBlock(obj.name)] }
+            // }
             case "Tuple": {
                 const join = this.joinBy(obj.symbols, ", ");
                 return blockBd.wrapBetweenBrackets(join)
@@ -323,11 +321,11 @@ export class Pr2M {
                 }
                 let runsRs: BlockModel[]
                 if (runs.length == 1) {
-                    runsRs = blockBd.joinBlocks(this.convertMaps(runs[0].symbols), blockBd.compositeBlock("\\rightarrow"))
+                    runsRs = blockBd.joinBlocks(this.convertMaps(runs[0].symbols), () => blockBd.compositeBlock("\\rightarrow"))
                 } else {
                     const forms = prTh.list(runs.map(r => r.symbols[0]));
                     const tos = prTh.list(runs.map(r => r.symbols[1]));
-                    runsRs = blockBd.joinBlocks(this.convertMaps([forms, tos]), blockBd.compositeBlock("\\rightarrow"))
+                    runsRs = blockBd.joinBlocks(this.convertMaps([forms, tos]), () => blockBd.compositeBlock("\\rightarrow"))
                 }
 
 
@@ -343,11 +341,6 @@ export class Pr2M {
                         ).blocks
                     ]
                 }
-            }
-
-
-            case "UnknownFunc": {
-                return this.convertFullNameFunc(obj.name, obj.symbols);
             }
         }
 
@@ -370,18 +363,6 @@ export class Pr2M {
 
         return "="
     }
-
-
-    private convertFullNameFunc(name: string, symbbol: Symbol[]): CResult {
-        return {
-            blocks: [
-                blockBd.operatorFuncBlock(name, this.constantTextFuncSet, this.symbolLatexNames),
-                ...blockBd.wrapBetweenBrackets(this.joinBy(symbbol, ", ")).blocks,
-            ]
-        }
-    }
-
-
 
     private convertVarSymbol(obj: P2Pr.Var): CResult {
         return { blocks: [blockBd.textBlock(obj.name, obj.bold ? { mathType: "\\mathbf" } : undefined)], }
