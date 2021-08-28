@@ -163,166 +163,166 @@ tau, Tau, TAU, taU = symbols('tau, Tau, TAU, taU')
         expect(await th.run("Symbol('omega') ** Symbol('beta')")).equal(`[𝜔][💪,[𝛽]]`);
     })
 
-    it.only("functions", async () => {
-        // expect(await th.run("exp(x)")).equal(`[e][💪,[x]]`);
-        // expect(await th.run("exp(1) + exp(2)")).equal(`[e+e][💪,[2]]`);
+    it("functions", async () => {
+        expect(await th.run("exp(x)")).equal(`[e][💪,[x]]`);
+        expect(await th.run("exp(1) + exp(2)")).equal(`[e+e][💪,[2]]`);
 
-        // await th.prepare(`f = Function('f')`);
+        await th.prepare(`f = Function('f')`);
 
-        // expect(await th.run("f(x)")).equal(`[f]([x])`);
-        // expect(await th.run("f")).equal(`[f]`);
+        expect(await th.run("f(x)")).equal(`[f]([x])`);
+        expect(await th.run("f")).equal(`[f]`);
 
-        // await th.prepare(`g = Function('g')`);
-        // expect(await th.run("g(x, y)")).equal(`[g]([x,y])`);
-        // expect(await th.run("g")).equal(`[g]`);
+        await th.prepare(`g = Function('g')`);
+        expect(await th.run("g(x, y)")).equal(`[g]([x,y])`);
+        expect(await th.run("g")).equal(`[g]`);
 
-        // await th.prepare(`  h = Function('h')`);
-        // expect(await th.run("h(x, y, z)")).equal(`[h]([x,y,z])`);
+        await th.prepare(`  h = Function('h')`);
+        expect(await th.run("h(x, y, z)")).equal(`[h]([x,y,z])`);
 
-        // await th.prepare(` Li = Function('Li')`);
-        // expect(await th.run("Li")).equal(`[⚙️,[Li]]`);
-        // expect(await th.run("Li(x)")).equal(`[⚙️,[Li]]([x])`);
+        await th.prepare(` Li = Function('Li')`);
+        expect(await th.run("Li")).equal(`[⚙️,[Li]]`);
+        expect(await th.run("Li(x)")).equal(`[⚙️,[Li]]([x])`);
 
-        // await th.prepare(` mybeta = Function('beta')`);
-        // expect(await th.run("mybeta(x, y, z)")).equal(`[𝛽]([x,y,z])`);
-        // expect(await th.run("beta(x, y)")).equal(`[⚙️,[B]]([x,y])`);
-        // expect(await th.run("beta(x, y)**2")).equal(`[⚙️,[B]][💪,[2]]([x,y])`);
-        // expect(await th.run("mybeta(x)")).equal(`[𝛽]([x])`);
-        // expect(await th.run("mybeta")).equal(`[𝛽]`);
+        await th.prepare(` mybeta = Function('beta')`);
+        expect(await th.run("mybeta(x, y, z)")).equal(`[𝛽]([x,y,z])`);
+        expect(await th.run("beta(x, y)")).equal(`[⚙️,[B]]([x,y])`);
+        expect(await th.run("beta(x, y)**2")).equal(`[⚙️,[B]][💪,[2]]([x,y])`);
+        expect(await th.run("mybeta(x)")).equal(`[𝛽]([x])`);
+        expect(await th.run("mybeta")).equal(`[𝛽]`);
 
-        // await th.prepare(`g = Function('gamma')`);
-        // expect(await th.run("g(x, y, z)")).equal(`[𝛾]([x,y,z])`);
-        // expect(await th.run("g(x)")).equal(`[𝛾]([x])`);
-        // expect(await th.run("g")).equal(`[𝛾]`);
+        await th.prepare(`g = Function('gamma')`);
+        expect(await th.run("g(x, y, z)")).equal(`[𝛾]([x,y,z])`);
+        expect(await th.run("g(x)")).equal(`[𝛾]([x])`);
+        expect(await th.run("g")).equal(`[𝛾]`);
 
-        // await th.prepare(`a1 = Function('a_1')`);
-        // expect(await th.run("a1")).equal(`[a][⛏️,[1]]`);
-        // expect(await th.run("a1(x)")).equal(`[a][⛏️,[1]]([x])`);
-        // await th.prepare(`omega1 = Function('omega1')`);
-        // expect(await th.run("omega1")).equal(`[𝜔][⛏️,[1]]`);
-        // expect(await th.run("omega1(x)")).equal(`[𝜔][⛏️,[1]]([x])`);
+        await th.prepare(`a1 = Function('a_1')`);
+        expect(await th.run("a1")).equal(`[a][⛏️,[1]]`);
+        expect(await th.run("a1(x)")).equal(`[a][⛏️,[1]]([x])`);
+        await th.prepare(`omega1 = Function('omega1')`);
+        expect(await th.run("omega1")).equal(`[𝜔][⛏️,[1]]`);
+        expect(await th.run("omega1(x)")).equal(`[𝜔][⛏️,[1]]([x])`);
 
-        // expect(await th.run("sin(x)")).equal(`[sin,]([x])`);
-        // expect(await th.run("sin(2*x**2)")).equal(`[sin,]([2x][💪,[2]])`);
-        // expect(await th.run("sin(x**2)")).equal(`[sin,]([x][💪,[2]])`);
+        expect(await th.run("sin(x)")).equal(`[sin,]([x])`);
+        expect(await th.run("sin(2*x**2)")).equal(`[sin,]([2x][💪,[2]])`);
+        expect(await th.run("sin(x**2)")).equal(`[sin,]([x][💪,[2]])`);
 
-        // expect(await th.run("asin(x)**2")).equal(`[asin,][💪,[2]]([x])`);
-        // expect(await th.run("acsc(x)")).equal(`[acsc,]([x])`);
-        // expect(await th.run("asinh(x)")).equal(`[asinh,]([x])`);
+        expect(await th.run("asin(x)**2")).equal(`[asin,][💪,[2]]([x])`);
+        expect(await th.run("acsc(x)")).equal(`[acsc,]([x])`);
+        expect(await th.run("asinh(x)")).equal(`[asinh,]([x])`);
 
-        // expect(await th.run("factorial(k)")).equal(`[k!]`);
-        // expect(await th.run("factorial(-k)")).equal(`([-k])[!]`);
-        // expect(await th.run("factorial(k)**2")).equal(`[k!][💪,[2]]`);
+        expect(await th.run("factorial(k)")).equal(`[k!]`);
+        expect(await th.run("factorial(-k)")).equal(`([-k])[!]`);
+        expect(await th.run("factorial(k)**2")).equal(`[k!][💪,[2]]`);
 
-        // expect(await th.run("subfactorial(k)")).equal(`[!k]`);
-        // expect(await th.run("subfactorial(-k)")).equal(`[!]([-k])`);
-        // expect(await th.run("subfactorial(k)**2")).equal(`([!k])[💪,[2]]`);
+        expect(await th.run("subfactorial(k)")).equal(`[!k]`);
+        expect(await th.run("subfactorial(-k)")).equal(`[!]([-k])`);
+        expect(await th.run("subfactorial(k)**2")).equal(`([!k])[💪,[2]]`);
 
-        // expect(await th.run("factorial2(k)")).equal(`[k!!]`);
-        // expect(await th.run("factorial2(-k)")).equal(`([-k])[!!]`);
-        // expect(await th.run("factorial2(k)**2")).equal(`[k!!][💪,[2]]`);
+        expect(await th.run("factorial2(k)")).equal(`[k!!]`);
+        expect(await th.run("factorial2(-k)")).equal(`([-k])[!!]`);
+        expect(await th.run("factorial2(k)**2")).equal(`[k!!][💪,[2]]`);
 
-        // expect(await th.run("binomial(2, k)")).equal(`[(🏓)binom,[2],[k]]`);
-        // expect(await th.run("binomial(2, k)**2")).equal(`[(🏓)binom,[2],[k]][💪,[2]]`);
+        expect(await th.run("binomial(2, k)")).equal(`[(🏓)binom,[2],[k]]`);
+        expect(await th.run("binomial(2, k)**2")).equal(`[(🏓)binom,[2],[k]][💪,[2]]`);
 
-        // expect(await th.run("FallingFactorial(3, k)")).equal(`([3])[⛏️,[k]]`);
-        // expect(await th.run("RisingFactorial(3, k)")).equal(`[3][💪,([k])]`);
+        expect(await th.run("FallingFactorial(3, k)")).equal(`([3])[⛏️,[k]]`);
+        expect(await th.run("RisingFactorial(3, k)")).equal(`[3][💪,([k])]`);
 
-        // expect(await th.run("floor(x)")).equal(`⌊[x]⌋`);
-        // expect(await th.run("ceiling(x)")).equal(`⌈[x]⌉`);
-        // expect(await th.run("frac(x)")).equal(`[⚙️,[frac]]([x])`);
-        // expect(await th.run("floor(x)**2")).equal(`⌊[x]⌋[💪,[2]]`);
-        // expect(await th.run("ceiling(x)**2")).equal(`⌈[x]⌉[💪,[2]]`);
-        // expect(await th.run("frac(x)**2")).equal(`[⚙️,[frac]][💪,[2]]([x])`);
+        expect(await th.run("floor(x)")).equal(`⌊[x]⌋`);
+        expect(await th.run("ceiling(x)")).equal(`⌈[x]⌉`);
+        expect(await th.run("frac(x)")).equal(`[⚙️,[frac]]([x])`);
+        expect(await th.run("floor(x)**2")).equal(`⌊[x]⌋[💪,[2]]`);
+        expect(await th.run("ceiling(x)**2")).equal(`⌈[x]⌉[💪,[2]]`);
+        expect(await th.run("frac(x)**2")).equal(`[⚙️,[frac]][💪,[2]]([x])`);
 
-        // expect(await th.run("Min(x, 2, x**3)")).equal(`[min,]([2,x,x][💪,[3]])`);
-        // expect(await th.run("Min(x, y)**2")).equal(`[min,]([x,y])[💪,[2]]`);
-        // expect(await th.run("Max(x, 2, x**3)")).equal(`[max,]([2,x,x][💪,[3]])`);
-        // expect(await th.run("Max(x, y)**2")).equal(`[max,]([x,y])[💪,[2]]`);
-        // expect(await th.run("Abs(x)")).equal(`|[x]|`);
-        // expect(await th.run("Abs(x)**2")).equal(`|[x]|[💪,[2]]`);
-        // expect(await th.run("re(x)")).equal(`[⚙️,[re]]([x])`);
-        // expect(await th.run("re(x + y)")).equal(`[⚙️,[re]]([x])[+][⚙️,[re]]([y])`);
-        // expect(await th.run("im(x)")).equal(`[⚙️,[im]]([x])`);
-        // expect(await th.run("conjugate(x)")).equal(`[overline,[x]]`);
-        // expect(await th.run("conjugate(x)**2")).equal(`[overline,[x]][💪,[2]]`);
-        // expect(await th.run("gamma(x)")).equal(`[𝛤]([x])`);
-        // await th.prepare(`w = Wild('w')`);
-        // expect(await th.run("gamma(w)")).equal(`[𝛤]([w])`);
-        // expect(await th.run("Order(x)")).equal(`[O]([x])`);
-        // expect(await th.run("Order(x)")).equal(`[O]([x])`);
-        // expect(await th.run("Order(x, (x, 0))")).equal(`[O]([x])`);
-        // expect(await th.run("Order(x, (x, oo))")).equal(`[O]([x;x][rightarrow,][∞])`);
-        // expect(await th.run("Order(x - y, (x, y))")).equal(`[O]([x-y;x][rightarrow,][y])`);
-        // expect(await th.run("Order(x, x, y)")).equal(`[O]([x;]([x,y])[rightarrow,]([0,0]))`);
-        // expect(await th.run("Order(x, (x, oo), (y, oo))")).equal(`[O]([x;]([x,y])[rightarrow,]([∞,∞]))`);
-        // expect(await th.run("lowergamma(x, y)")).equal(`[𝛾]([x,y])`);
-        // expect(await th.run("lowergamma(x, y)**2")).equal(`[𝛾][💪,[2]]([x,y])`);
-        // expect(await th.run("uppergamma(x, y)")).equal(`[𝛤]([x,y])`);
-        // expect(await th.run("uppergamma(x, y)**2")).equal(`[𝛤][💪,[2]]([x,y])`);
+        expect(await th.run("Min(x, 2, x**3)")).equal(`[min,]([2,x,x][💪,[3]])`);
+        expect(await th.run("Min(x, y)**2")).equal(`[min,]([x,y])[💪,[2]]`);
+        expect(await th.run("Max(x, 2, x**3)")).equal(`[max,]([2,x,x][💪,[3]])`);
+        expect(await th.run("Max(x, y)**2")).equal(`[max,]([x,y])[💪,[2]]`);
+        expect(await th.run("Abs(x)")).equal(`|[x]|`);
+        expect(await th.run("Abs(x)**2")).equal(`|[x]|[💪,[2]]`);
+        expect(await th.run("re(x)")).equal(`[⚙️,[re]]([x])`);
+        expect(await th.run("re(x + y)")).equal(`[⚙️,[re]]([x])[+][⚙️,[re]]([y])`);
+        expect(await th.run("im(x)")).equal(`[⚙️,[im]]([x])`);
+        expect(await th.run("conjugate(x)")).equal(`[overline,[x]]`);
+        expect(await th.run("conjugate(x)**2")).equal(`[overline,[x]][💪,[2]]`);
+        expect(await th.run("gamma(x)")).equal(`[𝛤]([x])`);
+        await th.prepare(`w = Wild('w')`);
+        expect(await th.run("gamma(w)")).equal(`[𝛤]([w])`);
+        expect(await th.run("Order(x)")).equal(`[O]([x])`);
+        expect(await th.run("Order(x)")).equal(`[O]([x])`);
+        expect(await th.run("Order(x, (x, 0))")).equal(`[O]([x])`);
+        expect(await th.run("Order(x, (x, oo))")).equal(`[O]([x;x][rightarrow,][∞])`);
+        expect(await th.run("Order(x - y, (x, y))")).equal(`[O]([x-y;x][rightarrow,][y])`);
+        expect(await th.run("Order(x, x, y)")).equal(`[O]([x;]([x,y])[rightarrow,]([0,0]))`);
+        expect(await th.run("Order(x, (x, oo), (y, oo))")).equal(`[O]([x;]([x,y])[rightarrow,]([∞,∞]))`);
+        expect(await th.run("lowergamma(x, y)")).equal(`[𝛾]([x,y])`);
+        expect(await th.run("lowergamma(x, y)**2")).equal(`[𝛾][💪,[2]]([x,y])`);
+        expect(await th.run("uppergamma(x, y)")).equal(`[𝛤]([x,y])`);
+        expect(await th.run("uppergamma(x, y)**2")).equal(`[𝛤][💪,[2]]([x,y])`);
 
-        // expect(await th.run("cot(x)")).equal(`[cot,]([x])`);
-        // expect(await th.run("coth(x)")).equal(`[coth,]([x])`);
-        // expect(await th.run("re(x)")).equal(`[⚙️,[re]]([x])`);
-        // expect(await th.run("im(x)")).equal(`[⚙️,[im]]([x])`);
-        // expect(await th.run("root(x, y)")).equal(`[x][💪,[frac,[1],[y]]]`);
-        // expect(await th.run("arg(x)")).equal(`[arg,]([x])`);
+        expect(await th.run("cot(x)")).equal(`[cot,]([x])`);
+        expect(await th.run("coth(x)")).equal(`[coth,]([x])`);
+        expect(await th.run("re(x)")).equal(`[⚙️,[re]]([x])`);
+        expect(await th.run("im(x)")).equal(`[⚙️,[im]]([x])`);
+        expect(await th.run("root(x, y)")).equal(`[x][💪,[frac,[1],[y]]]`);
+        expect(await th.run("arg(x)")).equal(`[arg,]([x])`);
 
-        // expect(await th.run("zeta(x)")).equal(`[𝜁]([x])`);
-        // expect(await th.run("zeta(x)**2")).equal(`[𝜁][💪,[2]]([x])`);
-        // expect(await th.run("zeta(x, y)")).equal(`[𝜁]([x,y])`);
-        // expect(await th.run("zeta(x, y)**2")).equal(`[𝜁][💪,[2]]([x,y])`);
-        // expect(await th.run("dirichlet_eta(x)")).equal(`[𝜂]([x])`);
-        // expect(await th.run("dirichlet_eta(x)**2")).equal(`[𝜂][💪,[2]]([x])`);
-        // expect(await th.run("polylog(x, y)")).equal(`[⚙️,[Li]][⛏️,[x]]([y])`);
-        // expect(await th.run("polylog(x, y)**2")).equal(`[⚙️,[Li]][💪,[2],[x]]([y])`);
-        // expect(await th.run("lerchphi(x, y, n)")).equal(`[𝛷]([x,y,n])`);
-        // expect(await th.run("lerchphi(x, y, n)**2")).equal(`[𝛷][💪,[2]]([x,y,n])`);
-        // expect(await th.run("stieltjes(x)")).equal(`[𝛾][⛏️,[x]]`);
-        // expect(await th.run("stieltjes(x)**2")).equal(`[𝛾][💪,[2],[x]]`);
-        // expect(await th.run("stieltjes(x, y)")).equal(`[𝛾][⛏️,[x]]([y])`);
-        // expect(await th.run("stieltjes(x, y)**2")).equal(`[𝛾][⛏️,[x]]([y])[💪,[2]]`);
+        expect(await th.run("zeta(x)")).equal(`[𝜁]([x])`);
+        expect(await th.run("zeta(x)**2")).equal(`[𝜁][💪,[2]]([x])`);
+        expect(await th.run("zeta(x, y)")).equal(`[𝜁]([x,y])`);
+        expect(await th.run("zeta(x, y)**2")).equal(`[𝜁][💪,[2]]([x,y])`);
+        expect(await th.run("dirichlet_eta(x)")).equal(`[𝜂]([x])`);
+        expect(await th.run("dirichlet_eta(x)**2")).equal(`[𝜂][💪,[2]]([x])`);
+        expect(await th.run("polylog(x, y)")).equal(`[⚙️,[Li]][⛏️,[x]]([y])`);
+        expect(await th.run("polylog(x, y)**2")).equal(`[⚙️,[Li]][💪,[2],[x]]([y])`);
+        expect(await th.run("lerchphi(x, y, n)")).equal(`[𝛷]([x,y,n])`);
+        expect(await th.run("lerchphi(x, y, n)**2")).equal(`[𝛷][💪,[2]]([x,y,n])`);
+        expect(await th.run("stieltjes(x)")).equal(`[𝛾][⛏️,[x]]`);
+        expect(await th.run("stieltjes(x)**2")).equal(`[𝛾][💪,[2],[x]]`);
+        expect(await th.run("stieltjes(x, y)")).equal(`[𝛾][⛏️,[x]]([y])`);
+        expect(await th.run("stieltjes(x, y)**2")).equal(`[𝛾][⛏️,[x]]([y])[💪,[2]]`);
 
-        // expect(await th.run("elliptic_k(z)")).equal(`[K]([z])`);
-        // expect(await th.run("elliptic_k(z)**2")).equal(`[K][💪,[2]]([z])`);
-        // expect(await th.run("elliptic_f(x, y)")).equal(`[F]([x][middle|,][y])`);
-        // expect(await th.run("elliptic_f(x, y)**2")).equal(`[F][💪,[2]]([x][middle|,][y])`);
-        // expect(await th.run("elliptic_e(x, y)")).equal(`[E]([x][middle|,][y])`);
-        // expect(await th.run("elliptic_e(x, y)**2")).equal(`[E][💪,[2]]([x][middle|,][y])`);
-        // expect(await th.run("elliptic_e(z)")).equal(`[E]([z])`);
-        // expect(await th.run("elliptic_e(z)**2")).equal(`[E][💪,[2]]([z])`);
-        // expect(await th.run("elliptic_pi(x, y, z)")).equal(`[𝛱]([x;y][middle|,][z])`);
-        // expect(await th.run("elliptic_pi(x, y, z)**2")).equal(`[𝛱][💪,[2]]([x;y][middle|,][z])`);
-        // expect(await th.run("elliptic_pi(x, y)")).equal(`[𝛱]([x][middle|,][y])`);
-        // expect(await th.run("elliptic_pi(x, y)**2")).equal(`[𝛱][💪,[2]]([x][middle|,][y])`);
+        expect(await th.run("elliptic_k(z)")).equal(`[K]([z])`);
+        expect(await th.run("elliptic_k(z)**2")).equal(`[K][💪,[2]]([z])`);
+        expect(await th.run("elliptic_f(x, y)")).equal(`[F]([x][middle|,][y])`);
+        expect(await th.run("elliptic_f(x, y)**2")).equal(`[F][💪,[2]]([x][middle|,][y])`);
+        expect(await th.run("elliptic_e(x, y)")).equal(`[E]([x][middle|,][y])`);
+        expect(await th.run("elliptic_e(x, y)**2")).equal(`[E][💪,[2]]([x][middle|,][y])`);
+        expect(await th.run("elliptic_e(z)")).equal(`[E]([z])`);
+        expect(await th.run("elliptic_e(z)**2")).equal(`[E][💪,[2]]([z])`);
+        expect(await th.run("elliptic_pi(x, y, z)")).equal(`[𝛱]([x;y][middle|,][z])`);
+        expect(await th.run("elliptic_pi(x, y, z)**2")).equal(`[𝛱][💪,[2]]([x;y][middle|,][z])`);
+        expect(await th.run("elliptic_pi(x, y)")).equal(`[𝛱]([x][middle|,][y])`);
+        expect(await th.run("elliptic_pi(x, y)**2")).equal(`[𝛱][💪,[2]]([x][middle|,][y])`);
 
-        // expect(await th.run("Ei(x)")).equal(`[⚙️,[Ei]]([x])`);
-        // expect(await th.run("Ei(x)**2")).equal(`[⚙️,[Ei]][💪,[2]]([x])`);
-        // expect(await th.run("expint(x, y)")).equal(`[E][⛏️,[x]]([y])`);
-        // expect(await th.run("expint(x, y)**2")).equal(`[E][💪,[2],[x]]([y])`);
-        // expect(await th.run("Shi(x)**2")).equal(`[⚙️,[Shi]][💪,[2]]([x])`);
-        // expect(await th.run("Si(x)**2")).equal(`[⚙️,[Si]][💪,[2]]([x])`);
-        // expect(await th.run("Ci(x)**2")).equal(`[⚙️,[Ci]][💪,[2]]([x])`);
-        // expect(await th.run("Chi(x)**2")).equal(`[⚙️,[Chi]][💪,[2]]([x])`);
-        // expect(await th.run("Chi(x)")).equal(`[⚙️,[Chi]]([x])`);
-        // expect(await th.run("jacobi(n, a, b, x)")).equal(`[P][💪,([a,b]),[n]]([x])`);
-        // expect(await th.run("jacobi(n, a, b, x)**2")).equal(`[P][💪,([a,b]),[n]]([x])[💪,[2]]`);
-        // expect(await th.run("gegenbauer(n, a, x)")).equal(`[C][💪,([a]),[n]]([x])`);
-        // expect(await th.run("gegenbauer(n, a, x)**2")).equal(`[C][💪,([a]),[n]]([x])[💪,[2]]`);
-        // expect(await th.run("chebyshevt(n, x)")).equal(`[T][⛏️,[n]]([x])`);
-        // expect(await th.run("chebyshevt(n, x)**2")).equal(`([T][⛏️,[n]]([x]))[💪,[2]]`);
-        // expect(await th.run("chebyshevu(n, x)")).equal(`[U][⛏️,[n]]([x])`);
-        // expect(await th.run("chebyshevu(n, x)**2")).equal(`([U][⛏️,[n]]([x]))[💪,[2]]`);
-        // expect(await th.run("legendre(n, x)")).equal(`[P][⛏️,[n]]([x])`);
-        // expect(await th.run("legendre(n, x)**2")).equal(`([P][⛏️,[n]]([x]))[💪,[2]]`);
-        // expect(await th.run("assoc_legendre(n, a, x)")).equal(`[P][💪,([a]),[n]]([x])`);
-        // expect(await th.run("assoc_legendre(n, a, x)**2")).equal(`([P][💪,([a]),[n]]([x]))[💪,[2]]`);
-        // expect(await th.run("laguerre(n, x)")).equal(`[L][⛏️,[n]]([x])`);
-        // expect(await th.run("laguerre(n, x)**2")).equal(`([L][⛏️,[n]]([x]))[💪,[2]]`);
-        // expect(await th.run("assoc_laguerre(n, a, x)")).equal(`[L][💪,([a]),[n]]([x])`);
-        // expect(await th.run("assoc_laguerre(n, a, x)**2")).equal(`([L][💪,([a]),[n]]([x]))[💪,[2]]`);
-        // expect(await th.run("hermite(n, x)")).equal(`[H][⛏️,[n]]([x])`);
-        // expect(await th.run("hermite(n, x)**2")).equal(`([H][⛏️,[n]]([x]))[💪,[2]]`);
+        expect(await th.run("Ei(x)")).equal(`[⚙️,[Ei]]([x])`);
+        expect(await th.run("Ei(x)**2")).equal(`[⚙️,[Ei]][💪,[2]]([x])`);
+        expect(await th.run("expint(x, y)")).equal(`[E][⛏️,[x]]([y])`);
+        expect(await th.run("expint(x, y)**2")).equal(`[E][💪,[2],[x]]([y])`);
+        expect(await th.run("Shi(x)**2")).equal(`[⚙️,[Shi]][💪,[2]]([x])`);
+        expect(await th.run("Si(x)**2")).equal(`[⚙️,[Si]][💪,[2]]([x])`);
+        expect(await th.run("Ci(x)**2")).equal(`[⚙️,[Ci]][💪,[2]]([x])`);
+        expect(await th.run("Chi(x)**2")).equal(`[⚙️,[Chi]][💪,[2]]([x])`);
+        expect(await th.run("Chi(x)")).equal(`[⚙️,[Chi]]([x])`);
+        expect(await th.run("jacobi(n, a, b, x)")).equal(`[P][💪,([a,b]),[n]]([x])`);
+        expect(await th.run("jacobi(n, a, b, x)**2")).equal(`[P][💪,([a,b]),[n]]([x])[💪,[2]]`);
+        expect(await th.run("gegenbauer(n, a, x)")).equal(`[C][💪,([a]),[n]]([x])`);
+        expect(await th.run("gegenbauer(n, a, x)**2")).equal(`[C][💪,([a]),[n]]([x])[💪,[2]]`);
+        expect(await th.run("chebyshevt(n, x)")).equal(`[T][⛏️,[n]]([x])`);
+        expect(await th.run("chebyshevt(n, x)**2")).equal(`([T][⛏️,[n]]([x]))[💪,[2]]`);
+        expect(await th.run("chebyshevu(n, x)")).equal(`[U][⛏️,[n]]([x])`);
+        expect(await th.run("chebyshevu(n, x)**2")).equal(`([U][⛏️,[n]]([x]))[💪,[2]]`);
+        expect(await th.run("legendre(n, x)")).equal(`[P][⛏️,[n]]([x])`);
+        expect(await th.run("legendre(n, x)**2")).equal(`([P][⛏️,[n]]([x]))[💪,[2]]`);
+        expect(await th.run("assoc_legendre(n, a, x)")).equal(`[P][💪,([a]),[n]]([x])`);
+        expect(await th.run("assoc_legendre(n, a, x)**2")).equal(`([P][💪,([a]),[n]]([x]))[💪,[2]]`);
+        expect(await th.run("laguerre(n, x)")).equal(`[L][⛏️,[n]]([x])`);
+        expect(await th.run("laguerre(n, x)**2")).equal(`([L][⛏️,[n]]([x]))[💪,[2]]`);
+        expect(await th.run("assoc_laguerre(n, a, x)")).equal(`[L][💪,([a]),[n]]([x])`);
+        expect(await th.run("assoc_laguerre(n, a, x)**2")).equal(`([L][💪,([a]),[n]]([x]))[💪,[2]]`);
+        expect(await th.run("hermite(n, x)")).equal(`[H][⛏️,[n]]([x])`);
+        expect(await th.run("hermite(n, x)**2")).equal(`([H][⛏️,[n]]([x]))[💪,[2]]`);
 
         await th.prepare(` 
 theta = Symbol("theta", real=True)
@@ -356,6 +356,44 @@ phi = Symbol("phi", real=True)`)
         expect(await th.run("primeomega(n)")).equal(`[𝛺]([n])`);
         expect(await th.run("primeomega(n) ** 2")).equal(`([𝛺]([n]))[💪,[2]]`);
 
+        expect(await th.run("LambertW(n)")).equal(`[W]([n])`);
+        expect(await th.run("LambertW(n, -1)")).equal(`[W][⛏️,[-1]]([n])`);
+        expect(await th.run("LambertW(n, k)")).equal(`[W][⛏️,[k]]([n])`);
+        expect(await th.run("LambertW(n) * LambertW(n)")).equal(`[W][💪,[2]]([n])`);
+        expect(await th.run("Pow(LambertW(n), 2)")).equal(`[W][💪,[2]]([n])`);
+        expect(await th.run("LambertW(n)**k")).equal(`[W][💪,[k]]([n])`);
+        expect(await th.run("LambertW(n, k)**p")).equal(`[W][💪,[p],[k]]([n])`);
+
+        expect(await th.run("Mod(x, 7)")).equal(`[x][bmod,][7]`);
+        expect(await th.run("Mod(x + 1, 7)")).equal(`([1+x])[bmod,][7]`);
+        expect(await th.run("Mod(2 * x, 7)")).equal(`[2x][bmod,][7]`);
+        expect(await th.run("Mod(x, 7) + 1")).equal(`[1+]([x][bmod,][7])`);
+        expect(await th.run("2 * Mod(x, 7)")).equal(`[2]([x][bmod,][7])`);
+        expect(await th.run("Mod(Mul(2,1/2,evaluate=False), 7,evaluate=False)")).equal(`([2×0.5])[bmod,][7]`);
+
+        await th.prepare(`fjlkd = Function('fjlkd')`);
+        expect(await th.run("fjlkd(x)")).equal(`[⚙️,[fjlkd]]([x])`);
+        expect(await th.run("fjlkd")).equal(`[⚙️,[fjlkd]]`);
+
+
     })
+
+    it("subclass different name", async () => {
+        await th.prepare(`    
+class mygamma(gamma):
+    pass`);
+
+        expect(await th.run("mygamma")).equal(`[⚙️,[mygamma]]`);
+        expect(await th.run("mygamma(x)")).equal(`[⚙️,[mygamma]]([x])`);
+    })
+
+    it.only("hyper", async () => {
+        await th.prepare(`
+from sympy import pi
+from sympy.abc import x, z`);
+
+        expect(await th.run(`meijerg(Tuple(pi, pi, x), Tuple(1),
+(0, 1), Tuple(1, 2, 3/pi), z)`)).equal(`[⚙️,[mygamma]]([x])`);
+    });
 
 });

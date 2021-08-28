@@ -128,7 +128,7 @@ class BlockBd {
 
     compositeBlock(
         name: "\\power-index" | "\\frac" | "\\sqrt" | "\\matrix" | "\\text" | "\\small-tilde" | "\\small-hat" | "\\middle|" |
-            "\\operatorname" | `\\${"i" | "ii" | "iii" | "iii"}nt` | "\\overline" | "\\rightarrow",
+            "\\operatorname" | `\\${"i" | "ii" | "iii" | "iii"}nt` | "\\overline" | "\\rightarrow" | "\\bmod",
         elementNames: ("powerValue" | "indexValue" | "value" | "sub1" | "textValue")[] = [],
         innerBlocks: BlockModel[][] = [],
         style?: BlockStyle): CompositeBlockModel {

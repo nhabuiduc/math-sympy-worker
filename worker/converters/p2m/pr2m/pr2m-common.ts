@@ -38,9 +38,9 @@ export class Pr2MCommon {
         return this.ifOpPowDeprecate;
     }
 
-    
 
-    join(args: P2Pr.Symbol[], text?: string, options?: Pr2MCommon.JoinOptions): Pr2M.CResult {
+
+    opJoin(args: P2Pr.Symbol[], textOrBlock?: string | (() => BlockModel), options?: Pr2MCommon.JoinOptions): Pr2M.CResult {
         options = options || { wrapBracket: "if-op" }
         let items = args.map(a => this.main.convert(a));
 
@@ -50,12 +50,12 @@ export class Pr2MCommon {
             const item = items[idx];
             let curBlocks = (deprecate && deprecate(item)) ? blockBd.wrapBracketIfOp(item) : item.blocks;
 
-            if (idx == 0 || !text) {
+            if (idx == 0 || !textOrBlock) {
                 blocks = blockBd.combine2Blockss(blocks, curBlocks);
                 continue;
             }
 
-            blocks = blockBd.combineMultipleBlocks(blocks, [blockBd.textBlock(text)], curBlocks);
+            blocks = blockBd.combineMultipleBlocks(blocks, typeof textOrBlock == "string" ? [blockBd.textBlock(textOrBlock)] : [textOrBlock()], curBlocks);
         }
 
         return { blocks, prUnit: "op" };

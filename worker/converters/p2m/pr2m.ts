@@ -84,12 +84,12 @@ export class Pr2M {
             }
             case "VecExpr": {
                 switch (obj.op) {
-                    case "Cross": return this.prCommon.join(obj.symbols, "×");
-                    case "Curl": return this.prCommon.join([prTh.var("∇") as Symbol].concat(obj.symbols), "×");
-                    case "Divergence": return this.prCommon.join([prTh.var("∇") as Symbol].concat(obj.symbols), "⋅");
-                    case "Dot": return this.prCommon.join(obj.symbols, "⋅");
-                    case "Gradient": return this.prCommon.join([prTh.var("∇") as Symbol].concat(obj.symbols));
-                    case "Laplacian": return this.prCommon.join([prTh.var("▵") as Symbol].concat(obj.symbols));
+                    case "Cross": return this.prCommon.opJoin(obj.symbols, "×");
+                    case "Curl": return this.prCommon.opJoin([prTh.var("∇") as Symbol].concat(obj.symbols), "×");
+                    case "Divergence": return this.prCommon.opJoin([prTh.var("∇") as Symbol].concat(obj.symbols), "⋅");
+                    case "Dot": return this.prCommon.opJoin(obj.symbols, "⋅");
+                    case "Gradient": return this.prCommon.opJoin([prTh.var("∇") as Symbol].concat(obj.symbols));
+                    case "Laplacian": return this.prCommon.opJoin([prTh.var("▵") as Symbol].concat(obj.symbols));
                 }
 
                 // return this.common.join(obj.symbols, "×");
@@ -302,7 +302,7 @@ export class Pr2M {
             }
             case "Brackets": {
                 return {
-                    blocks: blockBd.wrapBetweenBrackets(blockBd.joinBlocks(obj.symbols.map(c => this.innerConvert(c, level).blocks),","), obj.br).blocks,
+                    blocks: blockBd.wrapBetweenBrackets(blockBd.joinBlocks(obj.symbols.map(c => this.innerConvert(c, level).blocks), ","), obj.br).blocks,
                     prUnit: "bracket",
                     prBracket: obj.br,
                 }
@@ -341,6 +341,9 @@ export class Pr2M {
                         ).blocks
                     ]
                 }
+            }
+            case "Mod": {
+                return this.prCommon.opJoin(obj.symbols, () => blockBd.compositeBlock("\\bmod"), { wrapBracket: "if-op-exclude-mul-shortcut" })
             }
         }
 

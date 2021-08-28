@@ -13,7 +13,7 @@ export class GenericFunc {
 
     buildGenericFunc(obj: P2Pr.GenericFunc): GenericFuncResult {
 
-        const args = this.buildGenericFuncArgs(obj.symbols, obj.noBracketIfArgEmpty, obj.argSeparator || ",");
+        const args = this.buildGenericFuncArgs(obj.symbols, obj.argSeparator || ",");
 
         let nameBlock: BlockModel;
         if (obj.specialFuncClass) {
@@ -53,9 +53,9 @@ export class GenericFunc {
         }
     }
 
-    private buildGenericFuncArgs(symbols: Symbol[], noBracketIfArgEmpty: boolean, argSeparator: P2Pr.GenericFunc["argSeparator"]): GenericFuncArgsResult {
+    private buildGenericFuncArgs(symbols: Symbol[], argSeparator: P2Pr.GenericFunc["argSeparator"]): GenericFuncArgsResult {
         let argSymbols = symbols;
-        if (argSymbols.length <= 0 && noBracketIfArgEmpty) {
+        if (argSymbols.length <= 0) {
             return { args: [] }
         }
 

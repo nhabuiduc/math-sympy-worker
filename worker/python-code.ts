@@ -131,7 +131,11 @@ class __McHdl:
             if funcName in ['KroneckerDelta','gamma','lowergamma','beta','DiracDelta','Chi']:
                 return { 'func': 'SpecialFuncClass', 'name': funcName, 'args': self.argsMap(expr.args) }
         
-        if hasattr(expr, 'func'):
+        if expr.__class__.__name__ == 'FunctionClass':
+            dic['name']= expr.__name__
+            dic['args'] = []
+            return dic
+        elif hasattr(expr, 'func'):
             funcName = expr.func.__name__
             if funcName[0].islower():
                 dic['name']= funcName
