@@ -33,19 +33,6 @@ class BlockBd {
         }
 
         return this.compositeBlock("\\power-index", ["indexValue"], [blocksOrText])
-        // const compositeBlock: CompositeBlockModel = {
-        //     id: generator.nextId(),
-        //     type: "composite",
-        //     text: "\\power-index",
-        //     elements: {
-        //         indexValue: {
-        //             id: generator.nextId(),
-        //             lines: blocksOrText,
-        //         }
-        //     },
-        //     style
-        // }
-        // return compositeBlock;
     }
     bracketBlock(bracket: BlockBd.SupportBracket): BlockModel {
         return { id: generator.nextId(), type: "single", text: bracket }
@@ -58,6 +45,7 @@ class BlockBd {
         return this.compositeBlock("\\text", ["textValue"], [[this.textBlock(text)]]);
     }
 
+    // lines(blockModel)
 
 
     operatorFuncBlock(name: string, constantTextFuncSet: Set<string>, symbolLatexNames: { [key: string]: string }): BlockModel {
@@ -163,6 +151,15 @@ class BlockBd {
 
     editorFrom(blocks: BlockModel[]): EditorModel {
         return { id: generator.nextId(), lines: [{ id: generator.nextId(), blocks }] };
+    }
+    editorFromLines(blocks: BlockModel[][]): EditorModel {
+
+        return {
+            id: generator.nextId(),
+            lines: blocks.map(bb => {
+                return { id: generator.nextId(), blocks: bb }
+            })
+        };
     }
 
     textBlock(text: string, style?: BlockStyle): BlockModel {
@@ -271,7 +268,7 @@ class BlockBd {
 export const blockBd = new BlockBd();
 
 export namespace BlockBd {
-    export type SupportLeftBracket = "(" | "[" | "\\left\\angle" | "\\left\\lfloor" | "\\left\\lceil" | "\\left|";
-    export type SupportRightBracket = ")" | "]" | "\\right\\angle" | "\\right\\rfloor" | "\\right\\rceil" | "\\right|";
+    export type SupportLeftBracket = "(" | "[" | "\\left\\angle" | "\\left\\lfloor" | "\\left\\lceil" | "\\left|" | "\\left.";
+    export type SupportRightBracket = ")" | "]" | "\\right\\angle" | "\\right\\rfloor" | "\\right\\rceil" | "\\right|" | "\\right.";
     export type SupportBracket = SupportLeftBracket | SupportRightBracket;
 }

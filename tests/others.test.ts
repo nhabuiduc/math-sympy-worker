@@ -493,8 +493,13 @@ x2 = Symbol('x2')
         expect(await th.run(`diff(f(x), (x, Max(n1, n2)))`)).equal(`[frac,[d][💪,[max,]([n][⛏️,[1]][,n][⛏️,[2]])],[dx][💪,[max,]([n][⛏️,[1]][,n][⛏️,[2]])]][f]([x])`);
     });
 
-    it.only("subs", async () => {
-        expect(await th.run(`Subs(x*y, (x, y), (1, 2))`)).equal(`[frac,[d][💪,[max,]([n][⛏️,[1]][,n][⛏️,[2]])],[dx][💪,[max,]([n][⛏️,[1]][,n][⛏️,[2]])]][f]([x])`);
+    it.only("subs", async () => {    
+        expect(await th.run(`Subs(x*y, (x, y), (1, 2))`)).equal(`[b,\left.][xy]|[⛏️,[x=1]💔[y=2]]`);
+    });
+    
+    it.only("integrals", async () => {
+        expect(await th.run(`Integral(log(x), x)`)).equal(`[b,\left.][xy]|[⛏️,[x=1]💔[y=2]]`);
+        
     })
 
 });

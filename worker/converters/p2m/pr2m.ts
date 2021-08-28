@@ -257,18 +257,7 @@ export class Pr2M {
                     ]
                 }
             }
-            // case "Point": {
-            //     return this.convertFullNameFunc(obj.type, obj.symbols);
-            //     // return { blocks: [blockBd.textBlock(obj.name)] }
-            // }
-            // case "Tuple": {
-            //     const join = this.joinBy(obj.symbols, ",");
-            //     return blockBd.wrapBetweenBrackets(join)
-            // }
-            // case "List": {
-            //     const join = this.joinBy(obj.symbols, obj.separator);
-            //     return blockBd.wrapBetweenBrackets(join, obj.bracket);
-            // }
+
             case "BaseDyadic": {
                 const first = this.innerConvert(obj.symbols[0], 0).blocks;
                 const second = this.innerConvert(obj.symbols[1], 0).blocks;
@@ -336,13 +325,6 @@ export class Pr2M {
                     ]
                 }
             }
-            // case "Brackets": {
-            //     return {
-            //         blocks: blockBd.wrapBetweenBrackets(blockBd.joinBlocks(obj.symbols.map(c => this.innerConvert(c, level).blocks), ","), obj.br).blocks,
-            //         prUnit: "bracket",
-            //         prBracket: obj.br,
-            //     }
-            // }
             case "Conjugate": {
                 return {
                     blocks: [blockBd.compositeBlock("\\overline", ["value"], [this.innerConvert(obj.symbols[0], level).blocks])],
@@ -380,6 +362,30 @@ export class Pr2M {
             }
             case "Mod": {
                 return this.prCommon.opJoin(obj.symbols, () => blockBd.compositeBlock("\\bmod"), { wrapBracket: "if-op-exclude-mul-shortcut" })
+            }
+            case "Subs": {
+                const expr = this.convert(obj.symbols[0]);
+                const set1 = obj.symbols[1] as P2Pr.VarList;
+                const set2 = obj.symbols[2] as P2Pr.VarList;
+                const eqExprs: BlockModel[][] = [];
+                for (let idx = 0; idx < set1.symbols.length; idx++) {
+                    const s1 = set1.symbols[idx] || prTh.var(" ");
+                    const s2 = set2.symbols[idx] || prTh.var(" ");
+
+                    eqExprs.push(blockBd.joinBlocks([this.convert(s1).blocks, this.convert(s2).blocks], "="));
+                }
+
+                const indexBlock = blockBd.compositeBlock("\\power-index");
+                (indexBlock.elements["indexValue"] as EditorModel) = blockBd.editorFromLines(eqExprs);
+
+                return {
+                    blocks: [
+                        blockBd.bracketBlock("\\left."),
+                        ...expr.blocks,
+                        blockBd.bracketBlock("\\right|"),
+                        indexBlock
+                    ]
+                }
             }
         }
 
