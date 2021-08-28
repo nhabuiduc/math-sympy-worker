@@ -295,6 +295,12 @@ export class P2Pr {
             case "RisingFactorial": {
                 return prTh.pow(this.c(obj.args[0]), prTh.brackets(this.c(obj.args[1])))
             }
+            case "Set": {
+                return prTh.varList(this.m(obj.args), ",", "{")
+            }
+            case "FiniteSet": {
+                return prTh.varList(this.m(obj.args), ",", "{")
+            }
 
         }
 
@@ -373,7 +379,9 @@ export namespace P2Pr {
         L<"NaN"> | ConstantSymbol | C<"CoordSys3D"> | Str | BaseVector | BaseScalar | L<"VectorZero"> | C<"BaseDyadic"> |
         Derivative | L<"Zero"> | C<"Exp"> | Relational | Poly | PolynomialRing | DisplayedDomain | C<"Binomial"> | C<"Mod"> |
         VarList | C<"Integral"> | Discrete | SingularityFunction | VecExpr | C<"Index"> | JsonData | C<"Factorial"> | C<"SubFactorial"> |
-        C<"Factorial2"> | C<"Conjugate"> | C<"Order"> | C<"Prescript"> | C<"PrescriptIdx"> | Subs;
+        C<"Factorial2"> | C<"Conjugate"> | C<"Order"> | C<"Prescript"> | C<"PrescriptIdx"> | Subs |
+        C<"FiniteSet">
+        ;
 
 
     export type Frac = C<"Frac">;
@@ -473,11 +481,6 @@ export namespace P2Pr {
         name: string;
     }
 
-    // export interface Point extends Container {
-    //     type: "Point";
-    //     name: string;
-    // }
-
     export interface Derivative extends Container {
         type: "Derivative";
         partial: boolean;
@@ -494,12 +497,6 @@ export namespace P2Pr {
         type: "Relational";
         relOp: "==" | ">" | "<" | "<=" | ">=" | "!=";
     }
-
-    // export interface List extends Container {
-    //     type: "List";
-    //     separator: "," | ";",
-    //     bracket: SupportBracket;
-    // }
 
     export interface Poly extends Container {
         type: "Poly";
@@ -549,7 +546,7 @@ namespace P {
         PolynomialRing | DisplayedDomain | UndefinedFunction | F<"Integral"> | F<"Not"> | F<"And"> | F<"Or"> | F<"Implies"> |
         F<"SingularityFunction"> | F<"FallingFactorial"> | F<"RisingFactorial"> | F<"LambertW"> | F<"Mod"> |
         Cycle | F<"Cross"> | F<"Curl"> | F<"Divergence"> | F<"Dot"> | F<"Gradient"> | F<"Laplacian"> | SpecialFuncClass |
-        F<"Subs"> |
+        F<"Subs"> | F<"Set"> |
         UnknownFunc;
 
     export interface FuncArgs {
@@ -659,7 +656,7 @@ namespace P {
         func: "";
     }
 
-    export type SupportBracket = "(" | "[" | "<" | "floor" | "ceil" | "|";
+    export type SupportBracket = "(" | "[" | "<" | "floor" | "ceil" | "|" | "{";
 
     export interface F<T extends string> extends FuncArgs {
         func: T;

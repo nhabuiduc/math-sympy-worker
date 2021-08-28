@@ -494,12 +494,50 @@ x2 = Symbol('x2')
     });
 
     it.only("subs", async () => {    
-        expect(await th.run(`Subs(x*y, (x, y), (1, 2))`)).equal(`[b,\left.][xy]|[⛏️,[x=1]💔[y=2]]`);
+        expect(await th.run(`Subs(x*y, (x, y), (1, 2))`)).equal(`[b,\\left.][xy]|[⛏️,[x=1]💔[y=2]]`);
     });
     
     it.only("integrals", async () => {
-        expect(await th.run(`Integral(log(x), x)`)).equal(`[b,\left.][xy]|[⛏️,[x=1]💔[y=2]]`);
+    
+        expect(await th.run(`Integral(log(x), x)`)).equal(`[int,][log,]([x])[ dx]`);
+        expect(await th.run(`Integral(x**2, (x, 0, 1))`)).equal(`[int,[0],[1]][x][💪,[2]][ dx]`);
+        expect(await th.run(`Integral(x**2, (x, 10, 20))`)).equal(`[int,[10],[20]][x][💪,[2]][ dx]`);
+        expect(await th.run(`Integral(y*x**2, (x, 0, 1), y)`)).equal(`[int,][int,[0],[1]][yx][💪,[2]][ dx dy]`);
+        expect(await th.run(`Integral(x, (x, 0))`)).equal(`[int,[0]][x dx]`);
+        expect(await th.run(`Integral(x*y, x, y)`)).equal(`[iint,][xy dx dy]`);
+        expect(await th.run(`Integral(x*y*z, x, y, z)`)).equal(`[iiint,][xyz dx dy dz]`);
+        expect(await th.run(`Integral(x*y*z*t, x, y, z, t)`)).equal(`[int,][int,][int,][int,][txyz dx dy dz dt]`);
+        expect(await th.run(`Integral(x, x, x, x, x, x, x)`)).equal(`[int,][int,][int,][int,][int,][int,][x dx dx dx dx dx dx]`);
+        expect(await th.run(`Integral(x, x, y, (z, 0, 1))`)).equal(`[int,[0],[1]][int,][int,][x dx dy dz]`);
+
+        expect(await th.run(`Integral(-Integral(y**2,x),x)`)).equal(`[int,][-][int,][y][💪,[2]][ dx dx]`);
+        expect(await th.run(`Integral(-Integral(-Integral(y,x),x),x)`)).equal(`[int,][-][int,][-][int,][y dx dx dx]`);
+
+        expect(await th.run(`Integral(z, z)**2`)).equal(`([int,][z dz])[💪,[2]]`);
+        expect(await th.run(`Integral(x + z, z)`)).equal(`[int,]([x+z])[ dz]`);
+        expect(await th.run(`Integral(x+z/2, z)`)).equal(`[int,]([x+][frac,[z],[2]])[ dz]`);
+        expect(await th.run(`Integral(x**y, z)`)).equal(`[int,][x][💪,[y]][ dz]`);
         
+    })
+    
+    it.only("sets", async () => {
+    
+        expect(await th.run(`set([x*y, x**2])`)).equal(`{[xy,x][💪,[2]]}`);
+        expect(await th.run(`frozenset([x*y, x**2])`)).equal(`{[xy,x][💪,[2]]}`);
+        expect(await th.run(`set(range(1, 6))`)).equal(`{[1,2,3,4,5]}`);
+        
+        await th.prepare(`s = FiniteSet`);
+        expect(await th.run(`s(*[x*y, x**2])`)).equal(`{[x][💪,[2]][,xy]}`);
+        expect(await th.run(`s(*range(1, 6))`)).equal(`{[1,2,3,4,5]}`);
+    })
+    
+    it.only("SetExpr", async () => {
+        await th.prepare(`
+iv = Interval(1, 3)
+se = SetExpr(iv)`);
+
+        expect(await th.run(`se`)).equal(`{[1,2,3,4,5]}`);
+
     })
 
 });

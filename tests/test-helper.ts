@@ -72,6 +72,13 @@ json.dumps(rootDic)
                 if (b.text == "\\left|" || b.text == "\\right|") {
                     return "|"
                 }
+                if (b.text == "\\left{") {
+                    return "{"
+                }
+                if (b.text == "\\right}") {
+                    return "}"
+                }
+
 
                 return `[b,${b.text}${this.styleToText(b.style)}]`;
             }

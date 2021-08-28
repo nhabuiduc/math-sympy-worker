@@ -1,5 +1,6 @@
 import { blockBd } from "../block-bd";
 import type { P2Pr } from "../p2pr";
+import { prTh } from "../pr-transform/pr-transform-helper";
 import { Pr2M } from "../pr2m";
 
 export class Integral {
@@ -16,7 +17,7 @@ export class Integral {
             symbolBlocks = blockBd.joinBlocks(limits.map(c => {
                 const rs = this.main.convert((c as P2Pr.VarList).symbols[0]);
                 return [blockBd.textBlock("d")].concat(rs.blocks);
-            }), " ");
+            }), "\u2009");
         } else {
             intBlocks = [];
             const sBlockss: BlockModel[][] = [];
@@ -27,7 +28,7 @@ export class Integral {
                     intBlock = blockBd.compositeBlock("\\int", ["to", "from"],
                         [this.main.convert(lim.symbols[1]).blocks, this.main.convert(lim.symbols[2]).blocks]);
                 } else if (lim.symbols.length >= 2) {
-                    intBlock = blockBd.compositeBlock("\\int", ["to"],
+                    intBlock = blockBd.compositeBlock("\\int", ["from"],
                         [this.main.convert(lim.symbols[1]).blocks]);
                 } else {
                     intBlock = blockBd.compositeBlock("\\int");
@@ -36,16 +37,26 @@ export class Integral {
                 intBlocks.push(intBlock);
                 sBlockss.unshift(blockBd.combine2Blockss([blockBd.textBlock("d")], this.main.convert(lim.symbols[0]).blocks));
             }
-            symbolBlocks = blockBd.joinBlocks(sBlockss, " ");
+            symbolBlocks = blockBd.joinBlocks(sBlockss, "\u2009");
         }
+
+        const expCr = this.main.convert(derivative.symbols[0]);
+        const expBlocks = this.shouldWrapBrackets(derivative.symbols[0], expCr) ? blockBd.wrapBetweenBrackets(expCr.blocks).blocks : expCr.blocks;
 
         return blockBd.combineMultipleBlocks(
             intBlocks,
-            this.main.convert(derivative.symbols[0]).blocks,
-            [blockBd.textBlock(" ")],
+            expBlocks,
+            [blockBd.textBlock("\u2009")],
             symbolBlocks,
         )
-        return [];
+    }
+
+    private shouldWrapBrackets(s: Symbol, cr: Pr2M.CResult) {
+        if (s.type == "Mul" && s.symbols.length == 2 && prTh.isNegativeOne(s.symbols[0]) && s.symbols[1].type == "Integral") {
+            return false;
+        }
+
+        return !(prTh.considerPresentAsSingleUnit(s, cr));
     }
 
     private intBlockByCount(count: number): CompositeBlockModel {
@@ -62,3 +73,5 @@ export class Integral {
         return blockBd.compositeBlock("\\int");
     }
 }
+
+type Symbol = P2Pr.Symbol;

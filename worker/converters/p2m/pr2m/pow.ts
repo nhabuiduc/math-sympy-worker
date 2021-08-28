@@ -32,7 +32,7 @@ export class Pow {
             preventWrapBracket = true;
         }
 
-        if (!prTh.considerPresentAsSingleUnit(args[0], arg0Cr) && !preventWrapBracket) {
+        if (!prTh.considerPresentAsSingleUnitForPow(args[0], arg0Cr) && !preventWrapBracket) {
             base = blockBd.wrapBetweenBrackets(base).blocks;
         }
 

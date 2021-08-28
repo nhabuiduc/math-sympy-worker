@@ -260,6 +260,20 @@ class PrTransformHelper {
         return s.type == "Var" && stringHelper.length(s.name) == 1;
     }
 
+    considerPresentAsSingleUnitForPow(s: Symbol, cr: Pr2M.CResult) {
+        if (cr.prUnit == "bracket" || cr.prUnit == "factorial" || cr.prUnit == "conjugate") {
+            return true;
+        }
+
+        if (this.isSingleVar(s)) {
+            return true;
+        }
+
+        if (this.isPositiveOrZeroIntegerValue(s) || this.isPositiveOrZeroFloatValue(s)) {
+            return true;
+        }
+    }
+
     considerPresentAsSingleUnit(s: Symbol, cr: Pr2M.CResult) {
         if (cr.prUnit == "bracket" || cr.prUnit == "factorial" || cr.prUnit == "conjugate") {
             return true;
@@ -272,6 +286,15 @@ class PrTransformHelper {
         if (this.isPositiveOrZeroIntegerValue(s) || this.isPositiveOrZeroFloatValue(s)) {
             return true;
         }
+
+        if (cr.prUnit == "op" && cr.prOp == "mul" && cr.prMul?.allInShortcutForm) {
+            return true;
+        }
+
+        if (s.type == "Pow" || s.type == "Frac" || cr.prUnit == "func" || s.type == "Integral" || s.type == "Derivative") {
+            return true;
+        }
+
 
     }
 

@@ -182,7 +182,7 @@ export class Pr2M {
                 const rsArg0 = this.innerConvert(obj.symbols[0], level);
                 return {
                     blocks: blockBd.joinBlocks([
-                        prTh.considerPresentAsSingleUnit(obj.symbols[0], rsArg0) ? rsArg0.blocks : blockBd.wrapBetweenBrackets(rsArg0.blocks).blocks,
+                        prTh.considerPresentAsSingleUnitForPow(obj.symbols[0], rsArg0) ? rsArg0.blocks : blockBd.wrapBetweenBrackets(rsArg0.blocks).blocks,
                         [blockBd.textBlock("!")],
                     ]),
                     prUnit: "factorial"
@@ -192,7 +192,7 @@ export class Pr2M {
                 const rsArg0 = this.innerConvert(obj.symbols[0], level);
                 return {
                     blocks: blockBd.joinBlocks([
-                        prTh.considerPresentAsSingleUnit(obj.symbols[0], rsArg0) ? rsArg0.blocks : blockBd.wrapBetweenBrackets(rsArg0.blocks).blocks,
+                        prTh.considerPresentAsSingleUnitForPow(obj.symbols[0], rsArg0) ? rsArg0.blocks : blockBd.wrapBetweenBrackets(rsArg0.blocks).blocks,
                         [blockBd.textBlock("!!")],
                     ]),
                     prUnit: "factorial"
@@ -203,7 +203,7 @@ export class Pr2M {
                 return {
                     blocks: blockBd.joinBlocks([
                         [blockBd.textBlock("!")],
-                        prTh.considerPresentAsSingleUnit(obj.symbols[0], rsArg0) ? rsArg0.blocks : blockBd.wrapBetweenBrackets(rsArg0.blocks).blocks,
+                        prTh.considerPresentAsSingleUnitForPow(obj.symbols[0], rsArg0) ? rsArg0.blocks : blockBd.wrapBetweenBrackets(rsArg0.blocks).blocks,
                     ]),
                 }
             }

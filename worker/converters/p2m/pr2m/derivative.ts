@@ -13,7 +13,7 @@ export class Derivative {
             return false;
         }
 
-        return !(prTh.considerPresentAsSingleUnit(s, cr) || s.type == "Pow" || cr.prUnit == "func" || s.type == "Integral" || s.type == "Derivative");
+        return !(prTh.considerPresentAsSingleUnit(s, cr) );
     }
 
     private combineCounting(s1: Symbol, s2: Symbol): Symbol {

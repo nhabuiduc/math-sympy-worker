@@ -145,6 +145,11 @@ class __McHdl:
         ]            
     }
 
+    def hdl_set(self,expr):
+        return { 'func': 'Set', 'args': self.argsMap(expr) }
+
+    hdl_frozenset = hdl_set
+
     def hdlFunctionClass(self, expr, name):
         return { 'func': 'FunctionClass', 'name': name, 'args': self.argsMap(expr.args) }
 
