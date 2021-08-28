@@ -24,17 +24,17 @@ export class Integral {
                 const lim = limits[idx] as P2Pr.VarList;
                 let intBlock: CompositeBlockModel;
                 if (lim.symbols.length >= 3) {
-                    intBlock = blockBd.compositeBlock("\\int", ["indexValue", "powerValue"],
+                    intBlock = blockBd.compositeBlock("\\int", ["to", "from"],
                         [this.main.convert(lim.symbols[1]).blocks, this.main.convert(lim.symbols[2]).blocks]);
                 } else if (lim.symbols.length >= 2) {
-                    intBlock = blockBd.compositeBlock("\\int", ["powerValue"],
+                    intBlock = blockBd.compositeBlock("\\int", ["to"],
                         [this.main.convert(lim.symbols[1]).blocks]);
                 } else {
                     intBlock = blockBd.compositeBlock("\\int");
                 }
 
                 intBlocks.push(intBlock);
-                sBlockss.unshift(this.main.convert(lim.symbols[0]).blocks);
+                sBlockss.unshift(blockBd.combine2Blockss([blockBd.textBlock("d")], this.main.convert(lim.symbols[0]).blocks));
             }
             symbolBlocks = blockBd.joinBlocks(sBlockss, " ");
         }

@@ -245,6 +245,13 @@ class PrTransformHelper {
         throw new Error("Unable to extract integer value");
     }
 
+    extractIfVarList(s: Symbol): Symbol[] {
+        if (s.type == "VarList") {
+            return s.symbols;
+        }
+        return [s];
+    }
+
     extractRationalFrac(s: P2Pr.Frac): [number, number] {
         return [this.extractIntegerValue(s.symbols[0]), this.extractIntegerValue(s.symbols[1])]
     }
@@ -254,7 +261,7 @@ class PrTransformHelper {
     }
 
     considerPresentAsSingleUnit(s: Symbol, cr: Pr2M.CResult) {
-        if (cr.prUnit == "bracket" || cr.prUnit == "factorial" || cr.prUnit == "conjugate" || cr.prUnit == "func") {
+        if (cr.prUnit == "bracket" || cr.prUnit == "factorial" || cr.prUnit == "conjugate") {
             return true;
         }
 
@@ -310,6 +317,9 @@ class PrTransformHelper {
     }
     isZero(s: Symbol) {
         return s.type == "Zero" || (s.type == "Integer" && s.value == 0);
+    }
+    isOne(s: Symbol) {
+        return s.type == "One" || (s.type == "Integer" && s.value == 1);
     }
 
     var(text: string): P2Pr.Var {

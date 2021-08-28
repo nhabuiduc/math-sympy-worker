@@ -8,34 +8,53 @@ export class Derivative {
 
     }
 
-    private considerPresentAsSingleUnit(s: Symbol, cr: Pr2M.CResult) {
-        return prTh.considerPresentAsSingleUnit(s, cr) || s.type == "Pow";
+    private shouldWrapBrackets(s: Symbol, cr: Pr2M.CResult) {
+        if (s.type == "Mul" && s.symbols.length == 2 && prTh.isNegativeOne(s.symbols[0]) && s.symbols[1].type == "Derivative") {
+            return false;
+        }
+
+        return !(prTh.considerPresentAsSingleUnit(s, cr) || s.type == "Pow" || cr.prUnit == "func" || s.type == "Integral" || s.type == "Derivative");
+    }
+
+    private combineCounting(s1: Symbol, s2: Symbol): Symbol {
+        if (!s1 || !s2) {
+            return s1 || s2;
+        }
+
+        if (prTh.isIntegerValue(s1) && prTh.isIntegerValue(s2)) {
+            return prTh.int(prTh.extractIntegerValue(s1) + prTh.extractIntegerValue(s2));
+        }
+
+        const ss1 = prTh.extractIfVarList(s1);
+        const ss2 = prTh.extractIfVarList(s2);
+        return prTh.varList(ss1.concat(ss2));
     }
 
     convert(derivative: P2Pr.Derivative, level: number): Pr2M.CResult {
         let crs = this.main.convert(derivative.symbols[0]);
-        const exprBlocks = this.considerPresentAsSingleUnit(derivative.symbols[0], crs) ? crs.blocks : blockBd.wrapBetweenBrackets(crs.blocks).blocks;
+        const exprBlocks = this.shouldWrapBrackets(derivative.symbols[0], crs) ? blockBd.wrapBetweenBrackets(crs.blocks).blocks : crs.blocks;
         let denomVarList: P2Pr.VarList = { type: "VarList", kind: "Container", symbols: [] };
         const dLetter = derivative.partial ? "∂" : "d";
-        let allVar = 0;
+        let allVar: Symbol;
         for (let idx = derivative.symbols.length - 1; idx >= 1; idx--) {
             const tuple = (derivative.symbols[idx] as P2Pr.VarList);
-            const symbolCount = prTh.extractIntegerValue(tuple.symbols[1]);
             denomVarList.symbols.push(prTh.var(dLetter));
 
-            if (symbolCount > 1) {
-                denomVarList.symbols.push(prTh.pow(tuple.symbols[0], prTh.int(symbolCount)))
-            } else {
+
+            if (prTh.isZero(tuple.symbols[1]) || prTh.isOne(tuple.symbols[1])) {
                 denomVarList.symbols.push(tuple.symbols[0]);
+            } else {
+                denomVarList.symbols.push(prTh.pow(tuple.symbols[0], tuple.symbols[1]))
             }
-            allVar += symbolCount;
+
+            allVar = this.combineCounting(allVar, tuple.symbols[1]);
         }
 
         const numVarList: P2Pr.VarList = { type: "VarList", kind: "Container", symbols: [] };
-        if (allVar > 1) {
-            numVarList.symbols.push(prTh.pow(prTh.var(dLetter), prTh.int(allVar)));
-        } else {
+        if (prTh.isZero(allVar) || prTh.isOne(allVar)) {
             numVarList.symbols.push(prTh.var(dLetter))
+        } else {
+            numVarList.symbols.push(prTh.pow(prTh.var(dLetter), allVar));
         }
 
         const rs = [

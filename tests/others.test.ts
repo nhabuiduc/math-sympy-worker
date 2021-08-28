@@ -421,7 +421,7 @@ from sympy.abc import z`);
         expect(await th.run(`hn2(n, z)`)).equal(`[h][💪,[(2)],[n]]([z])`);
     });
 
-    it.only("fresnel", async () => {
+    it("fresnel", async () => {
 
         await th.prepare(`    
 from sympy.functions.special.error_functions import (fresnels, fresnelc)
@@ -433,12 +433,12 @@ from sympy.abc import z`);
         expect(await th.run(`fresnelc(z)**2`)).equal(`[C][💪,[2]]([z])`);
     });
 
-    it.only("brackets", async () => {
+    it("brackets", async () => {
         expect(await th.run(`(-1)**x`)).equal(`([-1])[💪,[x]]`);
 
     });
 
-    it.only("indexed", async () => {
+    it("indexed", async () => {
 
         await th.prepare(`  
 Psi_symbol = Symbol('Psi_0', complex=True, real=False)
@@ -453,24 +453,48 @@ Psi_indexed = IndexedBase(Symbol('Psi', complex=True, real=False))`);
 
     })
 
-    it.only("derivatives", async () => {
-        expect(await th.run(`diff(x**3, x, evaluate=False)`)).equal(`[frac,[d],[dx]]([x][💪,[3]])`);
+    it("derivatives", async () => {
+
+        expect(await th.run(`diff(x**3, x, evaluate=False)`)).equal(`[frac,[d],[dx]][x][💪,[3]]`);
         expect(await th.run(`diff(sin(x) + x**2, x, evaluate=False)`)).equal(`[frac,[d],[dx]]([x][💪,[2]][+][sin,]([x]))`);
         expect(await th.run(`diff(diff(sin(x) + x**2, x, evaluate=False), evaluate=False)`)).equal(`[frac,[d][💪,[2]],[dx][💪,[2]]]([x][💪,[2]][+][sin,]([x]))`);
         expect(await th.run(`diff(diff(diff(sin(x) + x**2, x, evaluate=False), evaluate=False), evaluate=False)`))
-        .equal(`[frac,[d][💪,[3]],[dx][💪,[3]]]([x][💪,[2]][+][sin,]([x]))`);
-        
+            .equal(`[frac,[d][💪,[3]],[dx][💪,[3]]]([x][💪,[2]][+][sin,]([x]))`);
+
         expect(await th.run(`diff(sin(x * y), x, evaluate=False)`)).equal(`[frac,[∂],[∂x]][sin,]([xy])`);
         expect(await th.run(`diff(sin(x * y) + x**2, x, evaluate=False)`)).equal(`[frac,[∂],[∂x]]([x][💪,[2]][+][sin,]([xy]))`);
         expect(await th.run(`diff(diff(sin(x*y) + x**2, x, evaluate=False), x, evaluate=False)`)).equal(`[frac,[∂][💪,[2]],[∂x][💪,[2]]]([x][💪,[2]][+][sin,]([xy]))`);
         expect(await th.run(`diff(diff(diff(sin(x*y) + x**2, x, evaluate=False), x, evaluate=False), x, evaluate=False)`)).equal(`[frac,[∂][💪,[3]],[∂x][💪,[3]]]([x][💪,[2]][+][sin,]([xy]))`);
-        
+
         await th.prepare(`f = Function("f")`);
         expect(await th.run(`diff(diff(f(x, y), x, evaluate=False), y, evaluate=False)`)).equal(`[frac,[∂][💪,[2]],[∂y∂x]][f]([x,y])`);
         expect(await th.run(`diff(diff(diff(f(x, y), x, evaluate=False), x, evaluate=False), y, evaluate=False)`)).equal(`[frac,[∂][💪,[3]],[∂y∂x][💪,[2]]][f]([x,y])`);
 
-        expect(await th.run(`diff(-diff(y**2,x,evaluate=False),x,evaluate=False)`)).equal(`[frac,[∂][💪,[3]],[∂x][💪,[2]][∂y]][f]([x,y])`);
+        expect(await th.run(`diff(-diff(y**2,x,evaluate=False),x,evaluate=False)`)).equal(`[frac,[d],[dx]][-][frac,[d],[dx]][y][💪,[2]]`);
+        expect(await th.run(`diff(diff(-diff(diff(y,x,evaluate=False),x,evaluate=False),x,evaluate=False),x,evaluate=False)`)).equal(`[frac,[d][💪,[2]],[dx][💪,[2]]][-][frac,[d][💪,[2]],[dx][💪,[2]]][y]`);
 
+        expect(await th.run(`diff(Integral(exp(-x*y), (x, 0, oo)), y, evaluate=False)`)).equal(`[frac,[d],[dy]][int,[0],[∞]][e][💪,[-xy]][ dx]`);
+        expect(await th.run(`diff(x, x, evaluate=False)**2`)).equal(`([frac,[d],[dx]][x])[💪,[2]]`);
+        expect(await th.run(`diff(f(x), x)**2`)).equal(`([frac,[d],[dx]][f]([x]))[💪,[2]]`);
+        expect(await th.run(`diff(f(x), (x, n))`)).equal(`[frac,[d][💪,[n]],[dx][💪,[n]]][f]([x])`);
+
+
+        await th.prepare(`
+x1 = Symbol('x1')
+x2 = Symbol('x2')
+`);
+
+        expect(await th.run(`diff(f(x1, x2), x1)`)).equal(`[frac,[∂],[∂x][⛏️,[1]]][f]([x][⛏️,[1]][,x][⛏️,[2]])`);
+
+        await th.prepare(` n1 = Symbol('n1')`);
+        expect(await th.run(`diff(f(x), (x, n1))`)).equal(`[frac,[d][💪,[n][⛏️,[1]]],[dx][💪,[n][⛏️,[1]]]][f]([x])`);
+
+        await th.prepare(` n2 = Symbol('n2')`);
+        expect(await th.run(`diff(f(x), (x, Max(n1, n2)))`)).equal(`[frac,[d][💪,[max,]([n][⛏️,[1]][,n][⛏️,[2]])],[dx][💪,[max,]([n][⛏️,[1]][,n][⛏️,[2]])]][f]([x])`);
+    });
+
+    it.only("subs", async () => {
+        expect(await th.run(`Subs(x*y, (x, y), (1, 2))`)).equal(`[frac,[d][💪,[max,]([n][⛏️,[1]][,n][⛏️,[2]])],[dx][💪,[max,]([n][⛏️,[1]][,n][⛏️,[2]])]][f]([x])`);
     })
 
 });

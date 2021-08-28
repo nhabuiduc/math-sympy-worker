@@ -125,11 +125,22 @@ class BlockBd {
 
         return cblock;
     }
+    compositeBlock(
+        name: `\\${"i" | "ii" | "iii" | "iii"}nt`,
+        elementNames?: ("from" | "to")[],
+        innerBlocks?: BlockModel[][],
+        style?: BlockStyle): CompositeBlockModel;
 
     compositeBlock(
         name: "\\power-index" | "\\frac" | "\\sqrt" | "\\matrix" | "\\text" | "\\small-tilde" | "\\small-hat" | "\\middle|" |
-            "\\operatorname" | `\\${"i" | "ii" | "iii" | "iii"}nt` | "\\overline" | "\\rightarrow" | "\\bmod" | "\\prescript",
-        elementNames: ("powerValue" | "indexValue" | "value" | "sub1" | "textValue")[] = [],
+            "\\operatorname" | "\\overline" | "\\rightarrow" | "\\bmod" | "\\prescript",
+        elementNames?: ("powerValue" | "indexValue" | "value" | "sub1" | "textValue")[],
+        innerBlocks?: BlockModel[][],
+        style?: BlockStyle): CompositeBlockModel;
+
+    compositeBlock(
+        name: string,
+        elementNames: (string)[] = [],
         innerBlocks: BlockModel[][] = [],
         style?: BlockStyle): CompositeBlockModel {
         const block: CompositeBlockModel = {
