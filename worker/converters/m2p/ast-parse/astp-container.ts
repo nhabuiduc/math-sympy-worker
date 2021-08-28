@@ -46,6 +46,7 @@ export class AstpContainer implements AstpNs.AstpUnit<M2T.Token> {
                     type: "func-symbol",
                     kind: "container",
                     name: "matrix",
+                    
                     row: nOfRow,
                     column: nOfCol,
                     args: exprs,

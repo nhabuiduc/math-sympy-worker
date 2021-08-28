@@ -1,4 +1,5 @@
 import stringHelper from "@lib-shared/string-helper";
+import { _l } from "@sympy-worker/light-lodash";
 import type { P2Pr } from "../p2pr";
 import { Pr2M } from "../pr2m";
 
@@ -131,8 +132,8 @@ class PrTransformHelper {
         return EnumPosWeight.Unknown;
     }
 
-    list(ss: Symbol[]): P2Pr.List {
-        return { type: "List", bracket: "(", kind: "Container", separator: ",", symbols: ss };
+    list(ss: Symbol[]): P2Pr.VarList {
+        return { type: "VarList", bracket: "(", kind: "Container", separator: ",", symbols: ss };
     }
     mul(s1: Symbol, s2: Symbol): P2Pr.Mul {
         if (s1.type == "Mul" && s2.type == "Mul") {
@@ -253,7 +254,7 @@ class PrTransformHelper {
     }
 
     considerPresentAsSingleUnit(s: Symbol, cr: Pr2M.CResult) {
-        if (cr.prUnit == "bracket" || cr.prUnit == "factorial" || cr.prUnit == "matrix-like" || cr.prUnit == "conjugate") {
+        if (cr.prUnit == "bracket" || cr.prUnit == "factorial" || cr.prUnit == "conjugate" || cr.prUnit == "func") {
             return true;
         }
 
@@ -315,6 +316,16 @@ class PrTransformHelper {
         return { type: "Var", kind: "Leaf", name: text };
     }
 
+    varList(ss: Symbol[], separator?: P2Pr.VarList["separator"], br?: P2Pr.VarList["bracket"]): P2Pr.VarList {
+        return { type: "VarList", kind: "Container", symbols: ss, separator, bracket: br };
+    }
+
+    removeVarListBracket(s: Symbol): Symbol {
+        if (s.type == "VarList") {
+            return { ...s, bracket: undefined }
+        }
+    }
+
     int(vl: number): P2Pr.Integer {
         return { type: "Integer", kind: "Leaf", value: vl }
     }
@@ -323,8 +334,35 @@ class PrTransformHelper {
         return { type: "Index", kind: "Container", symbols: [base, index] };
     }
 
-    brackets(base: Symbol, br: P2Pr.SupportBracket = "("): P2Pr.Symbol {
-        return { type: "Brackets", kind: "Container", symbols: [base], br };
+    brackets(base: Symbol | Symbol[], br: P2Pr.SupportBracket = "("): P2Pr.Symbol {
+        if (base instanceof Array) {
+            return { type: "VarList", kind: "Container", symbols: base, bracket: br, separator: "," };
+        }
+        return { type: "VarList", kind: "Container", symbols: [base], bracket: br, separator: "," };
+    }
+
+    matrix(ss: Symbol[][] | { ss: Symbol[], row: number, col: number }, bracket?: "(" | "["): P2Pr.Matrix {
+        let flattenSs: Symbol[];
+        let row = 1;
+        let col = 1;
+        if (ss instanceof Array) {
+            flattenSs = _l.flatten(ss);
+            row = ss.length;
+            col = ss[0].length;
+        } else {
+            flattenSs == ss.ss;
+            row = ss.row;
+            col = ss.col;
+        }
+
+        return {
+            type: "Matrix",
+            bracket: bracket,
+            row,
+            col,
+            kind: "Container",
+            symbols: flattenSs,
+        }
     }
 
     pow(base: Symbol, root: Symbol, index?: Symbol): P2Pr.Pow {
@@ -335,6 +373,16 @@ class PrTransformHelper {
         }
         if (index) {
             rs.symbols.push(index);
+        }
+
+        return rs;
+    }
+
+    prescriptIdx(index: Symbol): P2Pr.PrescriptIdx {
+        const rs: P2Pr.PrescriptIdx = {
+            type: "PrescriptIdx",
+            kind: "Container",
+            symbols: [index]
         }
 
         return rs;

@@ -41,6 +41,9 @@ class __McHdl:
 
     def hdl_Integer(self, expr):
         return {'func':'Integer', 'value':expr.p }
+
+    def hdl_int(self, expr):
+        return {'func':'Integer', 'value':expr }
         
     
     def hdl_Dummy(self, expr):
@@ -111,6 +114,37 @@ class __McHdl:
     def hdl_Exp1(self, expr):
         return { 'func': 'Exp1' }
 
+    def hdl_genfunc_meijerg(self,expr):
+        return { 
+            'func': 'GenericFunc',
+            'name': 'meijerg',
+            'args':[
+                self.hdlAll(len(expr.ap)),
+                self.hdlAll(len(expr.bq)),
+                self.hdlAll(len(expr.bm)),
+                self.hdlAll(len(expr.an)),
+                self.hdlAll(expr.an),
+                self.hdlAll(expr.aother),
+                self.hdlAll(expr.bm),
+                self.hdlAll(expr.bother),
+                self.hdlAll(expr.argument)
+
+            ]            
+         }
+
+    def hdl_genfunc_hyper(self,expr):
+        return { 
+        'func': 'GenericFunc',
+        'name': 'hyper',
+        'args':[
+            self.hdlAll(len(expr.ap)),
+            self.hdlAll(len(expr.bq)),            
+            self.hdlAll(expr.ap),
+            self.hdlAll(expr.bq),
+            self.hdlAll(expr.argument)
+        ]            
+    }
+
     def hdlFunctionClass(self, expr, name):
         return { 'func': 'FunctionClass', 'name': name, 'args': self.argsMap(expr.args) }
 
@@ -123,18 +157,15 @@ class __McHdl:
 
 
     def hdlOthers(self, expr):
-        dic = { 'args':[] }
-        dic['func']='GenericFunc'
+        dic = { 'func':'GenericFunc', 'args':[] }        
 
         if hasattr(expr.__class__, '__class__') and expr.__class__.__class__.__name__ == 'FunctionClass':
             funcName = expr.__class__.__name__
             if funcName in ['KroneckerDelta','gamma','lowergamma','beta','DiracDelta','Chi']:
                 return { 'func': 'SpecialFuncClass', 'name': funcName, 'args': self.argsMap(expr.args) }
         
-        if expr.__class__.__name__ == 'FunctionClass':
+        if expr.__class__.__name__ == 'FunctionClass':            
             dic['name']= expr.__name__
-            dic['args'] = []
-            return dic
         elif hasattr(expr, 'func'):
             funcName = expr.func.__name__
             if funcName[0].islower():
@@ -143,8 +174,17 @@ class __McHdl:
                 dic['func']= funcName
         else:
             dic['name']= expr.__class__.__name__
+
+        if 'name' in dic and  hasattr(self, 'hdl_genfunc_' + dic['name']) :                
+            found = getattr(self, 'hdl_genfunc_' + dic['name'])(expr)
+            return found
+
+        if hasattr(self, 'hdl_' + dic['func']) :                
+            found = getattr(self, 'hdl_' + dic['func'])(expr)
+            return found
         
-        if hasattr(expr, 'args'):
+        
+        if hasattr(expr, 'args') and hasattr(expr.args,'__iter__'):
             dic['args'] = self.argsMap(expr.args)
 
         return dic

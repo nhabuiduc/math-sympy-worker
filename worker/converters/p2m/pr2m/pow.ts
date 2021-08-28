@@ -53,7 +53,7 @@ export class Pow {
 
         const power = this.main.convert(powArgs[1]).blocks;
 
-        if (powArgs[2] && genericFunc.powerIndexPos == "power-after" && (!genericFunc.noBracketIfArgEmpty || genericFunc.symbols.length > 0)) {
+        if (powArgs[2] && genericFunc.powerIndexPos == "power-after" && (genericFunc.symbols.length > 0 || genericFunc.symbols.length > 0)) {
             const index = this.main.convert(powArgs[2]).blocks;
             powerBlock = blockBd.compositeBlock("\\power-index", ["powerValue"], [power]);
             const indexBlock = blockBd.compositeBlock("\\power-index", ["indexValue"], [index]);

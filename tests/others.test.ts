@@ -387,13 +387,90 @@ class mygamma(gamma):
         expect(await th.run("mygamma(x)")).equal(`[⚙️,[mygamma]]([x])`);
     })
 
-    it.only("hyper", async () => {
+    it("hyper", async () => {
         await th.prepare(`
 from sympy import pi
 from sympy.abc import x, z`);
 
+
+
         expect(await th.run(`meijerg(Tuple(pi, pi, x), Tuple(1),
-(0, 1), Tuple(1, 2, 3/pi), z)`)).equal(`[⚙️,[mygamma]]([x])`);
+(0, 1), Tuple(1, 2, 3/pi), z)`)).equal(`[C][💪,[2,3],[4,5]]([🏓matrix,[𝜋,𝜋,x],[1],[0,1],[1,2,][frac,[3],[𝜋]]][middle|,][z])`);
+
+        expect(await th.run(`meijerg(Tuple(), Tuple(1), (0,), Tuple(), z)`)).equal(`[C][💪,[1,0],[1,1]]([🏓matrix,,[1],[0],][middle|,][z])`);
+        expect(await th.run(`hyper((x, 2), (3,), z)`)).equal(`[prescript,[2]][F][⛏️,[1]]([🏓matrix,[x,2],[3]][middle|,][z])`);
+        expect(await th.run(`hyper(Tuple(), Tuple(1), z)`)).equal(`[prescript,[0]][F][⛏️,[1]]([🏓matrix,,[1]][middle|,][z])`);
+
     });
+
+    it("bessel", async () => {
+        await th.prepare(`from sympy.functions.special.bessel import (besselj, bessely, besseli,
+            besselk, hankel1, hankel2,
+            jn, yn, hn1, hn2)
+from sympy.abc import z`);
+
+        expect(await th.run(`besselj(n, z**2)**k`)).equal(`[J][💪,[k],[n]]([z][💪,[2]])`);
+        expect(await th.run(`bessely(n, z)`)).equal(`[Y][⛏️,[n]]([z])`);
+        expect(await th.run(`besseli(n, z)`)).equal(`[I][⛏️,[n]]([z])`);
+        expect(await th.run(`besselk(n, z)`)).equal(`[K][⛏️,[n]]([z])`);
+        expect(await th.run(`hankel1(n, z**2)**2`)).equal(`([H][💪,[(1)],[n]]([z][💪,[2]]))[💪,[2]]`);
+        expect(await th.run(`hankel2(n, z)`)).equal(`[H][💪,[(2)],[n]]([z])`);
+        expect(await th.run(`jn(n, z)`)).equal(`[j][⛏️,[n]]([z])`);
+        expect(await th.run(`yn(n, z)`)).equal(`[y][⛏️,[n]]([z])`);
+        expect(await th.run(`hn1(n, z)`)).equal(`[h][💪,[(1)],[n]]([z])`);
+        expect(await th.run(`hn2(n, z)`)).equal(`[h][💪,[(2)],[n]]([z])`);
+    });
+
+    it.only("fresnel", async () => {
+
+        await th.prepare(`    
+from sympy.functions.special.error_functions import (fresnels, fresnelc)
+from sympy.abc import z`);
+
+        expect(await th.run(`fresnels(z)`)).equal(`[S]([z])`);
+        expect(await th.run(`fresnelc(z)`)).equal(`[C]([z])`);
+        expect(await th.run(`fresnels(z)**2`)).equal(`[S][💪,[2]]([z])`);
+        expect(await th.run(`fresnelc(z)**2`)).equal(`[C][💪,[2]]([z])`);
+    });
+
+    it.only("brackets", async () => {
+        expect(await th.run(`(-1)**x`)).equal(`([-1])[💪,[x]]`);
+
+    });
+
+    it.only("indexed", async () => {
+
+        await th.prepare(`  
+Psi_symbol = Symbol('Psi_0', complex=True, real=False)
+Psi_indexed = IndexedBase(Symbol('Psi', complex=True, real=False))`);
+
+        expect(await th.run(`Psi_symbol * conjugate(Psi_symbol)`)).equal(`[Psi][⛏️,[0]][overline,[Psi][⛏️,[0]]]`);
+        expect(await th.run(`Psi_indexed[0] * conjugate(Psi_indexed[0])`)).equal(`[Psi][⛏️,[0]][overline,[Psi][⛏️,[0]]]`);
+        expect(await th.run(`Indexed('x1', Symbol('i'))`)).equal(`[x][⛏️,[1]][⛏️,[i]]`);
+        expect(await th.run(`IndexedBase('gamma')`)).equal(`[𝛾]`);
+        expect(await th.run(`IndexedBase('a b')`)).equal(`[a b]`);
+        expect(await th.run(`IndexedBase('a_b')`)).equal(`[a][⛏️,[b]]`);
+
+    })
+
+    it.only("derivatives", async () => {
+        expect(await th.run(`diff(x**3, x, evaluate=False)`)).equal(`[frac,[d],[dx]]([x][💪,[3]])`);
+        expect(await th.run(`diff(sin(x) + x**2, x, evaluate=False)`)).equal(`[frac,[d],[dx]]([x][💪,[2]][+][sin,]([x]))`);
+        expect(await th.run(`diff(diff(sin(x) + x**2, x, evaluate=False), evaluate=False)`)).equal(`[frac,[d][💪,[2]],[dx][💪,[2]]]([x][💪,[2]][+][sin,]([x]))`);
+        expect(await th.run(`diff(diff(diff(sin(x) + x**2, x, evaluate=False), evaluate=False), evaluate=False)`))
+        .equal(`[frac,[d][💪,[3]],[dx][💪,[3]]]([x][💪,[2]][+][sin,]([x]))`);
+        
+        expect(await th.run(`diff(sin(x * y), x, evaluate=False)`)).equal(`[frac,[∂],[∂x]][sin,]([xy])`);
+        expect(await th.run(`diff(sin(x * y) + x**2, x, evaluate=False)`)).equal(`[frac,[∂],[∂x]]([x][💪,[2]][+][sin,]([xy]))`);
+        expect(await th.run(`diff(diff(sin(x*y) + x**2, x, evaluate=False), x, evaluate=False)`)).equal(`[frac,[∂][💪,[2]],[∂x][💪,[2]]]([x][💪,[2]][+][sin,]([xy]))`);
+        expect(await th.run(`diff(diff(diff(sin(x*y) + x**2, x, evaluate=False), x, evaluate=False), x, evaluate=False)`)).equal(`[frac,[∂][💪,[3]],[∂x][💪,[3]]]([x][💪,[2]][+][sin,]([xy]))`);
+        
+        await th.prepare(`f = Function("f")`);
+        expect(await th.run(`diff(diff(f(x, y), x, evaluate=False), y, evaluate=False)`)).equal(`[frac,[∂][💪,[2]],[∂y∂x]][f]([x,y])`);
+        expect(await th.run(`diff(diff(diff(f(x, y), x, evaluate=False), x, evaluate=False), y, evaluate=False)`)).equal(`[frac,[∂][💪,[3]],[∂y∂x][💪,[2]]][f]([x,y])`);
+
+        expect(await th.run(`diff(-diff(y**2,x,evaluate=False),x,evaluate=False)`)).equal(`[frac,[∂][💪,[3]],[∂x][💪,[2]][∂y]][f]([x,y])`);
+
+    })
 
 });

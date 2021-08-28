@@ -6,6 +6,9 @@ class LightLodash {
     first<T>(arr: T[]): T {
         return arr[0];
     }
+    flatten<T>(arr: T[][]): T[] {
+        return arr.reduce((prev, c) => prev.concat(c), []);
+    }
 
     partition<T>(arr: T[], predicate: (item: T) => boolean): [T[], T[]] {
         const first: T[] = [];

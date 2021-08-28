@@ -17,6 +17,7 @@ class TestHelper {
             "zeta": "𝜁",
             "theta": "𝜃",
             "phi": "𝜙",
+            "pi": "𝜋",
         }
     });
     async prepare(statement: string): Promise<void> {

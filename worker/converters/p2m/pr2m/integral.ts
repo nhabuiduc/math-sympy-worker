@@ -11,17 +11,17 @@ export class Integral {
         const limits = derivative.symbols.slice(1);
         let intBlocks: CompositeBlockModel[];
         let symbolBlocks: BlockModel[];
-        if (limits.length <= 3 && limits.every(c => (c as P2Pr.Tuple).symbols.length == 1)) {
+        if (limits.length <= 3 && limits.every(c => (c as P2Pr.VarList).symbols.length == 1)) {
             intBlocks = [this.intBlockByCount(limits.length)];
             symbolBlocks = blockBd.joinBlocks(limits.map(c => {
-                const rs = this.main.convert((c as P2Pr.Tuple).symbols[0]);
+                const rs = this.main.convert((c as P2Pr.VarList).symbols[0]);
                 return [blockBd.textBlock("d")].concat(rs.blocks);
             }), " ");
         } else {
             intBlocks = [];
             const sBlockss: BlockModel[][] = [];
             for (let idx = limits.length - 1; idx >= 0; idx--) {
-                const lim = limits[idx] as P2Pr.Tuple;
+                const lim = limits[idx] as P2Pr.VarList;
                 let intBlock: CompositeBlockModel;
                 if (lim.symbols.length >= 3) {
                     intBlock = blockBd.compositeBlock("\\int", ["indexValue", "powerValue"],

@@ -8,13 +8,18 @@ export class Derivative {
 
     }
 
+    private considerPresentAsSingleUnit(s: Symbol, cr: Pr2M.CResult) {
+        return prTh.considerPresentAsSingleUnit(s, cr) || s.type == "Pow";
+    }
+
     convert(derivative: P2Pr.Derivative, level: number): Pr2M.CResult {
-        const exprBlocks = this.main.convert(derivative.symbols[0]).blocks;
+        let crs = this.main.convert(derivative.symbols[0]);
+        const exprBlocks = this.considerPresentAsSingleUnit(derivative.symbols[0], crs) ? crs.blocks : blockBd.wrapBetweenBrackets(crs.blocks).blocks;
         let denomVarList: P2Pr.VarList = { type: "VarList", kind: "Container", symbols: [] };
         const dLetter = derivative.partial ? "∂" : "d";
         let allVar = 0;
-        for (let idx = 1; idx < derivative.symbols.length; idx++) {
-            const tuple = (derivative.symbols[idx] as P2Pr.Tuple);
+        for (let idx = derivative.symbols.length - 1; idx >= 1; idx--) {
+            const tuple = (derivative.symbols[idx] as P2Pr.VarList);
             const symbolCount = prTh.extractIntegerValue(tuple.symbols[1]);
             denomVarList.symbols.push(prTh.var(dLetter));
 
@@ -46,6 +51,4 @@ export class Derivative {
     }
 }
 
-
-
-// export const derivative = new Derivative();
+type Symbol = P2Pr.Symbol;

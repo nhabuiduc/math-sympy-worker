@@ -20,11 +20,11 @@ export class P2Pr {
 
     convert(obj: P.Basic, ops?: P2Pr.TransformOptions): Symbol {
         ops = Object.assign({}, { orderAdd: true, orderMul: true } as P2Pr.TransformOptions, ops)
-        const rs = this.innerConvert(obj);
+        const rs = this.c(obj);
         return this.transforms.reduce((prev, cur) => cur.transform(prev, ops), rs);
     }
 
-    private innerConvert(obj: P.Basic): Symbol {
+    private c(obj: P.Basic): Symbol {
         switch (obj.func) {
 
             case "Integer": {
@@ -37,7 +37,7 @@ export class P2Pr {
                 return this.symbol.parse(obj.name);
             }
             case "Mul": {
-                const symbols = obj.args.map(c => this.innerConvert(c));
+                const symbols = this.m(obj.args);
                 return {
                     type: "Mul",
                     kind: "Container",
@@ -46,7 +46,7 @@ export class P2Pr {
                 }
             }
             case "Pow": {
-                return { type: "Pow", kind: "Container", symbols: obj.args.map(c => this.innerConvert(c)) }
+                return { type: "Pow", kind: "Container", symbols: this.m(obj.args) }
             }
 
             case "NegativeOne": {
@@ -97,6 +97,7 @@ export class P2Pr {
             }
 
             case "NumberSymbol": {
+
                 return { type: "ConstantSymbol", kind: "Leaf", showType: "text", name: obj.name }
             }
             case "Zero": {
@@ -110,46 +111,122 @@ export class P2Pr {
                 return prTh.frac(prTh.integerOrSpecial(obj.p), prTh.integerOrSpecial(obj.q));
             }
             case "Matrix": {
-                return { type: "Matrix", kind: "Container", row: obj.row, col: obj.col, symbols: obj.args.map(c => this.innerConvert(c)) }
+                return { type: "Matrix", kind: "Container", bracket: "[", row: obj.row, col: obj.col, symbols: this.m(obj.args) }
             }
 
             case "GenericFunc": {
+                if (obj.name == "meijerg") {
+                    return prTh.varList([prTh.pow(
+                        prTh.var("C"),
+                        prTh.varList(this.m(obj.args.slice(2, 4)), ","),
+                        prTh.varList(this.m(obj.args.slice(0, 2)), ","),
+                    ), prTh.varList([
+                        prTh.matrix([
+                            this.m(obj.args.slice(4, 6)).map(c => prTh.removeVarListBracket(c)),
+                            this.m(obj.args.slice(6, 8)).map(c => prTh.removeVarListBracket(c)),
+                        ]),
+                        this.c(obj.args[8]),
+                    ], "|", "(")])
+                }
+                if (obj.name == "hyper") {
+                    return prTh.varList([prTh.prescriptIdx(this.c(obj.args[0])),
+                    prTh.index(prTh.var("F"), this.c(obj.args[1])), , prTh.varList([
+                        prTh.matrix([
+                            this.m(obj.args.slice(2, 3)).map(c => prTh.removeVarListBracket(c)),
+                            this.m(obj.args.slice(3, 4)).map(c => prTh.removeVarListBracket(c)),
+                        ]),
+                        this.c(obj.args[4]),
+                    ], "|", "(")])
+                }
+
                 if (obj.name == "exp") {
-                    return { type: "Exp", kind: "Container", symbols: obj.args.map(c => this.innerConvert(c)) }
+                    return { type: "Exp", kind: "Container", symbols: this.m(obj.args) }
                 }
                 if (obj.name == "binomial") {
-                    return { type: "Binomial", kind: "Container", symbols: obj.args.map(c => this.innerConvert(c)) }
+                    return { type: "Binomial", kind: "Container", symbols: this.m(obj.args) }
                 }
                 if (obj.name == "NoneType") {
                     return { type: "ConstantSymbol", kind: "Leaf", showType: "text", name: "None" }
                 }
                 if (obj.name == "factorial") {
-                    return { type: "Factorial", kind: "Container", symbols: obj.args.map(c => this.innerConvert(c)) }
+                    return { type: "Factorial", kind: "Container", symbols: this.m(obj.args) }
                 }
                 if (obj.name == "subfactorial") {
-                    return { type: "SubFactorial", kind: "Container", symbols: obj.args.map(c => this.innerConvert(c)) }
+                    return { type: "SubFactorial", kind: "Container", symbols: this.m(obj.args) }
                 }
                 if (obj.name == "factorial2") {
-                    return { type: "Factorial2", kind: "Container", symbols: obj.args.map(c => this.innerConvert(c)) }
+                    return { type: "Factorial2", kind: "Container", symbols: this.m(obj.args) }
                 }
                 if (obj.name == "floor") {
-                    return { type: "Brackets", kind: "Container", br: "floor", symbols: obj.args.map(c => this.innerConvert(c)) }
+                    return prTh.brackets(this.m(obj.args), "floor");
                 }
                 if (obj.name == "ceiling") {
-                    return { type: "Brackets", kind: "Container", br: "ceil", symbols: obj.args.map(c => this.innerConvert(c)) }
+                    return prTh.brackets(this.m(obj.args), "ceil");
                 }
 
                 if (obj.name == "min" || obj.name == "max") {
-                    return { type: "GenericFunc", kind: "Container", func: obj.name, powerIndexPos: "all-after", symbols: obj.args.map(c => this.innerConvert(c)) }
+                    return { type: "GenericFunc", kind: "Container", func: obj.name, powerIndexPos: "all-after", symbols: this.m(obj.args) }
                 }
                 if (obj.name == "conjugate") {
-                    return { type: "Conjugate", kind: "Container", symbols: obj.args.map(c => this.innerConvert(c)) };
+                    return { type: "Conjugate", kind: "Container", symbols: this.m(obj.args) };
                 }
+
+
                 if (obj.name == "polylog") {
                     obj.name = "Li";
                     return this.firstIndexOfGenericFunc(obj);
-
                 }
+                if (obj.name == "besselj") {
+                    obj.name = "J";
+                    return this.firstIndexOfGenericFunc(obj);
+                }
+                if (obj.name == "bessely") {
+                    obj.name = "Y";
+                    return this.firstIndexOfGenericFunc(obj);
+                }
+                if (obj.name == "besseli") {
+                    obj.name = "I";
+                    return this.firstIndexOfGenericFunc(obj);
+                }
+                if (obj.name == "besselk") {
+                    obj.name = "K";
+                    return this.firstIndexOfGenericFunc(obj);
+                }
+                if (obj.name == "hankel1") {
+                    obj.name = "H";
+                    return this.firstIndexOfGenericFuncWithPow(obj, "(1)");
+                }
+                if (obj.name == "hankel2") {
+                    obj.name = "H";
+                    return this.firstIndexOfGenericFuncWithPow(obj, "(2)");
+                }
+
+                if (obj.name == "jn") {
+                    obj.name = "j";
+                    return this.firstIndexOfGenericFunc(obj);
+                }
+                if (obj.name == "yn") {
+                    obj.name = "y";
+                    return this.firstIndexOfGenericFunc(obj);
+                }
+
+                if (obj.name == "hn1") {
+                    obj.name = "h";
+                    return this.firstIndexOfGenericFuncWithPow(obj, "(1)");
+                }
+                if (obj.name == "hn2") {
+                    obj.name = "h";
+                    return this.firstIndexOfGenericFuncWithPow(obj, "(2)");
+                }
+
+                if (obj.name == "fresnels") {
+                    obj.name = "S";
+                }
+                if (obj.name == "fresnelc") {
+                    obj.name = "C";
+                }
+
+
                 if (obj.name == "stieltjes") {
                     obj.name = "𝛾";
                     return this.firstIndexOfGenericFunc(obj, { powerIndexPos: "power-after" });
@@ -251,11 +328,11 @@ export class P2Pr {
                 if (obj.name == "udivisor_sigma") {
                     obj.name = "𝜎";
                     if (obj.args.length == 1) {
-                        return prTh.pow(prTh.genFunc(obj.name, this.mapArgs(obj.args), { allowAncesstorPowerAtEnd: false }), prTh.var("*"));
+                        return prTh.pow(prTh.genFunc(obj.name, this.m(obj.args), { allowAncesstorPowerAtEnd: false }), prTh.var("*"));
                     }
 
                     if (obj.args.length == 2) {
-                        return prTh.pow(prTh.genFunc(obj.name, [this.innerConvert(obj.args[0])], { allowAncesstorPowerAtEnd: false }), prTh.var("*"), this.innerConvert(obj.args[1]));
+                        return prTh.pow(prTh.genFunc(obj.name, [this.c(obj.args[0])], { allowAncesstorPowerAtEnd: false }), prTh.var("*"), this.c(obj.args[1]));
                     }
 
                 }
@@ -268,11 +345,11 @@ export class P2Pr {
 
 
                 if (ignoreParseName) {
-                    return { type: "GenericFunc", kind: "Container", func: obj.name, symbols: obj.args.map(c => this.innerConvert(c)), ...genOps }
+                    return { type: "GenericFunc", kind: "Container", func: obj.name, symbols: this.m(obj.args), ...genOps }
                 }
 
                 return this.nameParser.parse(obj.name, (cn) => {
-                    return { type: "GenericFunc", kind: "Container", func: cn, symbols: obj.args.map(c => this.innerConvert(c)), ...genOps }
+                    return { type: "GenericFunc", kind: "Container", func: cn, symbols: this.m(obj.args), ...genOps }
                 })
 
             }
@@ -287,12 +364,19 @@ export class P2Pr {
                 return this.indexPowerGenericFunc({ name: "Z", args: obj.args, func: "GenericFunc" });
             }
             case "Abs": {
-                return { type: "Brackets", kind: "Container", br: "|", symbols: obj.args.map(c => this.innerConvert(c)) }
+                return prTh.brackets(this.m(obj.args), "|");
             }
             case "Str": {
                 return { type: "Str", kind: "Leaf", text: obj.text };
             }
 
+
+            case "IndexedBase": {
+                return this.c(obj.args[0]);
+            }
+            case "Indexed": {
+                return prTh.index(this.c(obj.args[0]), this.c(obj.args[1]))
+            }
 
             case "BaseVector": {
                 const vIdx = P2Pr.parseIntegerConstant(obj.args[0]);
@@ -328,31 +412,34 @@ export class P2Pr {
             case "Mod":
             case "Order":
             case "CoordSys3D":
-            case "BaseDyadic":
+            case "BaseDyadic": {
+                return { type: obj.func, kind: "Container", symbols: this.m(obj.args) }
+            }
+
             case "Tuple": {
-                return { type: obj.func, kind: "Container", symbols: obj.args.map(c => this.innerConvert(c)) }
+                return prTh.varList(this.m(obj.args), ",", "(")
             }
 
             case "VectorAdd": {
-                return { type: "Add", kind: "Container", symbols: obj.args.map(c => this.innerConvert(c)) }
+                return { type: "Add", kind: "Container", symbols: this.m(obj.args) }
             }
             case "VectorMul": {
-                return { type: "Mul", kind: "Container", unevaluatedDetected: true, symbols: obj.args.map(c => this.innerConvert(c)) }
+                return { type: "Mul", kind: "Container", unevaluatedDetected: true, symbols: this.m(obj.args) }
             }
             case "VectorZero": {
                 return { type: "VectorZero", kind: "Leaf" }
             }
             case "Point": {
-                return { type: "GenericFunc", kind: "Container", func: (obj.args[0] as P.Str).text, symbols: obj.args.map(c => this.innerConvert(c)) }
+                return { type: "GenericFunc", kind: "Container", func: (obj.args[0] as P.Str).text, symbols: this.m(obj.args) }
                 // return { type: "Point", kind: "Container", name: (obj.args[0] as P.Str).text, symbols: obj.args.map(c => this.innerConvert(c)) }
             }
 
             case "PolynomialRing": {
-                return { type: "PolynomialRing", kind: "Container", symbols: obj.args.map(c => this.innerConvert(c)), domain: this.innerConvert(obj.domain) }
+                return { type: "PolynomialRing", kind: "Container", symbols: this.m(obj.args), domain: this.c(obj.domain) }
             }
 
             case "Derivative": {
-                return { type: "Derivative", kind: "Container", partial: obj.partial, symbols: obj.args.map(c => this.innerConvert(c)) }
+                return { type: "Derivative", kind: "Container", partial: obj.partial, symbols: this.m(obj.args) }
             }
 
             case "BooleanTrue": {
@@ -363,14 +450,14 @@ export class P2Pr {
             }
 
             case "Relational": {
-                return { type: "Relational", kind: "Container", relOp: obj.relOp, symbols: obj.args.map(c => this.innerConvert(c)) }
+                return { type: "Relational", kind: "Container", relOp: obj.relOp, symbols: this.m(obj.args) }
             }
             case "List": {
                 return {
-                    type: "List",
+                    type: "VarList",
                     kind: "Container",
                     separator: obj.separator,
-                    symbols: obj.args.map(c => this.innerConvert(c)),
+                    symbols: this.m(obj.args),
                     bracket: "[",
                 }
             }
@@ -378,7 +465,7 @@ export class P2Pr {
                 return { type: "Var", kind: "Leaf", name: obj.name }
             }
             case "Poly": {
-                return { type: "Poly", kind: "Container", symbols: obj.args.map(c => this.innerConvert(c)), domain: this.innerConvert(obj.domain) }
+                return { type: "Poly", kind: "Container", symbols: this.m(obj.args), domain: this.c(obj.domain) }
             }
 
             case "DisplayedDomain": {
@@ -386,11 +473,11 @@ export class P2Pr {
             }
 
             case "Integral": {
-                return { type: "Integral", kind: "Container", symbols: obj.args.map(c => this.innerConvert(c)) }
+                return { type: "Integral", kind: "Container", symbols: this.m(obj.args) }
             }
 
             case "UndefinedFunction": {
-                return this.nameParser.parse(obj.name, (cn) => ({ type: "GenericFunc", kind: "Container", func: cn, symbols: obj.args.map(c => this.innerConvert(c)), noBracketIfArgEmpty: true }))
+                return this.nameParser.parse(obj.name, (cn) => ({ type: "GenericFunc", kind: "Container", func: cn, symbols: this.m(obj.args), isUndefinedFunction: true }))
             }
             case "Implies":
             case "Not":
@@ -399,19 +486,19 @@ export class P2Pr {
                 return {
                     type: "Discrete",
                     kind: "Container",
-                    op: obj.func, symbols: obj.args.map(c => this.innerConvert(c)),
+                    op: obj.func, symbols: this.m(obj.args),
                 }
             }
             case "SingularityFunction": {
-                return { type: "SingularityFunction", kind: "Container", symbols: obj.args.map(c => this.innerConvert(c)) }
+                return { type: "SingularityFunction", kind: "Container", symbols: this.m(obj.args) }
             }
             case "Cycle": {
                 if (obj.perm.length == 0) {
-                    return { type: "List", kind: "Container", bracket: "(", separator: ";", symbols: [] }
+                    return { type: "VarList", kind: "Container", bracket: "(", separator: ";", symbols: [] }
                 }
 
-                const listss: P2Pr.List[] = obj.perm.map(c => {
-                    const list: P2Pr.List = { type: "List", kind: "Container", bracket: "(", separator: ";", symbols: c.map(i => prTh.int(i)) };
+                const listss: P2Pr.VarList[] = obj.perm.map(c => {
+                    const list: P2Pr.VarList = { type: "VarList", kind: "Container", bracket: "(", separator: ";", symbols: c.map(i => prTh.int(i)) };
                     return list;
                 });
 
@@ -429,23 +516,23 @@ export class P2Pr {
             case "Laplacian":
             case "Curl":
             case "Cross": {
-                return { type: "VecExpr", op: obj.func, kind: "Container", symbols: obj.args.map(c => this.innerConvert(c)) }
+                return { type: "VecExpr", op: obj.func, kind: "Container", symbols: this.m(obj.args) }
             }
             case "SpecialFuncClass": {
-                return { type: "GenericFunc", func: obj.name, specialFuncClass: true, kind: "Container", symbols: obj.args.map(c => this.innerConvert(c)) }
+                return { type: "GenericFunc", func: obj.name, specialFuncClass: true, kind: "Container", symbols: this.m(obj.args) }
             }
             case "FallingFactorial": {
-                return prTh.index(prTh.brackets(this.innerConvert(obj.args[0])), this.innerConvert(obj.args[1]))
+                return prTh.index(prTh.brackets(this.c(obj.args[0])), this.c(obj.args[1]))
             }
             case "RisingFactorial": {
-                return prTh.pow(this.innerConvert(obj.args[0]), prTh.brackets(this.innerConvert(obj.args[1])))
+                return prTh.pow(this.c(obj.args[0]), prTh.brackets(this.c(obj.args[1])))
             }
 
         }
 
 
         if (obj.args) {
-            return this.nameParser.parse(obj.func, (cn) => ({ type: "GenericFunc", kind: "Container", func: cn, symbols: obj.args.map(c => this.innerConvert(c)), noBracketIfArgEmpty: true }))
+            return this.nameParser.parse(obj.func, (cn) => ({ type: "GenericFunc", kind: "Container", func: cn, symbols: this.m(obj.args), noBracketIfArgEmpty: true }))
         }
         return { type: "Var", kind: "Leaf", name: "?" }
     }
@@ -458,8 +545,20 @@ export class P2Pr {
             type: "Index",
             kind: "Container",
             symbols: [
-                { type: "GenericFunc", kind: "Container", func: obj.name, symbols: [this.innerConvert(obj.args[0])], ...options },
-                this.innerConvert(obj.args[1])
+                { type: "GenericFunc", kind: "Container", func: obj.name, symbols: [this.c(obj.args[0])], ...options },
+                this.c(obj.args[1])
+            ]
+        }
+    }
+
+    private firstIndexOfGenericFuncWithPow(obj: P.GenericFunc, powText: string, options?: Partial<P2Pr.GenericFunc>): P2Pr.Pow {
+        return {
+            type: "Pow",
+            kind: "Container",
+            symbols: [
+                { type: "GenericFunc", kind: "Container", func: obj.name, symbols: obj.args.slice(1).map(c => this.c(c)), ...options },
+                prTh.var(powText),
+                this.c(obj.args[0])
             ]
         }
     }
@@ -469,8 +568,8 @@ export class P2Pr {
             type: "Index",
             kind: "Container",
             symbols: [
-                { type: "GenericFunc", kind: "Container", func: obj.name, symbols: obj.args.slice(1).map(c => this.innerConvert(c)), ...options },
-                this.innerConvert(obj.args[0])
+                { type: "GenericFunc", kind: "Container", func: obj.name, symbols: obj.args.slice(1).map(c => this.c(c)), ...options },
+                this.c(obj.args[0])
             ]
         }
     }
@@ -480,13 +579,13 @@ export class P2Pr {
                 type: "Index",
                 kind: "Container",
                 symbols: [
-                    { type: "GenericFunc", kind: "Container", func: obj.name, symbols: [this.innerConvert(obj.args[0])], ...options },
-                    this.innerConvert(obj.args[1])
+                    { type: "GenericFunc", kind: "Container", func: obj.name, symbols: [this.c(obj.args[0])], ...options },
+                    this.c(obj.args[1])
                 ]
             }
         }
 
-        return { type: "GenericFunc", kind: "Container", func: obj.name, symbols: [this.innerConvert(obj.args[0])], ...options }
+        return { type: "GenericFunc", kind: "Container", func: obj.name, symbols: [this.c(obj.args[0])], ...options }
     }
 
     private indexPowerGenericFunc(obj: P.GenericFunc, options?: Partial<P2Pr.GenericFunc>): P2Pr.Pow {
@@ -498,9 +597,9 @@ export class P2Pr {
             type: "Pow",
             kind: "Container",
             symbols: [
-                { type: "GenericFunc", kind: "Container", func: obj.name, symbols: obj.args.slice(2).map(c => this.innerConvert(c)), ...options },
-                this.innerConvert(obj.args[1]),
-                this.innerConvert(obj.args[0]),
+                { type: "GenericFunc", kind: "Container", func: obj.name, symbols: obj.args.slice(2).map(c => this.c(c)), ...options },
+                this.c(obj.args[1]),
+                this.c(obj.args[0]),
             ]
         }
     }
@@ -514,15 +613,15 @@ export class P2Pr {
             type: "Pow",
             kind: "Container",
             symbols: [
-                { type: "GenericFunc", kind: "Container", func: obj.name, symbols: obj.args.slice(powConsumeCount + 1).map(c => this.innerConvert(c)), ...options },
-                { type: "Brackets", br: "(", kind: "Container", symbols: obj.args.slice(1, powConsumeCount + 1).map(c => this.innerConvert(c)) },
-                this.innerConvert(obj.args[0]),
+                { type: "GenericFunc", kind: "Container", func: obj.name, symbols: obj.args.slice(powConsumeCount + 1).map(c => this.c(c)), ...options },
+                prTh.brackets(this.m(obj.args.slice(1, powConsumeCount + 1))),
+                this.c(obj.args[0]),
             ]
         }
     }
 
-    mapArgs(args: P.Basic[]): Symbol[] {
-        return args.map(c => this.innerConvert(c));
+    m(args: P.Basic[]): Symbol[] {
+        return args.map(c => this.c(c));
     }
 
     private detectUnevaluatedMul(symbols: Symbol[]): boolean {
@@ -552,13 +651,13 @@ export namespace P2Pr {
         kind: "Leaf"
     }
 
-    export type Symbol = Mul | C<"Add"> | L<"One"> | L<"NegativeOne"> | Integer | Var | Pow | Matrix | C<"Frac"> | Float | L<"Half"> | C<"Sqrt"> | GenericFunc |
-        L<"NaN"> | ConstantSymbol | C<"CoordSys3D"> | Str | BaseVector | BaseScalar | L<"VectorZero"> | C<"Tuple"> | C<"BaseDyadic"> |
-        Derivative | L<"Zero"> | C<"Exp"> | Relational | List | Poly | PolynomialRing | DisplayedDomain | C<"Binomial"> | C<"Mod"> |
-        C<"VarList"> | C<"Integral"> | Discrete | SingularityFunction | VecExpr | C<"Index"> | JsonData | C<"Factorial"> | C<"SubFactorial"> |
-        C<"Factorial2"> | Brackets | C<"Conjugate"> | C<"Order">
+    export type Symbol = Mul | C<"Add"> | L<"One"> | L<"NegativeOne"> | Integer | Var | C<"Pow"> | Matrix | C<"Frac"> | Float | L<"Half"> | C<"Sqrt"> | GenericFunc |
+        L<"NaN"> | ConstantSymbol | C<"CoordSys3D"> | Str | BaseVector | BaseScalar | L<"VectorZero"> | C<"BaseDyadic"> |
+        Derivative | L<"Zero"> | C<"Exp"> | Relational | Poly | PolynomialRing | DisplayedDomain | C<"Binomial"> | C<"Mod"> |
+        VarList | C<"Integral"> | Discrete | SingularityFunction | VecExpr | C<"Index"> | JsonData | C<"Factorial"> | C<"SubFactorial"> |
+        C<"Factorial2"> | C<"Conjugate"> | C<"Order"> | C<"Prescript"> | C<"PrescriptIdx">;
 
-    export type VarList = C<"VarList">;
+
     export type Frac = C<"Frac">;
     export type Tuple = C<"Tuple">;
     export type Integral = C<"Integral">;
@@ -566,14 +665,19 @@ export namespace P2Pr {
     export type Sqrt = C<"Sqrt">;
     export type NegativeOne = L<"NegativeOne">;
     export type Index = C<"Index">;
+    export type Pow = C<"Pow">;
+    export type Prescript = C<"Prescript">;
+    export type PrescriptIdx = C<"PrescriptIdx">;
+
+    export interface VarList extends Container {
+        type: "VarList";
+        bracket?: SupportBracket;
+        separator?: "," | ";" | "|";
+    }
 
     export interface VecExpr extends Container {
         type: "VecExpr";
         op: "Cross" | "Curl" | "Divergence" | "Dot" | "Gradient" | "Laplacian";
-    }
-    export interface Brackets extends Container {
-        type: "Brackets";
-        br: SupportBracket
     }
 
     export interface Discrete extends Container {
@@ -615,15 +719,13 @@ export namespace P2Pr {
     }
 
 
-    export interface Pow extends Container {
-        type: "Pow";
-    }
-
 
     export interface Matrix extends Container {
         type: "Matrix"
         row: number;
         col: number;
+        bracket?: "(" | "["
+
     }
 
     export interface GenericFunc extends Container {
@@ -634,6 +736,7 @@ export namespace P2Pr {
         argSeparator?: "," | "|" | ";|";
         forceUsingOperatorName?: boolean;
         allowAncesstorPowerAtEnd?: boolean;
+        isUndefinedFunction?: boolean;
     }
 
     export interface Str extends Leaf {
@@ -673,11 +776,11 @@ export namespace P2Pr {
         relOp: "==" | ">" | "<" | "<=" | ">=" | "!=";
     }
 
-    export interface List extends Container {
-        type: "List";
-        separator: "," | ";",
-        bracket: SupportBracket;
-    }
+    // export interface List extends Container {
+    //     type: "List";
+    //     separator: "," | ";",
+    //     bracket: SupportBracket;
+    // }
 
     export interface Poly extends Container {
         type: "Poly";
@@ -720,12 +823,13 @@ namespace P {
         U<"Exp1"> | U<"ImaginaryUnit"> | U<"Pi"> | U<"EulerGamma"> | U<"Catalan"> | U<"GoldenRatio"> | U<"TribonacciConstant"> |
         NumberSymbol | U<"HBar"> | U<"Zero"> | CoordSys3D | Str | F<"BaseVector"> | F<"BaseScalar"> | F<"VectorAdd"> | U<"VectorZero"> | F<"VectorMul"> |
         F<"Point"> | F<"Tuple"> | F<"BaseDyadic"> | Derivative | U<"BooleanFalse"> | U<"BooleanTrue"> |
-        Relational | List | Dummy | Poly | F<"Abs"> | F<"Order"> | F<"Ynm"> | F<"Znm"> |
+        Relational | List | Dummy | Poly | F<"Abs"> | F<"Order"> | F<"Ynm"> | F<"Znm"> | F<"Indexed"> | F<"IndexedBase"> |
         PolynomialRing | DisplayedDomain | UndefinedFunction | F<"Integral"> | F<"Not"> | F<"And"> | F<"Or"> | F<"Implies"> |
         F<"SingularityFunction"> | F<"FallingFactorial"> | F<"RisingFactorial"> | F<"LambertW"> | F<"Mod"> |
         Cycle | F<"Cross"> | F<"Curl"> | F<"Divergence"> | F<"Dot"> | F<"Gradient"> | F<"Laplacian"> | SpecialFuncClass |
         UnknownFunc;
-    interface FuncArgs {
+
+    export interface FuncArgs {
         args: Basic[];
     }
 
