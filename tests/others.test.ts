@@ -493,12 +493,12 @@ x2 = Symbol('x2')
         expect(await th.run(`diff(f(x), (x, Max(n1, n2)))`)).equal(`[frac,[d][💪,[max,]([n][⛏️,[1]][,n][⛏️,[2]])],[dx][💪,[max,]([n][⛏️,[1]][,n][⛏️,[2]])]][f]([x])`);
     });
 
-    it.only("subs", async () => {    
+    it("subs", async () => {
         expect(await th.run(`Subs(x*y, (x, y), (1, 2))`)).equal(`[b,\\left.][xy]|[⛏️,[x=1]💔[y=2]]`);
     });
-    
-    it.only("integrals", async () => {
-    
+
+    it("integrals", async () => {
+
         expect(await th.run(`Integral(log(x), x)`)).equal(`[int,][log,]([x])[ dx]`);
         expect(await th.run(`Integral(x**2, (x, 0, 1))`)).equal(`[int,[0],[1]][x][💪,[2]][ dx]`);
         expect(await th.run(`Integral(x**2, (x, 10, 20))`)).equal(`[int,[10],[20]][x][💪,[2]][ dx]`);
@@ -517,26 +517,47 @@ x2 = Symbol('x2')
         expect(await th.run(`Integral(x + z, z)`)).equal(`[int,]([x+z])[ dz]`);
         expect(await th.run(`Integral(x+z/2, z)`)).equal(`[int,]([x+][frac,[z],[2]])[ dz]`);
         expect(await th.run(`Integral(x**y, z)`)).equal(`[int,][x][💪,[y]][ dz]`);
-        
+
     })
-    
-    it.only("sets", async () => {
-    
+
+    it("sets", async () => {
+
         expect(await th.run(`set([x*y, x**2])`)).equal(`{[xy,x][💪,[2]]}`);
         expect(await th.run(`frozenset([x*y, x**2])`)).equal(`{[xy,x][💪,[2]]}`);
         expect(await th.run(`set(range(1, 6))`)).equal(`{[1,2,3,4,5]}`);
-        
+
         await th.prepare(`s = FiniteSet`);
         expect(await th.run(`s(*[x*y, x**2])`)).equal(`{[x][💪,[2]][,xy]}`);
         expect(await th.run(`s(*range(1, 6))`)).equal(`{[1,2,3,4,5]}`);
     })
-    
-    it.only("SetExpr", async () => {
+
+    it("SetExpr", async () => {
         await th.prepare(`
 iv = Interval(1, 3)
 se = SetExpr(iv)`);
 
-        expect(await th.run(`se`)).equal(`{[1,2,3,4,5]}`);
+        expect(await th.run(`se`)).equal(`[⚙️,[SetExpr]]([[1,3]])`);
+        expect(await th.run(`Interval(1, x)`)).equal(`[[1,x]]`);
+        expect(await th.run(`Interval(x, x)`)).equal(`{[x]}`);
+    });
+
+    it.only("Range", async () => {
+        expect(await th.run(`Range(1, 51)`)).equal(`{[1,2,…,50]}`);
+        expect(await th.run(`Range(1, 4)`)).equal(`{[1,2,3]}`);
+        expect(await th.run(`Range(0, 3, 1)`)).equal(`{[0,1,2]}`);
+        expect(await th.run(`Range(0, 30, 1)`)).equal(`{[0,1,…,29]}`);
+        expect(await th.run(`Range(30, 1, -1)`)).equal(`{[30,29,…,2]}`);
+        expect(await th.run(`Range(0, oo, 2)`)).equal(`{[0,2,…]}`);
+        expect(await th.run(`Range(oo, -2, -2)`)).equal(`{[…,2,0]}`);
+        expect(await th.run(`Range(-2, -oo, -1)`)).equal(`{[-2,-3,…]}`);
+        expect(await th.run(`Range(-oo, oo)`)).equal(`{[…,-1,0,1,…]}`);
+        expect(await th.run(`Range(oo, -oo, -1)`)).equal(`{[…,1,0,-1,…]}`);
+        
+        await th.prepare(`  a, b, c = symbols('a:c')`);
+        expect(await th.run(`Range(a, b, c)`)).equal(`[⚙️,[Range]]([a,b,c])`);
+        expect(await th.run(`Range(a, 10, 1)`)).equal(`[⚙️,[Range]]([a,10,1])`);
+        expect(await th.run(`Range(0, b, 1)`)).equal(`[⚙️,[Range]]([0,b,1])`);
+        expect(await th.run(`Range(0, 10, c)`)).equal(`[⚙️,[Range]]([0,10,c])`);
 
     })
 

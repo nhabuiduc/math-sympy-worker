@@ -106,7 +106,7 @@ export class Pr2M {
                 }
 
                 if (obj.bracket) {
-                    return blockBd.wrapBetweenBrackets(blocks, obj.bracket);
+                    return blockBd.wrapBetweenBrackets(blocks, obj.bracket, obj.rightBracket);
                 }
                 return { blocks }
             }

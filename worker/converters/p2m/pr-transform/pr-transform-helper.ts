@@ -2,6 +2,8 @@ import stringHelper from "@lib-shared/string-helper";
 import { _l } from "@sympy-worker/light-lodash";
 import type { P2Pr } from "../p2pr";
 import { Pr2M } from "../pr2m";
+import dequal from "deep-equal";
+
 
 const enum EnumPosWeight {
     ConstantInAddCtx = 30000,
@@ -228,6 +230,11 @@ class PrTransformHelper {
         return !!this.isConstant(s.symbols[0]) && !!this.isConstant(s.symbols[1]);
     }
 
+
+    basicEquals(b1: P2Pr.PBasic, b2: P2Pr.PBasic): boolean {
+        return dequal(b1, b2);
+    }
+
     extractIntegerValue(s: Symbol): number {
         if (s.type == "Zero") {
             return 0;
@@ -349,8 +356,8 @@ class PrTransformHelper {
         return { type: "Var", kind: "Leaf", name: text };
     }
 
-    varList(ss: Symbol[], separator?: P2Pr.VarList["separator"], br?: P2Pr.VarList["bracket"]): P2Pr.VarList {
-        return { type: "VarList", kind: "Container", symbols: ss, separator, bracket: br };
+    varList(ss: Symbol[], separator?: P2Pr.VarList["separator"], br?: P2Pr.VarList["bracket"], rightBr?: P2Pr.VarList["bracket"]): P2Pr.VarList {
+        return { type: "VarList", kind: "Container", symbols: ss, separator, bracket: br, rightBracket: rightBr };
     }
 
     removeVarListBracket(s: Symbol): Symbol {

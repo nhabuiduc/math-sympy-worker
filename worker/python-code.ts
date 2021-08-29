@@ -150,6 +150,29 @@ class __McHdl:
 
     hdl_frozenset = hdl_set
 
+    def hdl_Range(self,s):
+        dots = Symbol('dots')
+        if s.has(Symbol):
+            return self.hdlGenericFunc('Range', s.args)
+
+        if s.start.is_infinite and s.stop.is_infinite:
+            if s.step.is_positive:
+                printset = dots, -1, 0, 1, dots
+            else:
+                printset = dots, 1, 0, -1, dots
+        elif s.start.is_infinite:
+            printset = dots, s[-1] - s.step, s[-1]
+        elif s.stop.is_infinite:
+            it = iter(s)
+            printset = next(it), next(it), dots
+        elif len(s) > 4:
+            it = iter(s)
+            printset = next(it), next(it), dots, s[-1]
+        else:
+            printset = tuple(s)
+        
+        return {'func':'Range', 'args': self.argsMap(printset)}
+
     def hdlFunctionClass(self, expr, name):
         return { 'func': 'FunctionClass', 'name': name, 'args': self.argsMap(expr.args) }
 

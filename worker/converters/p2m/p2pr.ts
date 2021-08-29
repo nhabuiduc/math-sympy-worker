@@ -301,6 +301,26 @@ export class P2Pr {
             case "FiniteSet": {
                 return prTh.varList(this.m(obj.args), ",", "{")
             }
+            case "Interval": {
+                if (prTh.basicEquals(obj.args[0], obj.args[1])) {
+                    return prTh.varList([this.c(obj.args[0])], ",", "{")
+                }
+
+                return prTh.varList([
+                    this.c(obj.args[0]),
+                    this.c(obj.args[1]),
+                ], ",", obj.args[2].func == "BooleanTrue" ? "(" : "[", obj.args[3].func == "BooleanTrue" ? "(" : "[")
+            }
+            case "Range": {
+                return prTh.varList(
+                    obj.args.map(c => {
+                        if (c.func == "Symbol" && c.name == "dots") {
+                            return prTh.var("…");
+                        }
+                        return this.c(c)
+                    }), ",", "{"
+                )
+            }
 
         }
 
@@ -379,8 +399,7 @@ export namespace P2Pr {
         L<"NaN"> | ConstantSymbol | C<"CoordSys3D"> | Str | BaseVector | BaseScalar | L<"VectorZero"> | C<"BaseDyadic"> |
         Derivative | L<"Zero"> | C<"Exp"> | Relational | Poly | PolynomialRing | DisplayedDomain | C<"Binomial"> | C<"Mod"> |
         VarList | C<"Integral"> | Discrete | SingularityFunction | VecExpr | C<"Index"> | JsonData | C<"Factorial"> | C<"SubFactorial"> |
-        C<"Factorial2"> | C<"Conjugate"> | C<"Order"> | C<"Prescript"> | C<"PrescriptIdx"> | Subs |
-        C<"FiniteSet">
+        C<"Factorial2"> | C<"Conjugate"> | C<"Order"> | C<"Prescript"> | C<"PrescriptIdx"> | Subs
         ;
 
 
@@ -400,6 +419,7 @@ export namespace P2Pr {
         type: "VarList";
         bracket?: SupportBracket;
         separator?: "," | ";" | "|";
+        rightBracket?: SupportBracket;
     }
 
     export interface VecExpr extends Container {
@@ -546,7 +566,7 @@ namespace P {
         PolynomialRing | DisplayedDomain | UndefinedFunction | F<"Integral"> | F<"Not"> | F<"And"> | F<"Or"> | F<"Implies"> |
         F<"SingularityFunction"> | F<"FallingFactorial"> | F<"RisingFactorial"> | F<"LambertW"> | F<"Mod"> |
         Cycle | F<"Cross"> | F<"Curl"> | F<"Divergence"> | F<"Dot"> | F<"Gradient"> | F<"Laplacian"> | SpecialFuncClass |
-        F<"Subs"> | F<"Set"> |
+        F<"Subs"> | F<"Set"> | F<"FiniteSet"> | F<"Interval"> | F<"Range"> |
         UnknownFunc;
 
     export interface FuncArgs {

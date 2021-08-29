@@ -232,9 +232,9 @@ class BlockBd {
         return rs;
     }
 
-    wrapBetweenBrackets(blocks: BlockModel[], bracketType: P2Pr.SupportBracket = "("): Pr2M.CResult {
+    wrapBetweenBrackets(blocks: BlockModel[], bracketType: P2Pr.SupportBracket = "(", rightBracketType?: P2Pr.SupportBracket): Pr2M.CResult {
         const latexLeft = this.leftLatexBracketName(bracketType);
-        const latexRight = this.rightLatexBracketName(bracketType);
+        const latexRight = this.rightLatexBracketName(rightBracketType || bracketType);
         return {
             blocks: [blockBd.bracketBlock(latexLeft)].concat(blocks).concat([blockBd.bracketBlock(latexRight)]),
             prUnit: "bracket",
