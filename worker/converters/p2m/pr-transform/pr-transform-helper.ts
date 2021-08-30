@@ -298,7 +298,7 @@ class PrTransformHelper {
             return true;
         }
 
-        if (s.type == "Pow" || s.type == "Frac" || cr.prUnit == "func" || s.type == "Integral" || s.type == "Derivative") {
+        if (s.type == "Exp" || s.type == "Pow" || s.type == "Frac" || cr.prUnit == "func" || s.type == "Integral" || s.type == "Derivative") {
             return true;
         }
 
@@ -442,9 +442,7 @@ class PrTransformHelper {
         return { type: "GenericFunc", func: name, kind: "Container", symbols: ss, ...more }
     }
 
-    integer(vl: number): P2Pr.Integer {
-        return { type: "Integer", kind: "Leaf", value: vl };
-    }
+
 
     integerOrSpecial(vl: number): P2Pr.Symbol {
         if (vl == 0) {
@@ -460,9 +458,7 @@ class PrTransformHelper {
         return { type: "Integer", kind: "Leaf", value: vl };
     }
 
-    power(base: Symbol, vl: number): P2Pr.Pow {
-        return { type: "Pow", kind: "Container", symbols: [base, this.integer(vl)] };
-    }
+
 
     frac(num: Symbol, den: Symbol): P2Pr.Frac {
         return {

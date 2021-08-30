@@ -94,7 +94,7 @@ export class PrPowerTransform implements P2Pr.IPrTransform {
             return {
                 type: "Sqrt",
                 kind: "Container",
-                symbols: [base, prTh.integer(denominator)]
+                symbols: [base, prTh.int(denominator)]
             }
         }
 
@@ -102,7 +102,7 @@ export class PrPowerTransform implements P2Pr.IPrTransform {
             return {
                 type: "Sqrt",
                 kind: "Container",
-                symbols: [prTh.power(base, enumerator), prTh.integer(denominator)]
+                symbols: [prTh.pow(base, prTh.int(enumerator)), prTh.int(denominator)]
             }
         }
 

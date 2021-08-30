@@ -336,6 +336,12 @@ export class Pr2M {
             case "Complement": {
                 return this.prCommon.opJoin(obj.symbols, "⧵", { wrapBracket: "if-op-exclude-mul-shortcut" });
             }
+            case "ProductSet": {
+                if (!obj.hasVariety && obj.symbols.length >= 1) {
+                    return this.convert(prTh.pow(obj.symbols[0], prTh.int(obj.symbols.length)))
+                }
+                return this.prCommon.opJoin(obj.symbols, "×");
+            }
         }
 
         return { blocks: [] };

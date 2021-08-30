@@ -5,8 +5,8 @@ import { Pr2M } from "../pr2m";
 import { Pr2MItemBase } from "./pr2m-item-base";
 
 export class Integral extends Pr2MItemBase {
-    convert(derivative: P2Pr.Integral): BlockModel[] {
-        const limits = derivative.symbols.slice(1);
+    convert(integral: P2Pr.Integral): BlockModel[] {
+        const limits = integral.symbols.slice(1);
         let intBlocks: CompositeBlockModel[];
         let symbolBlocks: BlockModel[];
         if (limits.length <= 3 && limits.every(c => (c as P2Pr.VarList).symbols.length == 1)) {
@@ -37,9 +37,9 @@ export class Integral extends Pr2MItemBase {
             symbolBlocks = blockBd.joinBlocks(sBlockss, "\u2009");
         }
 
-        const expCr = this.main.convert(derivative.symbols[0]);
-        const expBlocks = this.shouldWrapBrackets(derivative.symbols[0], expCr) ? blockBd.wrapBetweenBrackets(expCr.blocks).blocks : expCr.blocks;
-
+        const expCr = this.main.convert(integral.symbols[0]);
+        const expBlocks = this.shouldWrapBrackets(integral.symbols[0], expCr) ? blockBd.wrapBetweenBrackets(expCr.blocks).blocks : expCr.blocks;
+        // console.log(integral);
         return blockBd.combineMultipleBlocks(
             intBlocks,
             expBlocks,

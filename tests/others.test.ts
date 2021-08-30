@@ -16,7 +16,7 @@ describe("3: Others", () => {
         expect(await th.run("x_star**2")).equal(`([x^*])[💪,[2]]`);
         expect(await th.run("Derivative(f(x_star), x_star,2)")).equal(`[frac,[d][💪,[2]],[d]([x^*])[💪,[2]]][f]([x^*])`);
 
-        expect(await th.run("2*Integral(x, x)/3")).equal(`[frac,[2][int,][x dx],[3]]`);
+        expect(await th.run("2*Integral(x, x)/3")).equal(`[frac,[2][int,][x dx],[3]]`);
     });
 
     it("sqrt, rational", async () => {
@@ -473,7 +473,7 @@ Psi_indexed = IndexedBase(Symbol('Psi', complex=True, real=False))`);
         expect(await th.run(`diff(-diff(y**2,x,evaluate=False),x,evaluate=False)`)).equal(`[frac,[d],[dx]][-][frac,[d],[dx]][y][💪,[2]]`);
         expect(await th.run(`diff(diff(-diff(diff(y,x,evaluate=False),x,evaluate=False),x,evaluate=False),x,evaluate=False)`)).equal(`[frac,[d][💪,[2]],[dx][💪,[2]]][-][frac,[d][💪,[2]],[dx][💪,[2]]][y]`);
 
-        expect(await th.run(`diff(Integral(exp(-x*y), (x, 0, oo)), y, evaluate=False)`)).equal(`[frac,[d],[dy]][int,[0],[∞]][e][💪,[-xy]][ dx]`);
+        expect(await th.run(`diff(Integral(exp(-x*y), (x, 0, oo)), y, evaluate=False)`)).equal(`[frac,[d],[dy]][int,[0],[∞]][e][💪,[-xy]][ dx]`);
         expect(await th.run(`diff(x, x, evaluate=False)**2`)).equal(`([frac,[d],[dx]][x])[💪,[2]]`);
         expect(await th.run(`diff(f(x), x)**2`)).equal(`([frac,[d],[dx]][f]([x]))[💪,[2]]`);
         expect(await th.run(`diff(f(x), (x, n))`)).equal(`[frac,[d][💪,[n]],[dx][💪,[n]]][f]([x])`);
@@ -522,8 +522,8 @@ x2 = Symbol('x2')
 
     it("sets", async () => {
 
-        expect(await th.run(`set([x*y, x**2])`)).equal(`{[xy,x][💪,[2]]}`);
-        expect(await th.run(`frozenset([x*y, x**2])`)).equal(`{[xy,x][💪,[2]]}`);
+        expect(await th.run(`set([x*y, x**2])`)).equal(`{[x][💪,[2]][,xy]}`);
+        expect(await th.run(`frozenset([x*y, x**2])`)).equal(`{[x][💪,[2]][,xy]}`);
         expect(await th.run(`set(range(1, 6))`)).equal(`{[1,2,3,4,5]}`);
 
         await th.prepare(`s = FiniteSet`);
@@ -600,7 +600,7 @@ b = Symbol('b')
 
     })
 
-    it.only("intervals", async () => {
+    it("intervals", async () => {
         await th.prepare(`a = Symbol('a', real=True)`);
         expect(await th.run(`Interval(0, 0)`)).equal(`{[0]}`);
         expect(await th.run(`Interval(0, a)`)).equal(`[[0,a]]`);
@@ -611,22 +611,22 @@ b = Symbol('b')
 
     });
 
-    it.only("AccumuBounds", async () => {
+    it("AccumuBounds", async () => {
         await th.prepare(`a = Symbol('a', real=True)`);
         expect(await th.run(`AccumBounds(0, 1)`)).equal(`<[0,1]>`);
         expect(await th.run(`AccumBounds(0, a)`)).equal(`<[0,a]>`);
         expect(await th.run(`AccumBounds(a + 1, a + 2)`)).equal(`<[1+a,2+a]>`);
     });
 
-    it.only("emptyset", async () => {
+    it("emptyset", async () => {
         expect(await th.run(`S.EmptySet`)).equal(`[∅]`);
     })
 
-    it.only("universalset", async () => {
+    it("universalset", async () => {
         expect(await th.run(`S.UniversalSet`)).equal(`[U,mathbb]`);
     })
 
-    it.only("commutator", async () => {
+    it("commutator", async () => {
         await th.prepare(` 
 A = Operator('A')
 B = Operator('B')
@@ -635,31 +635,98 @@ comm = Commutator(B, A)
         expect(await th.run(`comm.doit()`)).equal(`[-]([AB-BA])`);
     })
 
-    it.only("union", async () => {
+    it("union", async () => {
         expect(await th.run(`Union(Interval(0, 1), Interval(2, 3))`)).equal(`[[0,1]][∪][[2,3]]`);
         expect(await th.run(`Union(Interval(1, 1), Interval(2, 2), Interval(3, 4))`)).equal(`{[1,2]}[∪][[3,4]]`);
 
     });
 
-    it.only("intersection", async () => {
+    it("intersection", async () => {
         expect(await th.run(`Intersection(Interval(0, 1), Interval(x, y))`)).equal(`[[0,1]][∩][[x,y]]`);
 
     });
 
-    it.only("symmetric_difference", async () => {
+    it("symmetric_difference", async () => {
         expect(await th.run(`SymmetricDifference(Interval(2, 5), Interval(4, 7),evaluate=False)`)).equal(`[[2,5]][▵][[4,7]]`);
     })
 
-    it.only("Complement", async () => {
+    it("Complement", async () => {
         expect(await th.run(`Complement(S.Reals, S.Naturals)`)).equal(`[R,mathbb][⧵][N,mathbb]`);
     })
-    it.only("productset", async () => {
+    it("productset", async () => {
+
         await th.prepare(`
 line = Interval(0, 1)
 bigline = Interval(0, 10)
 fset = FiniteSet(1, 2, 3)
         `)
-        expect(await th.run(`line**2`)).equal(`[R,mathbb][⧵][N,mathbb]`);
-    })
+        expect(await th.run(`line**2`)).equal(`[[0,1]][💪,[2]]`);
+        expect(await th.run(`line**10`)).equal(`[[0,1]][💪,[10]]`);
+        expect(await th.run(`(line * bigline * fset).flatten()`)).equal(`[[0,1]][×][[0,10]][×]{[1,2,3]}`);
+    });
+
+    it("set_operators_parenthesis", async () => {
+
+        await th.prepare(`
+a, b, c, d = symbols('a:d')
+A = FiniteSet(a)
+B = FiniteSet(b)
+C = FiniteSet(c)
+D = FiniteSet(d)
+
+U1 = Union(A, B, evaluate=False)
+U2 = Union(C, D, evaluate=False)
+I1 = Intersection(A, B, evaluate=False)
+I2 = Intersection(C, D, evaluate=False)
+C1 = Complement(A, B, evaluate=False)
+C2 = Complement(C, D, evaluate=False)
+D1 = SymmetricDifference(A, B, evaluate=False)
+D2 = SymmetricDifference(C, D, evaluate=False)
+# XXX ProductSet does not support evaluate keyword
+P1 = ProductSet(A, B)
+P2 = ProductSet(C, D)
+        `);
+        expect(await th.run(`Intersection(A, U2, evaluate=False)`)).equal(`{[a]}[∩]({[c]}[∪]{[d]})`);
+        expect(await th.run(`Intersection(U1, U2, evaluate=False)`)).equal(`({[a]}[∪]{[b]})[∩]({[c]}[∪]{[d]})`);
+        expect(await th.run(`Intersection(C1, C2, evaluate=False)`)).equal(`({[a]}[⧵]{[b]})[∩]({[c]}[⧵]{[d]})`);
+        expect(await th.run(`Intersection(D1, D2, evaluate=False)`)).equal(`({[a]}[▵]{[b]})[∩]({[c]}[▵]{[d]})`);
+        expect(await th.run(`Intersection(P1, P2, evaluate=False)`)).equal(`({[a]}[×]{[b]})[∩]({[c]}[×]{[d]})`);
+        expect(await th.run(`Union(A, I2, evaluate=False)`)).equal(`{[a]}[∪]({[c]}[∩]{[d]})`);
+        expect(await th.run(`Union(I1, I2, evaluate=False)`)).equal(`({[a]}[∩]{[b]})[∪]({[c]}[∩]{[d]})`);
+        expect(await th.run(`Union(C1, C2, evaluate=False)`)).equal(`({[a]}[⧵]{[b]})[∪]({[c]}[⧵]{[d]})`);
+        expect(await th.run(`Union(D1, D2, evaluate=False)`)).equal(`({[a]}[▵]{[b]})[∪]({[c]}[▵]{[d]})`);
+        expect(await th.run(`Union(P1, P2, evaluate=False)`)).equal(`({[a]}[×]{[b]})[∪]({[c]}[×]{[d]})`);
+        expect(await th.run(`Complement(A, C2, evaluate=False)`)).equal(`{[a]}[⧵]({[c]}[⧵]{[d]})`);
+        expect(await th.run(`Complement(U1, U2, evaluate=False)`)).equal(`({[a]}[∪]{[b]})[⧵]({[c]}[∪]{[d]})`);
+        expect(await th.run(`Complement(I1, I2, evaluate=False)`)).equal(`({[a]}[∩]{[b]})[⧵]({[c]}[∩]{[d]})`);
+        expect(await th.run(`Complement(D1, D2, evaluate=False)`)).equal(`({[a]}[▵]{[b]})[⧵]({[c]}[▵]{[d]})`);
+        expect(await th.run(`Complement(P1, P2, evaluate=False)`)).equal(`({[a]}[×]{[b]})[⧵]({[c]}[×]{[d]})`);
+        expect(await th.run(`SymmetricDifference(A, D2, evaluate=False)`)).equal(`{[a]}[▵]({[c]}[▵]{[d]})`);
+        expect(await th.run(`SymmetricDifference(U1, U2, evaluate=False)`)).equal(`({[a]}[∪]{[b]})[▵]({[c]}[∪]{[d]})`);
+        expect(await th.run(`SymmetricDifference(I1, I2, evaluate=False)`)).equal(`({[a]}[∩]{[b]})[▵]({[c]}[∩]{[d]})`);
+        expect(await th.run(`SymmetricDifference(C1, C2, evaluate=False)`)).equal(`({[a]}[⧵]{[b]})[▵]({[c]}[⧵]{[d]})`);
+        expect(await th.run(`SymmetricDifference(P1, P2, evaluate=False)`)).equal(`({[a]}[×]{[b]})[▵]({[c]}[×]{[d]})`);
+
+        expect(await th.run(`ProductSet(A, P2).flatten()`)).equal(`{[a]}[×]{[c]}[×]{[d]}`);
+        expect(await th.run(`ProductSet(U1, U2)`)).equal(`({[a]}[∪]{[b]})[×]({[c]}[∪]{[d]})`);
+        expect(await th.run(`ProductSet(I1, I2)`)).equal(`({[a]}[∩]{[b]})[×]({[c]}[∩]{[d]})`);
+        expect(await th.run(`ProductSet(C1, C2)`)).equal(`({[a]}[⧵]{[b]})[×]({[c]}[⧵]{[d]})`);
+        expect(await th.run(`ProductSet(D1, D2)`)).equal(`({[a]}[▵]{[b]})[×]({[c]}[▵]{[d]})`);
+
+    });
+
+    it("Complexes", async () => {
+        expect(await th.run(`S.Complexes`)).equal(`[C,mathbb]`);
+    });
+
+    it("Naturals", async () => {
+        expect(await th.run(`S.Naturals`)).equal(`[N,mathbb]`);
+    });
+    it("Naturals0", async () => {
+        expect(await th.run(`S.Naturals0`)).equal(`[N,mathbb][⛏️,[0]]`);
+    });
+    it("Integers", async () => {
+        expect(await th.run(`S.Integers`)).equal(`[Z,mathbb]`);
+    });
 
 });

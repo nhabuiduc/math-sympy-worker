@@ -355,7 +355,10 @@ export class P2Pr {
                 return bloackBoardBold.map(obj.func);
             }
             case "Naturals0": {
-                return prTh.index(bloackBoardBold.map(obj.func), prTh.var("0"))
+                return prTh.index(bloackBoardBold.map("Naturals"), prTh.var("0"))
+            }
+            case "ProductSet": {
+                return { type: "ProductSet", kind: "Container", hasVariety: obj.hasVariety, symbols: this.m(obj.args) }
             }
 
         }
@@ -436,7 +439,7 @@ export namespace P2Pr {
         Derivative | L<"Zero"> | C<"Exp"> | Relational | Poly | PolynomialRing | DisplayedDomain | C<"Binomial"> | C<"Mod"> |
         VarList | C<"Integral"> | Discrete | C<"SingularityFunction"> | VecExpr | C<"Index"> | JsonData | C<"Factorial"> | C<"SubFactorial"> |
         C<"Factorial2"> | C<"Conjugate"> | C<"Order"> | C<"Prescript"> | C<"PrescriptIdx"> | Subs | Raw | C<"Sum"> |
-        C<"Union"> | C<"Intersection"> | C<"SymmetricDifference"> | C<"Complement">;
+        C<"Union"> | C<"Intersection"> | C<"SymmetricDifference"> | C<"Complement"> | ProductSet;
 
 
 
@@ -451,6 +454,11 @@ export namespace P2Pr {
     export type Prescript = C<"Prescript">;
     export type PrescriptIdx = C<"PrescriptIdx">;
     export type Subs = C<"Subs">;
+
+    export interface ProductSet extends Container {
+        type: "ProductSet";
+        hasVariety: boolean;
+    }
 
     export interface VarList extends Container {
         type: "VarList";
@@ -604,8 +612,13 @@ namespace P {
         F<"Subs"> | F<"Set"> | F<"FiniteSet"> | F<"Interval"> | F<"Range"> | SeqFormula | F<"FourierSeries"> |
         F<"Sum"> | F<"AccumulationBounds"> | U<"EmptySet"> | U<"UniversalSet"> | F<"Operator"> | F<"Union"> |
         F<"Intersection"> | F<"SymmetricDifference"> | F<"Complement"> | U<"Reals"> | U<"Naturals"> | U<"Complexes"> |
-        U<"Rationals"> | U<"Integers"> | U<"Naturals0"> |
+        U<"Rationals"> | U<"Integers"> | U<"Naturals0"> | ProductSet |
         UnknownFunc;
+
+    export interface ProductSet extends FuncArgs {
+        func: "ProductSet";
+        hasVariety: boolean;
+    }
 
     export interface FuncArgs {
         args: Basic[];

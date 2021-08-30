@@ -203,8 +203,12 @@ class __McHdl:
 
     def hdl_FourierSeries(self, s):
         return {'func':'FourierSeries', 'args':[self.hdlAll(s.truncate())]}
+
     def hdl_FormalPowerSeries(self, s):
         return self.hdlAll(s.infinite)
+
+    def hdl_ProductSet(self, p):
+        return {'func':'ProductSet', 'hasVariety': has_variety(p.sets), 'args': self.argsMap(p.args)}
 
     def hdlFunctionClass(self, expr, name):
         return { 'func': 'FunctionClass', 'name': name, 'args': self.argsMap(expr.args) }
