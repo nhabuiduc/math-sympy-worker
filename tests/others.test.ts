@@ -562,7 +562,7 @@ se = SetExpr(iv)`);
 
     })
 
-    it.only("sequences", async () => {
+    it("sequences", async () => {
         expect(await th.run(`SeqFormula(a**2, (0, oo))`)).equal(`[[0,1,4,9,…]]`);
         expect(await th.run(`SeqPer((1, 2))`)).equal(`[[1,2,1,2,…]]`);
         expect(await th.run(`SeqFormula(a**2, (0, 2))`)).equal(`[[0,1,4]]`);
@@ -590,13 +590,76 @@ b = Symbol('b')
         expect(await th.run(`SeqFormula(b*a**2, (a, 0, 2))`)).equal(`[[0,b,4b]]`);
     });
 
-    it.only("FourierSeries", async () => {
+    it("FourierSeries", async () => {
         expect(await th.run(`fourier_series(x, (x, -pi, pi))`)).equal(`[-][sin,]([2x])[+2][sin,]([x])[+][frac,[2][sin,]([3x]),[3]][+…]`);
 
     })
-    it.only("FormalPowerSeries", async () => {
+
+    it("FormalPowerSeries", async () => {
         expect(await th.run(`fps(log(1 + x))`)).equal(`[sum,[k=1],[∞]][-][frac,([-1])[💪,[-k]][x][💪,[k]],[k]]`);
 
+    })
+
+    it.only("intervals", async () => {
+        await th.prepare(`a = Symbol('a', real=True)`);
+        expect(await th.run(`Interval(0, 0)`)).equal(`{[0]}`);
+        expect(await th.run(`Interval(0, a)`)).equal(`[[0,a]]`);
+        expect(await th.run(`Interval(0, a, False, False)`)).equal(`[[0,a]]`);
+        expect(await th.run(`Interval(0, a, True, False)`)).equal(`([0,a]]`);
+        expect(await th.run(`Interval(0, a, False, True)`)).equal(`[[0,a])`);
+        expect(await th.run(`Interval(0, a, True, True)`)).equal(`([0,a])`);
+
+    });
+
+    it.only("AccumuBounds", async () => {
+        await th.prepare(`a = Symbol('a', real=True)`);
+        expect(await th.run(`AccumBounds(0, 1)`)).equal(`<[0,1]>`);
+        expect(await th.run(`AccumBounds(0, a)`)).equal(`<[0,a]>`);
+        expect(await th.run(`AccumBounds(a + 1, a + 2)`)).equal(`<[1+a,2+a]>`);
+    });
+
+    it.only("emptyset", async () => {
+        expect(await th.run(`S.EmptySet`)).equal(`[∅]`);
+    })
+
+    it.only("universalset", async () => {
+        expect(await th.run(`S.UniversalSet`)).equal(`[U,mathbb]`);
+    })
+
+    it.only("commutator", async () => {
+        await th.prepare(` 
+A = Operator('A')
+B = Operator('B')
+comm = Commutator(B, A)
+`)
+        expect(await th.run(`comm.doit()`)).equal(`[-]([AB-BA])`);
+    })
+
+    it.only("union", async () => {
+        expect(await th.run(`Union(Interval(0, 1), Interval(2, 3))`)).equal(`[[0,1]][∪][[2,3]]`);
+        expect(await th.run(`Union(Interval(1, 1), Interval(2, 2), Interval(3, 4))`)).equal(`{[1,2]}[∪][[3,4]]`);
+
+    });
+
+    it.only("intersection", async () => {
+        expect(await th.run(`Intersection(Interval(0, 1), Interval(x, y))`)).equal(`[[0,1]][∩][[x,y]]`);
+
+    });
+
+    it.only("symmetric_difference", async () => {
+        expect(await th.run(`SymmetricDifference(Interval(2, 5), Interval(4, 7),evaluate=False)`)).equal(`[[2,5]][▵][[4,7]]`);
+    })
+
+    it.only("Complement", async () => {
+        expect(await th.run(`Complement(S.Reals, S.Naturals)`)).equal(`[R,mathbb][⧵][N,mathbb]`);
+    })
+    it.only("productset", async () => {
+        await th.prepare(`
+line = Interval(0, 1)
+bigline = Interval(0, 10)
+fset = FiniteSet(1, 2, 3)
+        `)
+        expect(await th.run(`line**2`)).equal(`[R,mathbb][⧵][N,mathbb]`);
     })
 
 });

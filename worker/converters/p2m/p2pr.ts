@@ -8,6 +8,8 @@ import { float } from "./p2pr/float";
 import { Symbol as SymbolP2Pr } from "./p2pr/symbol";
 import { NameParser } from "./p2pr/name-parser";
 import { GenericFunc } from "./p2pr/generic-func";
+import { funcToConstant } from "./p2pr/func-to-constant";
+import { bloackBoardBold } from "./p2pr/blackboard-bold";
 
 export class P2Pr {
 
@@ -30,6 +32,19 @@ export class P2Pr {
     c(obj: P.Basic): Symbol {
         switch (obj.func) {
 
+            case "Complement":
+            case "SymmetricDifference":
+            case "Intersection":
+            case "Union":
+            case "Sum":
+            case "Subs":
+            case "Add":
+            case "Mod":
+            case "Order":
+            case "CoordSys3D":
+            case "BaseDyadic": {
+                return { type: obj.func, kind: "Container", symbols: this.m(obj.args) }
+            }
             case "Integer": {
                 return { type: "Integer", kind: "Leaf", value: obj.value };
             }
@@ -61,42 +76,22 @@ export class P2Pr {
             case "NaN": {
                 return { type: "NaN", kind: "Leaf" }
             }
-            case "Infinity": {
-                return { type: "ConstantSymbol", kind: "Leaf", showType: "symbol", name: "∞" }
-            }
             case "NegativeInfinity": {
-                return { type: "ConstantSymbol", kind: "Leaf", showType: "symbol", name: "-∞" }
-            }
-            case "ComplexInfinity": {
-                return { type: "ConstantSymbol", kind: "Leaf", showType: "symbol", name: "∞̃" }
-            }
-            case "Exp1": {
-                return { type: "ConstantSymbol", kind: "Leaf", showType: "symbol", name: "e" }
-            }
-            case "ImaginaryUnit": {
-                return { type: "ConstantSymbol", kind: "Leaf", showType: "symbol", name: "i" }
-            }
-            case "Pi": {
-                return { type: "ConstantSymbol", kind: "Leaf", showType: "symbol", name: "𝜋" }
-            }
-            case "EulerGamma": {
-                return { type: "ConstantSymbol", kind: "Leaf", showType: "symbol", name: "𝛾" }
-            }
-            case "Catalan": {
-                return { type: "ConstantSymbol", kind: "Leaf", showType: "text", name: "Catalan" }
-            }
-            case "GoldenRatio": {
-                return { type: "ConstantSymbol", kind: "Leaf", showType: "symbol", name: "𝜙" }
-            }
-            case "Zero": {
-                return { type: "ConstantSymbol", kind: "Leaf", showType: "symbol", name: "0" }
-            }
-            case "HBar": {
-                return { type: "ConstantSymbol", kind: "Leaf", showType: "symbol", name: "ℏ" }
+                return prTh.mul(prTh.negativeOne(), { type: "ConstantSymbol", kind: "Leaf", showType: "symbol", name: "∞" })
             }
 
+            case "Infinity":
+            case "ComplexInfinity":
+            case "Exp1":
+            case "ImaginaryUnit":
+            case "Pi":
+            case "EulerGamma":
+            case "Catalan":
+            case "GoldenRatio":
+            case "Zero":
+            case "HBar":
             case "TribonacciConstant": {
-                return { type: "ConstantSymbol", kind: "Leaf", showType: "text", name: "TribonacciConstant" }
+                return funcToConstant.map(obj.func);
             }
 
             case "NumberSymbol": {
@@ -175,15 +170,7 @@ export class P2Pr {
                 }
             }
 
-            case "Sum":
-            case "Subs":
-            case "Add":
-            case "Mod":
-            case "Order":
-            case "CoordSys3D":
-            case "BaseDyadic": {
-                return { type: obj.func, kind: "Container", symbols: this.m(obj.args) }
-            }
+
 
             case "Tuple": {
                 return prTh.varList(this.m(obj.args), ",", "(")
@@ -346,6 +333,30 @@ export class P2Pr {
                     prTh.raw("+…")
                 ])
             }
+            case "AccumulationBounds": {
+                return prTh.varList([
+                    this.c(obj.args[0]),
+                    this.c(obj.args[1]),
+                ], ",", "<")
+            }
+            case "EmptySet": {
+                return prTh.var("∅");
+            }
+
+            case "Operator": {
+                return prTh.singleOrBrackets(this.m(obj.args));
+            }
+            case "Complexes":
+            case "Rationals":
+            case "Integers":
+            case "Reals":
+            case "UniversalSet":
+            case "Naturals": {
+                return bloackBoardBold.map(obj.func);
+            }
+            case "Naturals0": {
+                return prTh.index(bloackBoardBold.map(obj.func), prTh.var("0"))
+            }
 
         }
 
@@ -423,8 +434,9 @@ export namespace P2Pr {
     export type Symbol = Mul | C<"Add"> | L<"One"> | L<"NegativeOne"> | Integer | Var | C<"Pow"> | Matrix | C<"Frac"> | Float | L<"Half"> | C<"Sqrt"> | GenericFunc |
         L<"NaN"> | ConstantSymbol | C<"CoordSys3D"> | Str | BaseVector | BaseScalar | L<"VectorZero"> | C<"BaseDyadic"> |
         Derivative | L<"Zero"> | C<"Exp"> | Relational | Poly | PolynomialRing | DisplayedDomain | C<"Binomial"> | C<"Mod"> |
-        VarList | C<"Integral"> | Discrete | SingularityFunction | VecExpr | C<"Index"> | JsonData | C<"Factorial"> | C<"SubFactorial"> |
-        C<"Factorial2"> | C<"Conjugate"> | C<"Order"> | C<"Prescript"> | C<"PrescriptIdx"> | Subs | Raw | C<"Sum">;
+        VarList | C<"Integral"> | Discrete | C<"SingularityFunction"> | VecExpr | C<"Index"> | JsonData | C<"Factorial"> | C<"SubFactorial"> |
+        C<"Factorial2"> | C<"Conjugate"> | C<"Order"> | C<"Prescript"> | C<"PrescriptIdx"> | Subs | Raw | C<"Sum"> |
+        C<"Union"> | C<"Intersection"> | C<"SymmetricDifference"> | C<"Complement">;
 
 
 
@@ -482,20 +494,19 @@ export namespace P2Pr {
     export interface Var extends Leaf {
         type: "Var";
         name: string;
-        bold?: boolean;
+        bold?: boolean | "blackboard"
     }
+
     export interface Raw extends Leaf {
         type: "Raw";
         name: string;
-        bold?: boolean;
+        bold?: boolean | "blackboard"
     }
 
     export interface JsonData extends Leaf {
         type: "JsonData";
         data: string;
     }
-
-
 
     export interface Matrix extends Container {
         type: "Matrix"
@@ -521,7 +532,6 @@ export namespace P2Pr {
         text: string;
     }
 
-
     export interface BaseVector extends Leaf {
         type: "BaseVector",
         name: string;
@@ -542,7 +552,6 @@ export namespace P2Pr {
     }
 
 
-
     export interface Relational extends Container {
         type: "Relational";
         relOp: "==" | ">" | "<" | "<=" | ">=" | "!=";
@@ -556,10 +565,6 @@ export namespace P2Pr {
     export interface PolynomialRing extends Container {
         type: "PolynomialRing";
         domain: Symbol;
-    }
-
-    export interface SingularityFunction extends Container {
-        type: "SingularityFunction";
     }
 
 
@@ -597,7 +602,9 @@ namespace P {
         F<"SingularityFunction"> | F<"FallingFactorial"> | F<"RisingFactorial"> | F<"LambertW"> | F<"Mod"> |
         Cycle | F<"Cross"> | F<"Curl"> | F<"Divergence"> | F<"Dot"> | F<"Gradient"> | F<"Laplacian"> | SpecialFuncClass |
         F<"Subs"> | F<"Set"> | F<"FiniteSet"> | F<"Interval"> | F<"Range"> | SeqFormula | F<"FourierSeries"> |
-        F<"Sum"> |
+        F<"Sum"> | F<"AccumulationBounds"> | U<"EmptySet"> | U<"UniversalSet"> | F<"Operator"> | F<"Union"> |
+        F<"Intersection"> | F<"SymmetricDifference"> | F<"Complement"> | U<"Reals"> | U<"Naturals"> | U<"Complexes"> |
+        U<"Rationals"> | U<"Integers"> | U<"Naturals0"> |
         UnknownFunc;
 
     export interface FuncArgs {

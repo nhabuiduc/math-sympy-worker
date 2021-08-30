@@ -33,7 +33,7 @@ export class Pr2M {
     private subs = new Subs(this);
     private sum = new Sum(this);
 
-    public prCommon = new Pr2MCommon(this);
+    public prCommon: Pr2MCommon = new Pr2MCommon(this);
     public genericFunc: GenericFunc;
 
     constructor(constantTextFuncSet: Set<string>, private symbolLatexNames: { [key: string]: string }) {
@@ -324,6 +324,18 @@ export class Pr2M {
             case "Sum": {
                 return this.sum.convert(obj);
             }
+            case "Union": {
+                return this.prCommon.opJoin(obj.symbols, "∪", { wrapBracket: "if-op-exclude-mul-shortcut" });
+            }
+            case "Intersection": {
+                return this.prCommon.opJoin(obj.symbols, "∩", { wrapBracket: "if-op-exclude-mul-shortcut" });
+            }
+            case "SymmetricDifference": {
+                return this.prCommon.opJoin(obj.symbols, "▵", { wrapBracket: "if-op-exclude-mul-shortcut" });
+            }
+            case "Complement": {
+                return this.prCommon.opJoin(obj.symbols, "⧵", { wrapBracket: "if-op-exclude-mul-shortcut" });
+            }
         }
 
         return { blocks: [] };
@@ -346,8 +358,18 @@ export class Pr2M {
         return "="
     }
 
-    private convertVarRawSymbol(obj: { name: string, bold?: boolean }): CResult {
-        return { blocks: [blockBd.textBlock(obj.name, obj.bold ? { mathType: "\\mathbf" } : undefined)], }
+    private convertVarRawSymbol(obj: { name: string, bold?: boolean | "blackboard", }): CResult {
+        let style: BlockStyle = undefined;
+        if (obj.bold == "blackboard") {
+            style = { ...style, mathType: "\\mathbb" }
+        } else if (obj.bold) {
+            style = { ...style, mathType: "\\mathbf" }
+        }
+        return {
+            blocks: [
+                blockBd.textBlock(obj.name, style)
+            ],
+        }
     }
 
 

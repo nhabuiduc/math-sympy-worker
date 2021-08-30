@@ -359,6 +359,13 @@ class PrTransformHelper {
         return { type: "Raw", kind: "Leaf", name: text };
     }
 
+    singleOrBrackets(ss: Symbol[]): Symbol {
+        if (ss.length == 1) {
+            return ss[0];
+        }
+        return this.varList(ss, ",", "(");
+    }
+
     varList(ss: Symbol[], separator?: P2Pr.VarList["separator"], br?: P2Pr.VarList["bracket"], rightBr?: P2Pr.VarList["bracket"]): P2Pr.VarList {
         return { type: "VarList", kind: "Container", symbols: ss, separator, bracket: br, rightBracket: rightBr };
     }
