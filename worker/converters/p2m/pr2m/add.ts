@@ -1,11 +1,9 @@
 import { blockBd } from "../block-bd";
 import { P2Pr } from "../p2pr";
 import { Pr2M } from "../pr2m";
+import { Pr2MItemBase } from "./pr2m-item-base";
 
-export class Add {
-    constructor(private main: { convert(obj: P2Pr.Symbol): Pr2M.CResult }) {
-
-    }
+export class Add extends Pr2MItemBase {
 
     convert(obj: P2Pr.Add): Pr2M.CResult {
         const { symbols: args } = obj;

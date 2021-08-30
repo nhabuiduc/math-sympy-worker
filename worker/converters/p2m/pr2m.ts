@@ -10,27 +10,34 @@ import { Mul } from "./pr2m/mul";
 import { Discrete } from "./pr2m/discrete";
 import { Add } from "./pr2m/add";
 import { Pow } from "./pr2m/pow";
+import { Order } from "./pr2m/order";
+import { VarList } from "./pr2m/var-list";
+import { Subs } from "./pr2m/subs";
+import { Sum } from "./pr2m/sum";
 
 import { Pr2MCommon } from "./pr2m/pr2m-common";
 import { symbolIndexSerialize } from "@sympy-worker/symbol-index-serializer";
 import { GenericFunc } from "./pr2m/generic-func";
 
+
 export class Pr2M {
     private derivative = new Derivative(this);
     private integral = new Integral(this);
-    private float = new Float();
+    private float = new Float(this);
     private mul = new Mul(this);
-    private discrete: Discrete;
+    private discrete = new Discrete(this);
     private add = new Add(this);
-    private pow: Pow;
-    private prCommon: Pr2MCommon;
-    private genericFunc: GenericFunc;
+    private pow = new Pow(this);
+    private order = new Order(this);
+    private varList = new VarList(this);
+    private subs = new Subs(this);
+    private sum = new Sum(this);
+
+    public prCommon = new Pr2MCommon(this);
+    public genericFunc: GenericFunc;
 
     constructor(constantTextFuncSet: Set<string>, private symbolLatexNames: { [key: string]: string }) {
-        this.prCommon = new Pr2MCommon(this);
         this.genericFunc = new GenericFunc(this, constantTextFuncSet, symbolLatexNames)
-        this.pow = new Pow(this, this.genericFunc);
-        this.discrete = new Discrete(this, this.prCommon);
     }
 
     convert(obj: P2Pr.Symbol, level = 0): CResult {
@@ -77,38 +84,12 @@ export class Pr2M {
                 }
                 return { blocks: [blockBd.textBlock(obj.name)] }
             }
+            case "Raw":
             case "Var": {
-                return this.convertVarSymbol(obj);
+                return this.convertVarRawSymbol(obj);
             }
             case "VarList": {
-                if (!obj.bracket && !obj.separator) {
-                    return { blocks: blockBd.flattenBlocks(this.convertMaps(obj.symbols, level)) }
-                }
-
-                let blocks: BlockModel[];
-
-                if (obj.separator) {
-                    let separator: string | (() => BlockModel);
-                    switch (obj.separator) {
-                        case ",":
-                        case ";": {
-                            separator = obj.separator
-                            break;
-                        }
-                        case "|": {
-                            separator = () => blockBd.compositeBlock("\\middle|")
-                        }
-                    }
-
-                    blocks = blockBd.joinBlocks(this.convertMaps(obj.symbols, level), separator)
-                } else {
-                    blocks = blockBd.flattenBlocks(this.convertMaps(obj.symbols, level))
-                }
-
-                if (obj.bracket) {
-                    return blockBd.wrapBetweenBrackets(blocks, obj.bracket, obj.rightBracket);
-                }
-                return { blocks }
+                return this.varList.convert(obj);
             }
             case "Mul": {
                 return this.mul.convert(obj);
@@ -332,67 +313,23 @@ export class Pr2M {
                 }
             }
             case "Order": {
-                const exp = this.innerConvert(obj.symbols[0], level);
-                const runs = obj.symbols.slice(1) as P2Pr.VarList[];
-                if (runs.length <= 1 && (!runs[0] || prTh.isZero(runs[0].symbols[1]))) {
-                    return { blocks: [blockBd.textBlock("O"), ...blockBd.wrapBetweenBrackets(exp.blocks).blocks] }
-                }
-                let runsRs: BlockModel[]
-                if (runs.length == 1) {
-                    runsRs = blockBd.joinBlocks(this.convertMaps(runs[0].symbols), () => blockBd.compositeBlock("\\rightarrow"))
-                } else {
-                    const forms = prTh.list(runs.map(r => r.symbols[0]));
-                    const tos = prTh.list(runs.map(r => r.symbols[1]));
-                    runsRs = blockBd.joinBlocks(this.convertMaps([forms, tos]), () => blockBd.compositeBlock("\\rightarrow"))
-                }
-
-
-                return {
-                    blocks: [
-                        blockBd.textBlock("O"),
-                        ...blockBd.wrapBetweenBrackets(
-                            blockBd.joinBlocks([
-                                exp.blocks,
-                                [blockBd.textBlock(";")],
-                                runsRs
-                            ])
-                        ).blocks
-                    ]
-                }
+                return this.order.convert(obj);
             }
             case "Mod": {
                 return this.prCommon.opJoin(obj.symbols, () => blockBd.compositeBlock("\\bmod"), { wrapBracket: "if-op-exclude-mul-shortcut" })
             }
             case "Subs": {
-                const expr = this.convert(obj.symbols[0]);
-                const set1 = obj.symbols[1] as P2Pr.VarList;
-                const set2 = obj.symbols[2] as P2Pr.VarList;
-                const eqExprs: BlockModel[][] = [];
-                for (let idx = 0; idx < set1.symbols.length; idx++) {
-                    const s1 = set1.symbols[idx] || prTh.var(" ");
-                    const s2 = set2.symbols[idx] || prTh.var(" ");
-
-                    eqExprs.push(blockBd.joinBlocks([this.convert(s1).blocks, this.convert(s2).blocks], "="));
-                }
-
-                const indexBlock = blockBd.compositeBlock("\\power-index");
-                (indexBlock.elements["indexValue"] as EditorModel) = blockBd.editorFromLines(eqExprs);
-
-                return {
-                    blocks: [
-                        blockBd.bracketBlock("\\left."),
-                        ...expr.blocks,
-                        blockBd.bracketBlock("\\right|"),
-                        indexBlock
-                    ]
-                }
+                return this.subs.convert(obj);
+            }
+            case "Sum": {
+                return this.sum.convert(obj);
             }
         }
 
         return { blocks: [] };
     }
 
-    private convertMaps(ss: Symbol[], level = 0): BlockModel[][] {
+    convertMaps(ss: Symbol[], level = 0): BlockModel[][] {
         return ss.map(s => this.innerConvert(s, level).blocks);
     }
 
@@ -409,10 +346,9 @@ export class Pr2M {
         return "="
     }
 
-    private convertVarSymbol(obj: P2Pr.Var): CResult {
+    private convertVarRawSymbol(obj: { name: string, bold?: boolean }): CResult {
         return { blocks: [blockBd.textBlock(obj.name, obj.bold ? { mathType: "\\mathbf" } : undefined)], }
     }
-
 
 
     private frac(numerator: BlockModel[], denominator: BlockModel[]): CResult {

@@ -2,18 +2,17 @@ import { blockBd } from "../block-bd";
 import type { P2Pr } from "../p2pr";
 import { prTh as prTh } from "../pr-transform/pr-transform-helper";
 import { Pr2M } from "../pr2m";
+import { Pr2MItemBase } from "./pr2m-item-base";
 
-export class Derivative {
-    constructor(private main: { convert(obj: P2Pr.Symbol): Pr2M.CResult }) {
+export class Derivative extends Pr2MItemBase {
 
-    }
 
     private shouldWrapBrackets(s: Symbol, cr: Pr2M.CResult) {
         if (s.type == "Mul" && s.symbols.length == 2 && prTh.isNegativeOne(s.symbols[0]) && s.symbols[1].type == "Derivative") {
             return false;
         }
 
-        return !(prTh.considerPresentAsSingleUnit(s, cr) );
+        return !(prTh.considerPresentAsSingleUnit(s, cr));
     }
 
     private combineCounting(s1: Symbol, s2: Symbol): Symbol {

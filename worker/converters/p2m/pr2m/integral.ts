@@ -2,12 +2,9 @@ import { blockBd } from "../block-bd";
 import type { P2Pr } from "../p2pr";
 import { prTh } from "../pr-transform/pr-transform-helper";
 import { Pr2M } from "../pr2m";
+import { Pr2MItemBase } from "./pr2m-item-base";
 
-export class Integral {
-    constructor(private main: { convert(obj: P2Pr.Symbol): Pr2M.CResult }) {
-
-    }
-
+export class Integral extends Pr2MItemBase {
     convert(derivative: P2Pr.Integral): BlockModel[] {
         const limits = derivative.symbols.slice(1);
         let intBlocks: CompositeBlockModel[];

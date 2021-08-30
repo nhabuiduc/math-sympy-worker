@@ -355,6 +355,9 @@ class PrTransformHelper {
     var(text: string): P2Pr.Var {
         return { type: "Var", kind: "Leaf", name: text };
     }
+    raw(text: string): P2Pr.Raw {
+        return { type: "Raw", kind: "Leaf", name: text };
+    }
 
     varList(ss: Symbol[], separator?: P2Pr.VarList["separator"], br?: P2Pr.VarList["bracket"], rightBr?: P2Pr.VarList["bracket"]): P2Pr.VarList {
         return { type: "VarList", kind: "Container", symbols: ss, separator, bracket: br, rightBracket: rightBr };

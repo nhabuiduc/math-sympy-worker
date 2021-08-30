@@ -541,7 +541,7 @@ se = SetExpr(iv)`);
         expect(await th.run(`Interval(x, x)`)).equal(`{[x]}`);
     });
 
-    it.only("Range", async () => {
+    it("Range", async () => {
         expect(await th.run(`Range(1, 51)`)).equal(`{[1,2,…,50]}`);
         expect(await th.run(`Range(1, 4)`)).equal(`{[1,2,3]}`);
         expect(await th.run(`Range(0, 3, 1)`)).equal(`{[0,1,2]}`);
@@ -552,12 +552,50 @@ se = SetExpr(iv)`);
         expect(await th.run(`Range(-2, -oo, -1)`)).equal(`{[-2,-3,…]}`);
         expect(await th.run(`Range(-oo, oo)`)).equal(`{[…,-1,0,1,…]}`);
         expect(await th.run(`Range(oo, -oo, -1)`)).equal(`{[…,1,0,-1,…]}`);
-        
+
         await th.prepare(`  a, b, c = symbols('a:c')`);
         expect(await th.run(`Range(a, b, c)`)).equal(`[⚙️,[Range]]([a,b,c])`);
         expect(await th.run(`Range(a, 10, 1)`)).equal(`[⚙️,[Range]]([a,10,1])`);
         expect(await th.run(`Range(0, b, 1)`)).equal(`[⚙️,[Range]]([0,b,1])`);
         expect(await th.run(`Range(0, 10, c)`)).equal(`[⚙️,[Range]]([0,10,c])`);
+
+
+    })
+
+    it.only("sequences", async () => {
+        expect(await th.run(`SeqFormula(a**2, (0, oo))`)).equal(`[[0,1,4,9,…]]`);
+        expect(await th.run(`SeqPer((1, 2))`)).equal(`[[1,2,1,2,…]]`);
+        expect(await th.run(`SeqFormula(a**2, (0, 2))`)).equal(`[[0,1,4]]`);
+        expect(await th.run(`SeqPer((1, 2), (0, 2))`)).equal(`[[1,2,1]]`);
+        expect(await th.run(`SeqFormula(a**2, (-oo, 0))`)).equal(`[[…,9,4,1,0]]`);
+        expect(await th.run(`SeqPer((1, 2), (-oo, 0))`)).equal(`[[…,2,1,2,1]]`);
+
+        th.prepare(`
+s1 = SeqFormula(a**2, (0, oo))
+s2 = SeqPer((1, 2))
+s3 = SeqFormula(a**2, (0, 2))
+s4 = SeqPer((1, 2), (0, 2))
+s5 = SeqFormula(a**2, (-oo, 0))
+s6 = SeqPer((1, 2), (-oo, 0))
+b = Symbol('b')
+        `);
+
+        expect(await th.run(`SeqAdd(s1, s2)`)).equal(`[[1,3,5,11,…]]`);
+        expect(await th.run(`SeqAdd(s3, s4)`)).equal(`[[1,3,5]]`);
+        expect(await th.run(`SeqAdd(s5, s6)`)).equal(`[[…,11,5,3,1]]`);
+        expect(await th.run(`SeqMul(s1, s2)`)).equal(`[[0,2,4,18,…]]`);
+        expect(await th.run(`SeqMul(s3, s4)`)).equal(`[[0,2,4]]`);
+        expect(await th.run(`SeqMul(s5, s6)`)).equal(`[[…,18,4,2,0]]`);
+        expect(await th.run(`SeqFormula(a**2, (a, 0, x))`)).equal(`{[a][💪,[2]]}[💪,[x],[a=0]]`);
+        expect(await th.run(`SeqFormula(b*a**2, (a, 0, 2))`)).equal(`[[0,b,4b]]`);
+    });
+
+    it.only("FourierSeries", async () => {
+        expect(await th.run(`fourier_series(x, (x, -pi, pi))`)).equal(`[-][sin,]([2x])[+2][sin,]([x])[+][frac,[2][sin,]([3x]),[3]][+…]`);
+
+    })
+    it.only("FormalPowerSeries", async () => {
+        expect(await th.run(`fps(log(1 + x))`)).equal(`[sum,[k=1],[∞]][-][frac,([-1])[💪,[-k]][x][💪,[k]],[k]]`);
 
     })
 

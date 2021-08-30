@@ -3,12 +3,9 @@ import { blockBd } from "../block-bd";
 import { P2Pr } from "../p2pr";
 import { prTh } from "../pr-transform/pr-transform-helper";
 import { Pr2M } from "../pr2m";
+import { Pr2MItemBase } from "./pr2m-item-base";
 
-export class Mul {
-    constructor(private main: { convert(obj: P2Pr.Symbol): Pr2M.CResult }) {
-
-    }
-
+export class Mul extends Pr2MItemBase {
 
     convert(obj: P2Pr.Mul): Pr2M.CResult {
         const { symbols } = obj;
@@ -21,7 +18,7 @@ export class Mul {
         for (let idx = 0; idx < items.length; idx++) {
             const item = items[idx];
             const curArg = symbols[idx];
-            
+
             if (idx == 0 && prTh.isNegativeOne(curArg) && !obj.unevaluatedDetected) {
                 isNegative = true;
                 continue;

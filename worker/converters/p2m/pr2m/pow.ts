@@ -2,16 +2,9 @@ import { blockBd } from "../block-bd";
 import { P2Pr } from "../p2pr";
 import { prTh } from "../pr-transform/pr-transform-helper";
 import { Pr2M } from "../pr2m";
-import { GenericFunc } from "./generic-func";
+import { Pr2MItemBase } from "./pr2m-item-base";
 
-export class Pow {
-    constructor(
-        private main: { convert(obj: P2Pr.Symbol): Pr2M.CResult },
-        private genericFunc: GenericFunc,
-    ) {
-
-    }
-
+export class Pow extends Pr2MItemBase {
 
     convert(obj: P2Pr.Pow): Pr2M.CResult {
         const { symbols: args } = obj;
@@ -47,7 +40,7 @@ export class Pow {
 
     private handlePowToGenericFunc(powArgs: P2Pr.Symbol[]): Pr2M.CResult {
         const genericFunc = powArgs[0] as P2Pr.GenericFunc;
-        const { name, args } = this.genericFunc.buildGenericFunc(genericFunc);
+        const { name, args } = this.main.genericFunc.buildGenericFunc(genericFunc);
 
         let powerBlock: CompositeBlockModel;
 

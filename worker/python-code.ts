@@ -173,6 +173,39 @@ class __McHdl:
         
         return {'func':'Range', 'args': self.argsMap(printset)}
 
+    def hdl_SeqFormula(self,s):
+        dots = Symbol('dots')
+        if len(s.start.free_symbols) > 0 or len(s.stop.free_symbols) > 0:
+            return {
+                'func':'SeqFormula', 'args': self.argsMap((
+                s.formula,
+                s.variables[0],
+                s.start,
+                s.stop
+            )), 'freeSymbol': True}
+
+            
+        if s.start is S.NegativeInfinity:
+            stop = s.stop
+            printset = (dots, s.coeff(stop - 3), s.coeff(stop - 2),
+                        s.coeff(stop - 1), s.coeff(stop))
+        elif s.stop is S.Infinity or s.length > 4:
+            printset = s[:4]
+            printset.append(dots)
+        else:
+            printset = tuple(s)
+
+        return {'func':'SeqFormula', 'args': self.argsMap(printset)}
+
+    hdl_SeqPer = hdl_SeqFormula
+    hdl_SeqAdd = hdl_SeqFormula
+    hdl_SeqMul = hdl_SeqFormula
+
+    def hdl_FourierSeries(self, s):
+        return {'func':'FourierSeries', 'args':[self.hdlAll(s.truncate())]}
+    def hdl_FormalPowerSeries(self, s):
+        return self.hdlAll(s.infinite)
+
     def hdlFunctionClass(self, expr, name):
         return { 'func': 'FunctionClass', 'name': name, 'args': self.argsMap(expr.args) }
 

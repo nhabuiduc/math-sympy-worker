@@ -1,13 +1,9 @@
 import { blockBd } from "../block-bd";
 import { P2Pr } from "../p2pr";
 import { Pr2M } from "../pr2m";
+import { Pr2MItemBase } from "./pr2m-item-base";
 
-export class Pr2MCommon {
-    constructor(
-        private main: { convert(obj: P2Pr.Symbol): Pr2M.CResult }
-    ) {
-
-    }
+export class Pr2MCommon extends Pr2MItemBase {
 
     private ifOpPowDeprecate = (item: Pr2M.CResult): boolean => {
         return item.prUnit == "op";
@@ -38,7 +34,19 @@ export class Pr2MCommon {
         return this.ifOpPowDeprecate;
     }
 
+    equals(s1: Symbol, s2: Symbol): Pr2M.CResult {
+        return { blocks: blockBd.joinBlocks([this.main.convert(s1).blocks, this.main.convert(s2).blocks], "=") }
+    }
 
+    leqleq(s1: Symbol, s2: Symbol, s3: Symbol): Pr2M.CResult {
+        return {
+            blocks: blockBd.joinBlocks([
+                this.main.convert(s1).blocks,
+                this.main.convert(s2).blocks,
+                this.main.convert(s3).blocks,
+            ], "≤")
+        }
+    }
 
     opJoin(args: P2Pr.Symbol[], textOrBlock?: string | (() => BlockModel), options?: Pr2MCommon.JoinOptions): Pr2M.CResult {
         options = options || { wrapBracket: "if-op" }
@@ -69,3 +77,5 @@ export namespace Pr2MCommon {
     }
 }
 
+
+type Symbol = P2Pr.Symbol;

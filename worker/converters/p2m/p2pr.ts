@@ -175,6 +175,7 @@ export class P2Pr {
                 }
             }
 
+            case "Sum":
             case "Subs":
             case "Add":
             case "Mod":
@@ -315,11 +316,35 @@ export class P2Pr {
                 return prTh.varList(
                     obj.args.map(c => {
                         if (c.func == "Symbol" && c.name == "dots") {
-                            return prTh.var("…");
+                            return prTh.raw("…");
                         }
                         return this.c(c)
                     }), ",", "{"
                 )
+            }
+            case "SeqFormula": {
+                if (obj.freeSymbol) {
+                    return prTh.pow(
+                        prTh.varList([this.c(obj.args[0])], ",", "{"),
+                        this.c(obj.args[3]),
+                        prTh.varList([this.c(obj.args[1]), prTh.raw("="), this.c(obj.args[2])])
+                    )
+                }
+
+                return prTh.varList(
+                    obj.args.map(c => {
+                        if (c.func == "Symbol" && c.name == "dots") {
+                            return prTh.raw("…");
+                        }
+                        return this.c(c)
+                    }), ",", "["
+                )
+            }
+            case "FourierSeries": {
+                return prTh.varList([
+                    this.c(obj.args[0]),
+                    prTh.raw("+…")
+                ])
             }
 
         }
@@ -399,12 +424,12 @@ export namespace P2Pr {
         L<"NaN"> | ConstantSymbol | C<"CoordSys3D"> | Str | BaseVector | BaseScalar | L<"VectorZero"> | C<"BaseDyadic"> |
         Derivative | L<"Zero"> | C<"Exp"> | Relational | Poly | PolynomialRing | DisplayedDomain | C<"Binomial"> | C<"Mod"> |
         VarList | C<"Integral"> | Discrete | SingularityFunction | VecExpr | C<"Index"> | JsonData | C<"Factorial"> | C<"SubFactorial"> |
-        C<"Factorial2"> | C<"Conjugate"> | C<"Order"> | C<"Prescript"> | C<"PrescriptIdx"> | Subs
-        ;
+        C<"Factorial2"> | C<"Conjugate"> | C<"Order"> | C<"Prescript"> | C<"PrescriptIdx"> | Subs | Raw | C<"Sum">;
+
 
 
     export type Frac = C<"Frac">;
-    export type Tuple = C<"Tuple">;
+    // export type Tuple = C<"Tuple">;
     export type Integral = C<"Integral">;
     export type Add = C<"Add">;
     export type Sqrt = C<"Sqrt">;
@@ -456,6 +481,11 @@ export namespace P2Pr {
 
     export interface Var extends Leaf {
         type: "Var";
+        name: string;
+        bold?: boolean;
+    }
+    export interface Raw extends Leaf {
+        type: "Raw";
         name: string;
         bold?: boolean;
     }
@@ -566,7 +596,8 @@ namespace P {
         PolynomialRing | DisplayedDomain | UndefinedFunction | F<"Integral"> | F<"Not"> | F<"And"> | F<"Or"> | F<"Implies"> |
         F<"SingularityFunction"> | F<"FallingFactorial"> | F<"RisingFactorial"> | F<"LambertW"> | F<"Mod"> |
         Cycle | F<"Cross"> | F<"Curl"> | F<"Divergence"> | F<"Dot"> | F<"Gradient"> | F<"Laplacian"> | SpecialFuncClass |
-        F<"Subs"> | F<"Set"> | F<"FiniteSet"> | F<"Interval"> | F<"Range"> |
+        F<"Subs"> | F<"Set"> | F<"FiniteSet"> | F<"Interval"> | F<"Range"> | SeqFormula | F<"FourierSeries"> |
+        F<"Sum"> |
         UnknownFunc;
 
     export interface FuncArgs {
@@ -670,6 +701,10 @@ namespace P {
     export interface SpecialFuncClass extends FuncArgs {
         func: "SpecialFuncClass";
         name: string;
+    }
+    export interface SeqFormula extends FuncArgs {
+        func: "SeqFormula";
+        freeSymbol: boolean;
     }
 
     export interface UnknownFunc extends FuncArgs {

@@ -114,10 +114,11 @@ class BlockBd {
         return cblock;
     }
     compositeBlock(
-        name: `\\${"i" | "ii" | "iii" | "iii"}nt`,
+        name: `\\${"i" | "ii" | "iii" | "iii"}nt` | "\\sum",
         elementNames?: ("from" | "to")[],
         innerBlocks?: BlockModel[][],
         style?: BlockStyle): CompositeBlockModel;
+
 
     compositeBlock(
         name: "\\power-index" | "\\frac" | "\\sqrt" | "\\matrix" | "\\text" | "\\small-tilde" | "\\small-hat" | "\\middle|" |
