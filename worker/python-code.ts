@@ -210,6 +210,9 @@ class __McHdl:
     def hdl_ProductSet(self, p):
         return {'func':'ProductSet', 'hasVariety': has_variety(p.sets), 'args': self.argsMap(p.args)}
 
+    def hdl_ComplexRegion(self, p):
+        return {'func':'ComplexRegion',  'args': self.argsMap([p.expr, p.variables, p.sets])}
+
     def hdlFunctionClass(self, expr, name):
         return { 'func': 'FunctionClass', 'name': name, 'args': self.argsMap(expr.args) }
 

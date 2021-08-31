@@ -12,18 +12,8 @@ export class VarList extends Pr2MItemBase {
         let blocks: BlockModel[];
 
         if (obj.separator) {
-            let separator: string | (() => BlockModel);
-            switch (obj.separator) {
-                case ",":
-                case ";": {
-                    separator = obj.separator
-                    break;
-                }
-                case "|": {
-                    separator = () => blockBd.compositeBlock("\\middle|")
-                }
-            }
 
+            const separator = this.buildSeparatorBlock(obj.separator, obj.separatorSpacing);
             blocks = blockBd.joinBlocks(this.main.convertMaps(obj.symbols), separator)
         } else {
             blocks = blockBd.flattenBlocks(this.main.convertMaps(obj.symbols))
@@ -33,5 +23,47 @@ export class VarList extends Pr2MItemBase {
             return blockBd.wrapBetweenBrackets(blocks, obj.bracket, obj.rightBracket);
         }
         return { blocks }
+    }
+
+    private buildSeparatorBlock(separator: P2Pr.VarList["separator"], sSpacing: P2Pr.VarList["separatorSpacing"]): string | (() => BlockModel | BlockModel[]) {
+        switch (separator) {
+            case ",":
+            case ";": {
+                return this.spaceAroundText(separator, sSpacing);
+                break;
+            }
+            case "|": {
+                return () => this.spaceAroundBlock(blockBd.compositeBlock("\\middle|"), sSpacing)
+            }
+        }
+    }
+
+    private spaceAroundText(text: string, sSpacing: P2Pr.VarList["separatorSpacing"]): string {
+        if (!sSpacing) {
+            return text;
+        }
+        if (sSpacing == "around") {
+            return ` ${text} `
+        }
+        if (sSpacing == "before") {
+            return ` ${text}`;
+        }
+
+        return `${text} `;
+    }
+
+    private spaceAroundBlock(block: BlockModel, sSpacing: P2Pr.VarList["separatorSpacing"]): BlockModel | BlockModel[] {
+        if (!sSpacing) {
+            return block;
+        }
+
+        if (sSpacing == "around") {
+            return blockBd.combineMultipleBlocks([blockBd.textBlock(" "), block, blockBd.textBlock(" ")]);
+        }
+        if (sSpacing == "before") {
+            return blockBd.combineMultipleBlocks([blockBd.textBlock(" "), block]);
+        }
+
+        return blockBd.combineMultipleBlocks([block, blockBd.textBlock(" ")]);
     }
 }

@@ -4,6 +4,7 @@ import stringHelper from "@lib-shared/string-helper";
 import { tabularKeyInfoHelper } from "@lib-shared/tabular-key-info-helper";
 import { sympyToMcConstantFuncs } from "../mapping/generic-func-map";
 import { P2Pr } from "./p2pr";
+import { prTh } from "./pr-transform/pr-transform-helper";
 import type { Pr2M } from "./pr2m";
 
 class BlockBd {
@@ -113,8 +114,11 @@ class BlockBd {
 
         return cblock;
     }
+
+
+
     compositeBlock(
-        name: `\\${"i" | "ii" | "iii" | "iii"}nt` | "\\sum",
+        name: `\\${"i" | "ii" | "iii" | "iii"}nt` | "\\sum" | "\\prod" | "\\lim",
         elementNames?: ("from" | "to")[],
         innerBlocks?: BlockModel[][],
         style?: BlockStyle): CompositeBlockModel;
@@ -212,12 +216,19 @@ class BlockBd {
         return this.wrapBetweenBrackets(this.joinBlocks(blockss, join), bracketType);
     }
 
+    wrapBracketIfConsiderSingleUnit(s: Symbol, rs: Pr2M.CResult): Pr2M.CResult {
+        if (prTh.considerPresentAsSingleUnit(s, rs)) {
+            return rs;
+        }
+
+        return this.wrapBetweenBrackets(rs.blocks);
+    }
+
     wrapBracketIfOp(rs: Pr2M.CResult): BlockModel[] {
         return (rs.prUnit == "op") ? this.wrapBetweenBrackets(rs.blocks).blocks : rs.blocks;
     }
 
-    /**Fix to have deepclone block */
-    joinBlocks(blockss: BlockModel[][], textOrBlock?: string | (() => BlockModel)) {
+    joinBlocks(blockss: BlockModel[][], textOrBlock?: string | (() => BlockModel | BlockModel[])) {
         let rs: BlockModel[] = [];
         for (let idx = 0; idx < blockss.length; idx++) {
             let blocks = blockss[idx];
@@ -225,12 +236,23 @@ class BlockBd {
             if (idx <= 0 || !textOrBlock) {
                 rs = this.combine2Blockss(rs, blocks);
             } else {
-                rs = this.combineMultipleBlocks(rs, typeof textOrBlock == "string" ? [this.textBlock(textOrBlock)] : [textOrBlock()], blocks);
+                rs = this.combineMultipleBlocks(rs, this.resolveJoinBlocks(textOrBlock), blocks);
             }
 
         }
 
         return rs;
+    }
+
+    private resolveJoinBlocks(textOrBlock?: string | (() => BlockModel | BlockModel[])): BlockModel[] {
+        if (typeof textOrBlock == "string") {
+            return [this.textBlock(textOrBlock)];
+        }
+        const rs = textOrBlock();
+        if (rs instanceof Array) {
+            return rs;
+        }
+        return [rs];
     }
 
     wrapBetweenBrackets(blocks: BlockModel[], bracketType: P2Pr.SupportBracket = "(", rightBracketType?: P2Pr.SupportBracket): Pr2M.CResult {
@@ -275,3 +297,4 @@ export namespace BlockBd {
     export type SupportRightBracket = ")" | "]" | "\\right\\angle" | "\\right\\rfloor" | "\\right\\rceil" | "\\right|" | "\\right." | "\\right}";
     export type SupportBracket = SupportLeftBracket | SupportRightBracket;
 }
+type Symbol = P2Pr.Symbol;

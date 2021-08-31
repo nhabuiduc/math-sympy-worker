@@ -23,6 +23,17 @@ class LightLodash {
 
         return [first, second];
     }
+
+    zip<T, K>(arr1: T[], arr2: K[]): [T, K][] {
+        const maxLength = Math.max(arr1.length, arr2.length);
+        const rs = new Array(maxLength) as [T, K][];
+        for (let idx = 0; idx < maxLength; idx++) {
+            rs[idx]=[arr1[idx], arr2[idx]]
+        }
+
+        return rs;
+    }
+
 }
 
 export const _l = new LightLodash();

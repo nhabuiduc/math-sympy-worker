@@ -1,14 +1,9 @@
 import { P2Pr } from "../p2pr";
 import { prTh } from "../pr-transform/pr-transform-helper";
-import { NameParser } from "./name-parser";
+import { P2PrItemBase } from "./p2pr-item-base"
 
-export class GenericFunc {
-    constructor(
-        private main: { m(args: P2Pr.PBasic[]): Symbol[], c(obj: P2Pr.PBasic): Symbol },
-        private nameParser: NameParser) {
 
-    }
-
+export class GenericFunc extends P2PrItemBase {
     convert(obj: P2Pr.PGenericFunc): Symbol {
         if (obj.name == "meijerg") {
             return prTh.varList([prTh.pow(
@@ -64,6 +59,9 @@ export class GenericFunc {
         }
         if (obj.name == "conjugate") {
             return { type: "Conjugate", kind: "Container", symbols: this.m(obj.args) };
+        }
+        if (obj.name == "log") {
+            return { type: "GenericFunc", kind: "Container", func: obj.name, powerIndexPos: "power-after", symbols: this.m(obj.args) }
         }
 
 
@@ -243,7 +241,7 @@ export class GenericFunc {
             return { type: "GenericFunc", kind: "Container", func: obj.name, symbols: this.m(obj.args), ...genOps }
         }
 
-        return this.nameParser.parse(obj.name, (cn) => {
+        return this.main.nameParser.parse(obj.name, (cn) => {
             return { type: "GenericFunc", kind: "Container", func: cn, symbols: this.m(obj.args), ...genOps }
         })
 

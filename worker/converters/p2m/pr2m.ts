@@ -321,6 +321,8 @@ export class Pr2M {
             case "Subs": {
                 return this.subs.convert(obj);
             }
+            case "Limit":
+            case "Product":
             case "Sum": {
                 return this.sum.convert(obj);
             }

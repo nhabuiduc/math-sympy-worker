@@ -12,6 +12,10 @@ export abstract class Pr2MItemBase {
     }) {
 
     }
+
+    protected c(s: Symbol): Pr2M.CResult {
+        return this.main.convert(s);
+    }
 }
 
 type Symbol = P2Pr.Symbol;

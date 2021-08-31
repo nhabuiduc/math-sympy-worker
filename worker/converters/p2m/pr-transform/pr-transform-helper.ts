@@ -259,6 +259,18 @@ class PrTransformHelper {
         return [s];
     }
 
+    isInfinity(s: Symbol): boolean {
+        return s.type == "ConstantSymbol" && s.name == "∞";
+    }
+    isNegativeInfinity(s: Symbol): boolean {
+        return this.isMulNegativeOf(s, st => this.isInfinity(st));
+    }
+
+    isMulNegativeOf(s: Symbol, predicate: (sToTest: Symbol) => boolean): boolean {
+        return s.type == "Mul" && s.symbols.length == 2 && this.isNegativeOne(s.symbols[0]) && predicate(s.symbols[1]);
+    }
+
+
     extractRationalFrac(s: P2Pr.Frac): [number, number] {
         return [this.extractIntegerValue(s.symbols[0]), this.extractIntegerValue(s.symbols[1])]
     }
@@ -366,8 +378,14 @@ class PrTransformHelper {
         return this.varList(ss, ",", "(");
     }
 
-    varList(ss: Symbol[], separator?: P2Pr.VarList["separator"], br?: P2Pr.VarList["bracket"], rightBr?: P2Pr.VarList["bracket"]): P2Pr.VarList {
-        return { type: "VarList", kind: "Container", symbols: ss, separator, bracket: br, rightBracket: rightBr };
+    varList(ss: Symbol[], separator?: P2Pr.VarList["separator"], br?: P2Pr.VarList["bracket"], rightBr?: P2Pr.VarList["bracket"], sSpacing?: P2Pr.VarList["separatorSpacing"]): P2Pr.VarList;
+    varList(ss: Symbol[], op?: Partial<P2Pr.VarList>): P2Pr.VarList;
+
+    varList(ss: Symbol[], separatorOrOp?: P2Pr.VarList["separator"] | Partial<P2Pr.VarList>, br?: P2Pr.VarList["bracket"], rightBr?: P2Pr.VarList["bracket"], sSpacing?: P2Pr.VarList["separatorSpacing"]): P2Pr.VarList {
+        if (typeof separatorOrOp == "string") {
+            return { type: "VarList", kind: "Container", symbols: ss, separator: separatorOrOp, bracket: br, rightBracket: rightBr, separatorSpacing: sSpacing };
+        }
+        return { type: "VarList", kind: "Container", symbols: ss, ...separatorOrOp };
     }
 
     removeVarListBracket(s: Symbol): Symbol {

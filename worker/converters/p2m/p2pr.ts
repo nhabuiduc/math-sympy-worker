@@ -10,17 +10,21 @@ import { NameParser } from "./p2pr/name-parser";
 import { GenericFunc } from "./p2pr/generic-func";
 import { funcToConstant } from "./p2pr/func-to-constant";
 import { bloackBoardBold } from "./p2pr/blackboard-bold";
+import { _l } from "@sympy-worker/light-lodash";
+import { Set as SetP2Pr } from "./p2pr/set";
 
 export class P2Pr {
 
     private transforms: P2Pr.IPrTransform[] = [new PrPowerTransform(), new PrFracTransform(), new PrMulTransform(), new PrSqrtTransform(), new PrAddTransform()];
     private symbol: SymbolP2Pr;
-    private nameParser: NameParser;
+    public nameParser: NameParser;
     private genericFunc: GenericFunc;
+    private set: SetP2Pr;
     constructor(symbolLatexNames: { [key: string]: string }) {
         this.nameParser = new NameParser(symbolLatexNames);
         this.symbol = new SymbolP2Pr(this.nameParser);
-        this.genericFunc = new GenericFunc(this, this.nameParser);
+        this.genericFunc = new GenericFunc(this);
+        this.set = new SetP2Pr(this);
     }
 
     convert(obj: P.Basic, ops?: P2Pr.TransformOptions): Symbol {
@@ -32,10 +36,12 @@ export class P2Pr {
     c(obj: P.Basic): Symbol {
         switch (obj.func) {
 
+            case "Limit":
             case "Complement":
             case "SymmetricDifference":
             case "Intersection":
             case "Union":
+            case "Product":
             case "Sum":
             case "Subs":
             case "Add":
@@ -51,6 +57,7 @@ export class P2Pr {
             case "Float": {
                 return float.parse(obj.value);
             }
+            case "Dummy":
             case "Symbol": {
                 return this.symbol.parse(obj.name);
             }
@@ -103,7 +110,7 @@ export class P2Pr {
             }
 
             case "Half": {
-                return prTh.frac(prTh.integer(1), prTh.integer(2));
+                return prTh.frac(prTh.int(1), prTh.int(2));
             }
             case "Rational": {
                 return prTh.frac(prTh.integerOrSpecial(obj.p), prTh.integerOrSpecial(obj.q));
@@ -217,9 +224,7 @@ export class P2Pr {
                     bracket: "[",
                 }
             }
-            case "Dummy": {
-                return { type: "Var", kind: "Leaf", name: obj.name }
-            }
+
             case "Poly": {
                 return { type: "Poly", kind: "Container", symbols: this.m(obj.args), domain: this.c(obj.domain) }
             }
@@ -360,6 +365,15 @@ export class P2Pr {
             case "ProductSet": {
                 return { type: "ProductSet", kind: "Container", hasVariety: obj.hasVariety, symbols: this.m(obj.args) }
             }
+            case "ComplexRegion":
+            case "ConditionSet":
+            case "ImageSet": {
+                return this.set.convert(obj);
+            }
+            case "Contains": {
+                const ss = this.m(obj.args);
+                return prTh.varList([ss[0], prTh.var("∈"), ss[1]])
+            }
 
         }
 
@@ -439,7 +453,7 @@ export namespace P2Pr {
         Derivative | L<"Zero"> | C<"Exp"> | Relational | Poly | PolynomialRing | DisplayedDomain | C<"Binomial"> | C<"Mod"> |
         VarList | C<"Integral"> | Discrete | C<"SingularityFunction"> | VecExpr | C<"Index"> | JsonData | C<"Factorial"> | C<"SubFactorial"> |
         C<"Factorial2"> | C<"Conjugate"> | C<"Order"> | C<"Prescript"> | C<"PrescriptIdx"> | Subs | Raw | C<"Sum"> |
-        C<"Union"> | C<"Intersection"> | C<"SymmetricDifference"> | C<"Complement"> | ProductSet;
+        C<"Union"> | C<"Intersection"> | C<"SymmetricDifference"> | C<"Complement"> | ProductSet | C<"Product"> | C<"Limit">;
 
 
 
@@ -464,6 +478,7 @@ export namespace P2Pr {
         type: "VarList";
         bracket?: SupportBracket;
         separator?: "," | ";" | "|";
+        separatorSpacing?: "before" | "after" | "around";
         rightBracket?: SupportBracket;
     }
 
@@ -596,6 +611,8 @@ export namespace P2Pr {
 
     export type PGenericFunc = P.GenericFunc;
     export type PBasic = P.Basic;
+    export type PF<T extends string> = P.F<T>;
+    export type PU<T extends string> = P.U<T>;
 }
 
 namespace P {
@@ -612,7 +629,8 @@ namespace P {
         F<"Subs"> | F<"Set"> | F<"FiniteSet"> | F<"Interval"> | F<"Range"> | SeqFormula | F<"FourierSeries"> |
         F<"Sum"> | F<"AccumulationBounds"> | U<"EmptySet"> | U<"UniversalSet"> | F<"Operator"> | F<"Union"> |
         F<"Intersection"> | F<"SymmetricDifference"> | F<"Complement"> | U<"Reals"> | U<"Naturals"> | U<"Complexes"> |
-        U<"Rationals"> | U<"Integers"> | U<"Naturals0"> | ProductSet |
+        U<"Rationals"> | U<"Integers"> | U<"Naturals0"> | ProductSet | F<"ImageSet"> | F<"Lambda"> | F<"ConditionSet"> |
+        F<"ComplexRegion"> | F<"Contains"> | F<"Product"> | F<"Limit"> |
         UnknownFunc;
 
     export interface ProductSet extends FuncArgs {

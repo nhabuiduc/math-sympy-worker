@@ -729,4 +729,61 @@ P2 = ProductSet(C, D)
         expect(await th.run(`S.Integers`)).equal(`[Z,mathbb]`);
     });
 
+    it.only("ImageSet", async () => {
+        await th.prepare(` x = Symbol('x')`)
+        expect(await th.run(`ImageSet(Lambda(x, x**2), S.Naturals)`)).equal(`{[x][💪,[2]][ ][middle|,][ x∈][N,mathbb]}`);
+        expect(await th.run(`ImageSet(Lambda(((x, y),), x + y), ProductSet({1, 2, 3}, {3, 4}))`)).equal(`{[x+y ][middle|,][ ]([x,y])[∈]{[1,2,3]}[×]{[3,4]}}`);
+    });
+
+    it.only("ConditionSet", async () => {
+        await th.prepare(` x = Symbol('x')`)
+        expect(await th.run(`ConditionSet(x, Eq(x**2, 1), S.Reals)`)).equal(`{[x ][middle|,][ x∈][R,mathbb][∧x][💪,[2]][=1]}`);
+        expect(await th.run(`ConditionSet(x, Eq(x**2, 1), S.UniversalSet)`)).equal(`{[x ][middle|,][ x][💪,[2]][=1]}`);
+
+    })
+    it.only("ComplexRegion", async () => {
+        expect(await th.run(`ComplexRegion(Interval(3, 5)*Interval(4, 6))`)).equal(`{[iy+x ][middle|,][ x,y∈][[3,5]][×][[4,6]]}`);
+        expect(await th.run(`ComplexRegion(Interval(0, 1)*Interval(0, 2*pi), polar=True)`)).equal(`{([i][sin,]([𝜃])[+][cos,]([𝜃]))[r ][middle|,][ r,𝜃∈][[0,1]][×][[0,2𝜋])}`);
+
+    })
+
+    it.only("Contains", async () => {
+        expect(await th.run(`Contains(x, S.Naturals)`)).equal(`[x∈][N,mathbb]`);
+    })
+
+    it.only("sum", async () => {
+        expect(await th.run(`Sum(x*y**2, (x, -2, 2), (y, -5, 5))`)).equal(`[sum,[-2≤x≤2]💔[-5≤y≤5]][xy][💪,[2]]`);
+        expect(await th.run(`Sum(x**2, (x, -2, 2))`)).equal(`[sum,[x=-2],[2]][x][💪,[2]]`);
+        expect(await th.run(`Sum(x**2 + y, (x, -2, 2))`)).equal(`[sum,[x=-2],[2]]([y+x][💪,[2]])`);
+        expect(await th.run(`Sum(x**2 + y, (x, -2, 2))**2`)).equal(`([sum,[x=-2],[2]]([y+x][💪,[2]]))[💪,[2]]`);
+    });
+
+    it.only("product", async () => {
+        expect(await th.run(`Product(x*y**2, (x, -2, 2), (y, -5, 5))`)).equal(`[prod,[-2≤x≤2]💔[-5≤y≤5]][xy][💪,[2]]`);
+        expect(await th.run(`Product(x**2, (x, -2, 2))`)).equal(`[prod,[x=-2],[2]][x][💪,[2]]`);
+        expect(await th.run(`Product(x**2 + y, (x, -2, 2))`)).equal(`[prod,[x=-2],[2]]([y+x][💪,[2]])`);
+        expect(await th.run(`Product(x, (x, -2, 2))**2`)).equal(`([prod,[x=-2],[2]][x])[💪,[2]]`);
+        
+    });
+    
+    it.only("limits", async () => {
+        expect(await th.run(`Limit(x, x, oo)`)).equal(`[lim,[x][rightarrow,][∞]][x]`);
+        await th.prepare(`f = Function('f')`);
+        expect(await th.run(`Limit(f(x), x, 0)`)).equal(`[lim,[x][rightarrow,][0][💪,[+]]][f]([x])`);
+        expect(await th.run(`Limit(f(x), x, 0, "-")`)).equal(`[lim,[x][rightarrow,][0][💪,[-]]][f]([x])`);
+        expect(await th.run(`Limit(f(x), x, 0)**2`)).equal(`([lim,[x][rightarrow,][0][💪,[+]]][f]([x]))[💪,[2]]`);
+        expect(await th.run(`Limit(f(x), x, 0, dir='+-')`)).equal(`[lim,[x][rightarrow,][0]][f]([x])`);
+    });
+    
+    it.only("log", async () => {    
+        expect(await th.run(`log(x)`)).equal(`[log,]([x])`);
+        expect(await th.run(`ln(x)`)).equal(`[log,]([x])`);
+        expect(await th.run(`log(x)+log(y)`)).equal(`[log,]([x])[+][log,]([y])`);
+        expect(await th.run(`pow(log(x), x)`)).equal(`[log,]([x])[💪,[x]]`);
+
+    })
+    it.only("sympy issue 3568", async () => {
+        
+    })
+
 });
