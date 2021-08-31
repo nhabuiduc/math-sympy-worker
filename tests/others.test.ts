@@ -763,19 +763,20 @@ P2 = ProductSet(C, D)
         expect(await th.run(`Product(x**2, (x, -2, 2))`)).equal(`[prod,[x=-2],[2]][x][💪,[2]]`);
         expect(await th.run(`Product(x**2 + y, (x, -2, 2))`)).equal(`[prod,[x=-2],[2]]([y+x][💪,[2]])`);
         expect(await th.run(`Product(x, (x, -2, 2))**2`)).equal(`([prod,[x=-2],[2]][x])[💪,[2]]`);
-        
+
     });
-    
+
     it.only("limits", async () => {
-        expect(await th.run(`Limit(x, x, oo)`)).equal(`[lim,[x][rightarrow,][∞]][x]`);
         await th.prepare(`f = Function('f')`);
+        expect(await th.run(`Limit(x, x, oo)`)).equal(`[lim,[x][rightarrow,][∞]][x]`);
         expect(await th.run(`Limit(f(x), x, 0)`)).equal(`[lim,[x][rightarrow,][0][💪,[+]]][f]([x])`);
         expect(await th.run(`Limit(f(x), x, 0, "-")`)).equal(`[lim,[x][rightarrow,][0][💪,[-]]][f]([x])`);
         expect(await th.run(`Limit(f(x), x, 0)**2`)).equal(`([lim,[x][rightarrow,][0][💪,[+]]][f]([x]))[💪,[2]]`);
         expect(await th.run(`Limit(f(x), x, 0, dir='+-')`)).equal(`[lim,[x][rightarrow,][0]][f]([x])`);
     });
-    
-    it.only("log", async () => {    
+
+    it.only("log", async () => {
+        await th.prepare(`y = symbols('y')`);
         expect(await th.run(`log(x)`)).equal(`[log,]([x])`);
         expect(await th.run(`ln(x)`)).equal(`[log,]([x])`);
         expect(await th.run(`log(x)+log(y)`)).equal(`[log,]([x])[+][log,]([y])`);
@@ -783,7 +784,23 @@ P2 = ProductSet(C, D)
 
     })
     it.only("sympy issue 3568", async () => {
-        
+        await th.prepare(` 
+beta = Symbol(r'\\beta')
+y1111 = beta + x
+        `);
+
+        expect(await th.run(`y1111`)).equal(`[𝛽+x]`);
+    })
+
+    it.only("Rational", async () => {
+        expect(await th.run(`(2*tau)**Rational(7, 2)`)).equal(`[8][sqrt,[2]][𝜏][💪,[frac,[7],[2]]]`);
+        expect(await th.run(`[2/x, y]`)).equal(`[[frac,[2],[x]][,y]]`);
+
+    })
+
+    it.only("dict", async () => {
+        expect(await th.run(`{Rational(1): 1, x**2: 2, x: 3, x**3: 4}`)).equal(`[[frac,[2],[x]][,y]]`);
+
     })
 
 });

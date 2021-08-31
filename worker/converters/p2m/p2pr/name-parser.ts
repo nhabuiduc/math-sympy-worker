@@ -80,7 +80,9 @@ export class NameParser {
     }
 
     private nameMap(n: string): string {
-        return symbolNameMap[n] || this.symbolLatexNames[n] || n;
+        const latexName = n.startsWith("\\") ? n.substr(1) : n;
+
+        return symbolNameMap[n] || this.symbolLatexNames[latexName] || n;
     }
 }
 
