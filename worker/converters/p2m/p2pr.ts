@@ -119,6 +119,7 @@ export class P2Pr {
                 return { type: "Matrix", kind: "Container", bracket: "[", row: obj.row, col: obj.col, symbols: this.m(obj.args) }
             }
 
+            case "SpecialFuncClass":
             case "GenericFunc": {
                 return this.genericFunc.convert(obj);
             }
@@ -279,9 +280,7 @@ export class P2Pr {
             case "Cross": {
                 return { type: "VecExpr", op: obj.func, kind: "Container", symbols: this.m(obj.args) }
             }
-            case "SpecialFuncClass": {
-                return { type: "GenericFunc", func: obj.name, specialFuncClass: true, kind: "Container", symbols: this.m(obj.args) }
-            }
+
             case "FallingFactorial": {
                 return prTh.index(prTh.brackets(this.c(obj.args[0])), this.c(obj.args[1]))
             }
@@ -374,6 +373,23 @@ export class P2Pr {
                 const ss = this.m(obj.args);
                 return prTh.varList([ss[0], prTh.var("∈"), ss[1]])
             }
+            case "DiracDelta": {
+                const ss = this.m(obj.args);
+                if (ss.length == 1 || prTh.isZero(ss[1])) {
+                    return prTh.genFunc("𝛿", [ss[0]], { powerIndexPos: "power-after" });
+                } else {
+                    return prTh.pow(
+                        prTh.genFunc("𝛿", [ss[0]]),
+                        prTh.brackets(ss[1]),
+                    )
+                }
+            }
+            case "Heaviside": {
+                return prTh.genFunc("𝜃", this.m(obj.args), { powerIndexPos: "wrap-all" })
+            }
+            case "KroneckerDelta": {
+                return prTh.index(prTh.var("𝛿"), prTh.varList(this.m(obj.args), obj.isArgsAtom ? undefined : ","), { noPowMerge: true })
+            }
 
         }
 
@@ -442,6 +458,7 @@ export namespace P2Pr {
     export interface Container {
         kind: "Container";
         symbols: Symbol[];
+        noPowMerge?: boolean;
     }
 
     export interface Leaf {
@@ -477,7 +494,7 @@ export namespace P2Pr {
     export interface VarList extends Container {
         type: "VarList";
         bracket?: SupportBracket;
-        separator?: "," | ";" | "|";
+        separator?: "," | ";" | "|" | ":";
         separatorSpacing?: "before" | "after" | "around";
         rightBracket?: SupportBracket;
     }
@@ -542,7 +559,6 @@ export namespace P2Pr {
     export interface GenericFunc extends Container {
         type: "GenericFunc"
         func: string;
-        specialFuncClass?: boolean;
         powerIndexPos?: "all-after" | "power-after" | "wrap-all";
         argSeparator?: "," | "|" | ";|";
         forceUsingOperatorName?: boolean;
@@ -630,8 +646,12 @@ namespace P {
         F<"Sum"> | F<"AccumulationBounds"> | U<"EmptySet"> | U<"UniversalSet"> | F<"Operator"> | F<"Union"> |
         F<"Intersection"> | F<"SymmetricDifference"> | F<"Complement"> | U<"Reals"> | U<"Naturals"> | U<"Complexes"> |
         U<"Rationals"> | U<"Integers"> | U<"Naturals0"> | ProductSet | F<"ImageSet"> | F<"Lambda"> | F<"ConditionSet"> |
-        F<"ComplexRegion"> | F<"Contains"> | F<"Product"> | F<"Limit"> |
+        F<"ComplexRegion"> | F<"Contains"> | F<"Product"> | F<"Limit"> | F<"DiracDelta"> | F<"Heaviside"> | KroneckerDelta |
         UnknownFunc;
+
+    export interface KroneckerDelta extends F<"KroneckerDelta"> {
+        isArgsAtom: boolean;
+    }
 
     export interface ProductSet extends FuncArgs {
         func: "ProductSet";

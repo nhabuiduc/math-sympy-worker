@@ -62,6 +62,9 @@ export class PrPowerTransform implements P2Pr.IPrTransform {
             }
 
             let allowMergeIdx = true;
+            if (symbol.symbols[0].type == "Index" && symbol.symbols[0].noPowMerge) {
+                allowMergeIdx = false;
+            }
             if (symbol.symbols[0].type == "Index" && symbol.symbols[0].symbols[0].type == "GenericFunc" && symbol.symbols[0].symbols[0].powerIndexPos == "wrap-all") {
                 allowMergeIdx = false;
             }

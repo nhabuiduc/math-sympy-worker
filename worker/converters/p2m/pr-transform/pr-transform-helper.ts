@@ -398,8 +398,8 @@ class PrTransformHelper {
         return { type: "Integer", kind: "Leaf", value: vl }
     }
 
-    index(base: Symbol, index: Symbol): P2Pr.Index {
-        return { type: "Index", kind: "Container", symbols: [base, index] };
+    index(base: Symbol, index: Symbol, more?: Partial<P2Pr.Index>): P2Pr.Index {
+        return { type: "Index", kind: "Container", symbols: [base, index], ...more };
     }
 
     brackets(base: Symbol | Symbol[], br: P2Pr.SupportBracket = "("): P2Pr.Symbol {

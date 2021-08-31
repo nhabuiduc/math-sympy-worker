@@ -27,15 +27,11 @@ export class VarList extends Pr2MItemBase {
 
     private buildSeparatorBlock(separator: P2Pr.VarList["separator"], sSpacing: P2Pr.VarList["separatorSpacing"]): string | (() => BlockModel | BlockModel[]) {
         switch (separator) {
-            case ",":
-            case ";": {
-                return this.spaceAroundText(separator, sSpacing);
-                break;
-            }
             case "|": {
                 return () => this.spaceAroundBlock(blockBd.compositeBlock("\\middle|"), sSpacing)
             }
         }
+        return this.spaceAroundText(separator, sSpacing);
     }
 
     private spaceAroundText(text: string, sSpacing: P2Pr.VarList["separatorSpacing"]): string {

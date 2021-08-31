@@ -16,35 +16,36 @@ export class GenericFunc {
         const args = this.buildGenericFuncArgs(obj.symbols, obj.argSeparator || ",");
 
         let nameBlock: BlockModel;
-        if (obj.specialFuncClass) {
-            // let nameText = obj.func;
-            switch (obj.func) {
-                case "KroneckerDelta": {
-                    nameBlock = blockBd.textBlock("𝛿");
-                    break;
-                }
-                case "gamma": {
-                    nameBlock = blockBd.textBlock("𝛤");
-                    break;
-                }
-                case "lowergamma": {
-                    nameBlock = blockBd.textBlock("𝛾");
-                    break;
-                }
-                case "beta": {
-                    nameBlock = blockBd.operatorNameBlock("B");
-                    break;
-                }
-                case "DiracDelta": {
-                    nameBlock = blockBd.textBlock("𝛿");
-                    break;
-                }
-                case "Chi": {
-                    nameBlock = blockBd.operatorNameBlock("Chi");
-                    break;
-                }
-            }
-        } else {
+        // if (obj.specialFuncClass) {
+        //     // let nameText = obj.func;
+        //     switch (obj.func) {
+        //         // case "KroneckerDelta": {
+        //         //     nameBlock = blockBd.textBlock("𝛿");
+        //         //     break;
+        //         // }
+        //         // case "gamma": {
+        //         //     nameBlock = blockBd.textBlock("𝛤");
+        //         //     break;
+        //         // }
+        //         // case "lowergamma": {
+        //         //     nameBlock = blockBd.textBlock("𝛾");
+        //         //     break;
+        //         // }
+        //         case "beta": {
+        //             nameBlock = blockBd.operatorNameBlock("B");
+        //             break;
+        //         }
+        //         // case "DiracDelta": {
+        //         //     nameBlock = blockBd.textBlock("𝛿");
+        //         //     break;
+        //         // }
+        //         case "Chi": {
+        //             nameBlock = blockBd.operatorNameBlock("Chi");
+        //             break;
+        //         }
+        //     }
+        // }
+        if (!nameBlock) {
             nameBlock = blockBd.operatorFuncBlock(obj.func, this.constantTextFuncSet, this.symbolLatexNames);
         }
         return {

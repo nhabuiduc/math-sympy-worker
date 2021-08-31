@@ -138,6 +138,7 @@ export class PrFracTransform implements P2Pr.IPrTransform {
             const children = symbol.symbols.map(c => this.transformNumeratorMinus(c, ctx));
             const [num, den] = children;
             if (this.isFracPartNegative(num) && !this.isFracPartNegative(den)) {
+                console.log(num, den)
                 ctx.applyFound = true;
                 return prTh.mul(prTh.negativeOne(), prTh.frac(this.removeNegativePart(num), den));
 
@@ -164,10 +165,10 @@ export class PrFracTransform implements P2Pr.IPrTransform {
             return true;
         }
 
-        if (s.type == "Mul" && s.symbols[0].type == "NegativeOne") {
+        if (s.type == "Mul" && prTh.isNegativeOne(s.symbols[0])) {
             return true;
         }
-        if (s.type == "Mul" && s.symbols[0].type == "Integer" && s.symbols[0].value == -1) {
+        if (s.type == "Mul" && s.symbols[0].type == "Integer" && s.symbols[0].value < 0) {
             return true;
         }
     }
@@ -177,7 +178,19 @@ export class PrFracTransform implements P2Pr.IPrTransform {
             case "Integer": return { ...s, value: -s.value }
             case "NegativeOne": return { type: "One", kind: "Leaf" }
             case "Mul": {
-                return { ...s, symbols: s.symbols.slice(1) }
+                if (prTh.isNegativeOne(s.symbols[0])) {
+                    if (s.symbols.length == 2) {
+                        return s.symbols[1];
+                    }
+                    return { ...s, symbols: s.symbols.slice(1) }
+                }
+
+                if (s.symbols[0].type == "Integer") {
+                    return {
+                        ...s,
+                        symbols: [{ ...s.symbols[0], value: -s.symbols[0].value } as Symbol].concat(s.symbols.slice(1))
+                    }
+                }
             }
         }
 

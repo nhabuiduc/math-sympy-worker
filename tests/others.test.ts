@@ -729,36 +729,36 @@ P2 = ProductSet(C, D)
         expect(await th.run(`S.Integers`)).equal(`[Z,mathbb]`);
     });
 
-    it.only("ImageSet", async () => {
+    it("ImageSet", async () => {
         await th.prepare(` x = Symbol('x')`)
         expect(await th.run(`ImageSet(Lambda(x, x**2), S.Naturals)`)).equal(`{[x][💪,[2]][ ][middle|,][ x∈][N,mathbb]}`);
         expect(await th.run(`ImageSet(Lambda(((x, y),), x + y), ProductSet({1, 2, 3}, {3, 4}))`)).equal(`{[x+y ][middle|,][ ]([x,y])[∈]{[1,2,3]}[×]{[3,4]}}`);
     });
 
-    it.only("ConditionSet", async () => {
+    it("ConditionSet", async () => {
         await th.prepare(` x = Symbol('x')`)
         expect(await th.run(`ConditionSet(x, Eq(x**2, 1), S.Reals)`)).equal(`{[x ][middle|,][ x∈][R,mathbb][∧x][💪,[2]][=1]}`);
         expect(await th.run(`ConditionSet(x, Eq(x**2, 1), S.UniversalSet)`)).equal(`{[x ][middle|,][ x][💪,[2]][=1]}`);
 
     })
-    it.only("ComplexRegion", async () => {
+    it("ComplexRegion", async () => {
         expect(await th.run(`ComplexRegion(Interval(3, 5)*Interval(4, 6))`)).equal(`{[iy+x ][middle|,][ x,y∈][[3,5]][×][[4,6]]}`);
         expect(await th.run(`ComplexRegion(Interval(0, 1)*Interval(0, 2*pi), polar=True)`)).equal(`{([i][sin,]([𝜃])[+][cos,]([𝜃]))[r ][middle|,][ r,𝜃∈][[0,1]][×][[0,2𝜋])}`);
 
     })
 
-    it.only("Contains", async () => {
+    it("Contains", async () => {
         expect(await th.run(`Contains(x, S.Naturals)`)).equal(`[x∈][N,mathbb]`);
     })
 
-    it.only("sum", async () => {
+    it("sum", async () => {
         expect(await th.run(`Sum(x*y**2, (x, -2, 2), (y, -5, 5))`)).equal(`[sum,[-2≤x≤2]💔[-5≤y≤5]][xy][💪,[2]]`);
         expect(await th.run(`Sum(x**2, (x, -2, 2))`)).equal(`[sum,[x=-2],[2]][x][💪,[2]]`);
         expect(await th.run(`Sum(x**2 + y, (x, -2, 2))`)).equal(`[sum,[x=-2],[2]]([y+x][💪,[2]])`);
         expect(await th.run(`Sum(x**2 + y, (x, -2, 2))**2`)).equal(`([sum,[x=-2],[2]]([y+x][💪,[2]]))[💪,[2]]`);
     });
 
-    it.only("product", async () => {
+    it("product", async () => {
         expect(await th.run(`Product(x*y**2, (x, -2, 2), (y, -5, 5))`)).equal(`[prod,[-2≤x≤2]💔[-5≤y≤5]][xy][💪,[2]]`);
         expect(await th.run(`Product(x**2, (x, -2, 2))`)).equal(`[prod,[x=-2],[2]][x][💪,[2]]`);
         expect(await th.run(`Product(x**2 + y, (x, -2, 2))`)).equal(`[prod,[x=-2],[2]]([y+x][💪,[2]])`);
@@ -766,7 +766,7 @@ P2 = ProductSet(C, D)
 
     });
 
-    it.only("limits", async () => {
+    it("limits", async () => {
         await th.prepare(`f = Function('f')`);
         expect(await th.run(`Limit(x, x, oo)`)).equal(`[lim,[x][rightarrow,][∞]][x]`);
         expect(await th.run(`Limit(f(x), x, 0)`)).equal(`[lim,[x][rightarrow,][0][💪,[+]]][f]([x])`);
@@ -775,7 +775,7 @@ P2 = ProductSet(C, D)
         expect(await th.run(`Limit(f(x), x, 0, dir='+-')`)).equal(`[lim,[x][rightarrow,][0]][f]([x])`);
     });
 
-    it.only("log", async () => {
+    it("log", async () => {
         await th.prepare(`y = symbols('y')`);
         expect(await th.run(`log(x)`)).equal(`[log,]([x])`);
         expect(await th.run(`ln(x)`)).equal(`[log,]([x])`);
@@ -783,7 +783,7 @@ P2 = ProductSet(C, D)
         expect(await th.run(`pow(log(x), x)`)).equal(`[log,]([x])[💪,[x]]`);
 
     })
-    it.only("sympy issue 3568", async () => {
+    it("sympy issue 3568", async () => {
         await th.prepare(` 
 beta = Symbol(r'\\beta')
 y1111 = beta + x
@@ -792,14 +792,62 @@ y1111 = beta + x
         expect(await th.run(`y1111`)).equal(`[𝛽+x]`);
     })
 
-    it.only("Rational", async () => {
+    it("Rational", async () => {
         expect(await th.run(`(2*tau)**Rational(7, 2)`)).equal(`[8][sqrt,[2]][𝜏][💪,[frac,[7],[2]]]`);
         expect(await th.run(`[2/x, y]`)).equal(`[[frac,[2],[x]][,y]]`);
 
     })
 
+
     it.only("dict", async () => {
-        expect(await th.run(`{Rational(1): 1, x**2: 2, x: 3, x**3: 4}`)).equal(`[[frac,[2],[x]][,y]]`);
+        expect(await th.run(`{Rational(1): 1, x**2: 2, x: 3, x**3: 4}`)).equal(`{[1:1,x][💪,[2]][:2,x:3,x][💪,[3]][:4]}`);
+        expect(await th.run(`Dict({Rational(1): 1, x**2: 2, x: 3, x**3: 4})`)).equal(`{[x][💪,[3]][:4,x:3,1:1,x][💪,[2]][:2]}`);
+
+    })
+
+    it.only("list", async () => {
+        expect(await th.run(`[Symbol('omega1'), Symbol('a'), Symbol('alpha')]`)).equal(`[[𝜔][⛏️,[1]][,a,𝛼]]`);
+    })
+
+    it.only("Rational2", async () => {
+        expect(await th.run(`-Rational(1, 2)`)).equal(`[-][frac,[1],[2]]`);
+        expect(await th.run(`Rational(-1, 2)`)).equal(`[-][frac,[1],[2]]`);
+        expect(await th.run(`Rational(1, -2)`)).equal(`[-][frac,[1],[2]]`);
+        expect(await th.run(`-Rational(-1, 2)`)).equal(`[frac,[1],[2]]`);
+        expect(await th.run(`-Rational(1, 2)*x`)).equal(`[-][frac,[x],[2]]`);
+        expect(await th.run(`-Rational(1, 2)*x + Rational(-2, 3)*y`)).equal(`[-][frac,[2y],[3]][-][frac,[x],[2]]`);
+
+    })
+
+    it.only("inverse", async () => {
+        expect(await th.run(`1/x`)).equal(`[frac,[1],[x]]`);
+        expect(await th.run(`1/(x + y)`)).equal(`[frac,[1],[x+y]]`);
+    });
+
+    it.only("DiracDelta", async () => {
+        expect(await th.run(`DiracDelta(x)`)).equal(`[𝛿]([x])`);
+        expect(await th.run(`DiracDelta(x)**2`)).equal(`[𝛿]([x])[💪,[2]]`);
+        expect(await th.run(`DiracDelta(x, 0)`)).equal(`[𝛿]([x])`);
+        expect(await th.run(`DiracDelta(x, 5)`)).equal(`[𝛿][💪,([5])]([x])`);
+        expect(await th.run(`DiracDelta(x, 5)**2`)).equal(`([𝛿][💪,([5])]([x]))[💪,[2]]`);
+
+    })
+
+    it.only("Heaviside", async () => {
+        expect(await th.run(`Heaviside(x)`)).equal(`[𝜃]([x])`);
+        expect(await th.run(`Heaviside(x)**2`)).equal(`([𝜃]([x]))[💪,[2]]`);
+    })
+
+    it.only("KroneckerDelta", async () => {
+    
+        expect(await th.run(`KroneckerDelta(x, y)`)).equal(`[𝛿][⛏️,[xy]]`);
+        expect(await th.run(`KroneckerDelta(x, y + 1)`)).equal(`[𝛿][⛏️,[x,1+y]]`);
+        expect(await th.run(`KroneckerDelta(x + 1, y)`)).equal(`[𝛿][⛏️,[y,1+x]]`);
+        expect(await th.run(`Pow(KroneckerDelta(x, y), 2, evaluate=False)`)).equal(`([𝛿][⛏️,[xy]])[💪,[2]]`);
+    })
+    
+    it.only("LeviCivita", async () => {
+        expect(await th.run(`LeviCivita(x, y, z)`)).equal(`([𝛿][⛏️,[xy]])[💪,[2]]`);
 
     })
 

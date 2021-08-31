@@ -4,7 +4,13 @@ import { P2PrItemBase } from "./p2pr-item-base"
 
 
 export class GenericFunc extends P2PrItemBase {
-    convert(obj: P2Pr.PGenericFunc): Symbol {
+    convert(obj: Omit<P2Pr.PGenericFunc, "func">): Symbol {
+        if (obj.name == "dict") {
+            return prTh.varList(this.m(obj.args).map(s => {
+                const ss = prTh.extractIfVarList(s);
+                return prTh.varList(ss, ":")
+            }), ",", "{")
+        }
         if (obj.name == "meijerg") {
             return prTh.varList([prTh.pow(
                 prTh.var("C"),
@@ -236,6 +242,24 @@ export class GenericFunc extends P2PrItemBase {
         }
 
 
+        if (obj.name == "KroneckerDelta" || obj.name == "DiracDelta") {
+            obj.name = "𝛿";
+            genOps.powerIndexPos = "power-after";
+        }
+        if (obj.name == "gamma") {
+            obj.name = "𝛤";
+        }
+        if (obj.name == "lowergamma") {
+            obj.name = "𝛾";
+        }
+        if (obj.name == "beta") {
+            obj.name = "B";
+            genOps.forceUsingOperatorName = true;
+        }
+        if (obj.name == "Chi") {
+            genOps.forceUsingOperatorName = true;
+        }
+
 
         if (ignoreParseName) {
             return { type: "GenericFunc", kind: "Container", func: obj.name, symbols: this.m(obj.args), ...genOps }
@@ -255,7 +279,7 @@ export class GenericFunc extends P2PrItemBase {
         return this.main.c(obj);
     }
 
-    private indexPowerBracketGenericFunc(obj: P2Pr.PGenericFunc, powConsumeCount: number, options?: Partial<P2Pr.GenericFunc>): P2Pr.Pow {
+    private indexPowerBracketGenericFunc(obj: Omit<P2Pr.PGenericFunc, "func">, powConsumeCount: number, options?: Partial<P2Pr.GenericFunc>): P2Pr.Pow {
         if (obj.args.length < powConsumeCount + 1) {
             throw new Error("not enough params");
         }
@@ -271,7 +295,7 @@ export class GenericFunc extends P2PrItemBase {
         }
     }
 
-    private secondArgAsIndexOfGenericFunc(obj: P2Pr.PGenericFunc, options?: Partial<P2Pr.GenericFunc>): P2Pr.Index {
+    private secondArgAsIndexOfGenericFunc(obj: Omit<P2Pr.PGenericFunc, "func">, options?: Partial<P2Pr.GenericFunc>): P2Pr.Index {
         if (obj.args.length != 2) {
             throw new Error("args length must be 2")
         }
@@ -285,7 +309,7 @@ export class GenericFunc extends P2PrItemBase {
         }
     }
 
-    private firstIndexOfGenericFuncWithPow(obj: P2Pr.PGenericFunc, powText: string, options?: Partial<P2Pr.GenericFunc>): P2Pr.Pow {
+    private firstIndexOfGenericFuncWithPow(obj: Omit<P2Pr.PGenericFunc, "func">, powText: string, options?: Partial<P2Pr.GenericFunc>): P2Pr.Pow {
         return {
             type: "Pow",
             kind: "Container",
@@ -297,7 +321,7 @@ export class GenericFunc extends P2PrItemBase {
         }
     }
 
-    private firstIndexOfGenericFunc(obj: P2Pr.PGenericFunc, options?: Partial<P2Pr.GenericFunc>): P2Pr.Index {
+    private firstIndexOfGenericFunc(obj: Omit<P2Pr.PGenericFunc, "func">, options?: Partial<P2Pr.GenericFunc>): P2Pr.Index {
         return {
             type: "Index",
             kind: "Container",

@@ -213,6 +213,21 @@ class __McHdl:
     def hdl_ComplexRegion(self, p):
         return {'func':'ComplexRegion',  'args': self.argsMap([p.expr, p.variables, p.sets])}
 
+    def hdl_dict(self, d):
+        items = []
+
+        for key in d.keys():
+            val = d[key]
+            items.append(Tuple(key,val))
+        
+        return { 'func':'GenericFunc', 'name':'dict',  'args': self.argsMap(items) }
+    
+    def hdl_Dict(self, d):
+        return { 'func':'GenericFunc', 'name':'dict',  'args': self.argsMap(d.args) }
+
+    def hdl_KroneckerDelta(self, d):
+        return { 'func':'KroneckerDelta',  'args': self.argsMap(d.args), 'isArgsAtom': d.args[0].is_Atom and d.args[1].is_Atom }
+
     def hdlFunctionClass(self, expr, name):
         return { 'func': 'FunctionClass', 'name': name, 'args': self.argsMap(expr.args) }
 
@@ -229,7 +244,7 @@ class __McHdl:
 
         if hasattr(expr.__class__, '__class__') and expr.__class__.__class__.__name__ == 'FunctionClass':
             funcName = expr.__class__.__name__
-            if funcName in ['KroneckerDelta','gamma','lowergamma','beta','DiracDelta','Chi']:
+            if funcName in ['KroneckerDelta','gamma','lowergamma','beta','Chi']:
                 return { 'func': 'SpecialFuncClass', 'name': funcName, 'args': self.argsMap(expr.args) }
         
         if expr.__class__.__name__ == 'FunctionClass':            
