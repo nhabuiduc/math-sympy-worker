@@ -38,12 +38,23 @@ class BlockBd {
     bracketBlock(bracket: BlockBd.SupportBracket): BlockModel {
         return { id: generator.nextId(), type: "single", text: bracket }
     }
-    hat(textOrBlocks: string | BlockModel[], style?: BlockStyle) {
+    over(textOrBlocks: string | BlockModel[], name: P2Pr.OverSymbol["op"], style?: BlockStyle) {
+        let latexName: "\\small-hat" | "\\overline" = "\\small-hat";
+        switch (name) {
+            case "hat": {
+                latexName = "\\small-hat";
+                break;
+            }
+            case "overline": {
+                latexName = "\\overline";
+                break;
+            }
+        }
         if (typeof textOrBlocks == "string") {
-            return this.compositeBlock("\\small-hat", ["value"], [[this.textBlock(textOrBlocks)]], style);
+            return this.compositeBlock(latexName, ["value"], [[this.textBlock(textOrBlocks)]], style);
         }
 
-        return this.compositeBlock("\\small-hat", ["value"], [textOrBlocks], style);
+        return this.compositeBlock(latexName, ["value"], [textOrBlocks], style);
     }
 
     normalText(text: string): BlockModel {

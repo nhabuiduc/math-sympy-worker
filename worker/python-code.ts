@@ -40,10 +40,10 @@ class __McHdl:
         return {'func': 'Poly','args': [self.hdlAll(expr.domain)]+ self.argsMap(expr.args) }
 
     def hdl_Integer(self, expr):
-        return {'func':'Integer', 'value':expr.p }
+        return {'func':'Integer', 'value':str(expr.p) }
 
     def hdl_int(self, expr):
-        return {'func':'Integer', 'value':expr }
+        return {'func':'Integer', 'value':str(expr) }
         
     
     def hdl_Dummy(self, expr):

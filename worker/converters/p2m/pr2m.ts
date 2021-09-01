@@ -46,7 +46,11 @@ export class Pr2M {
 
         switch (obj.type) {
             case "BinaryOp": {
-                return this.prCommon.opJoin(obj.symbols, obj.op, { wrapBracket: "if-op-exclude-mul-shortcut" });
+                const { op } = obj;
+                if (typeof op == "string") {
+                    return this.prCommon.opJoin(obj.symbols, op, { wrapBracket: "if-op-exclude-mul-shortcut" });
+                }
+                return this.prCommon.opJoin(obj.symbols, () => blockBd.compositeBlock(op.cp), { wrapBracket: "if-op-exclude-mul-shortcut" });
             }
             case "UnaryOp": {
                 const rsArg0 = this.innerConvert(obj.symbols[0], level);
@@ -138,12 +142,12 @@ export class Pr2M {
             case "Frac": {
                 return this.buildFrac(obj.symbols);
             }
-            case "One": {
-                return { blocks: [blockBd.textBlock("1")] };
-            }
-            case "Zero": {
-                return { blocks: [blockBd.textBlock("0")] };
-            }
+            // case "One": {
+            //     return { blocks: [blockBd.textBlock("1")] };
+            // }
+            // case "Zero": {
+            //     return { blocks: [blockBd.textBlock("0")] };
+            // }
             case "Half": {
                 return this.frac(
                     [blockBd.textBlock("1")],
@@ -194,7 +198,7 @@ export class Pr2M {
             //     return { blocks: name.concat(args) }
             // }
             case "OverSymbol": {
-                return { blocks: [blockBd.hat(this.convert(obj.symbols[0]).blocks, blockBd.style(obj)),] }
+                return { blocks: [blockBd.over(this.convert(obj.symbols[0]).blocks, obj.op, blockBd.style(obj)),] }
             }
             // case "BaseVector": {
             //     return {
@@ -277,26 +281,26 @@ export class Pr2M {
             //     }
             // }
 
-            case "SingularityFunction": {
-                return {
-                    blocks: [
-                        ...blockBd.wrapBetweenBrackets(this.innerConvert(obj.symbols[0], level).blocks, "<").blocks,
-                        blockBd.powerBlock(this.innerConvert(obj.symbols[1], level).blocks)
-                    ]
-                }
-            }
-            case "Conjugate": {
-                return {
-                    blocks: [blockBd.compositeBlock("\\overline", ["value"], [this.innerConvert(obj.symbols[0], level).blocks])],
-                    prUnit: "conjugate"
-                }
-            }
+            // case "SingularityFunction": {
+            //     return {
+            //         blocks: [
+            //             ...blockBd.wrapBetweenBrackets(this.innerConvert(obj.symbols[0], level).blocks, "<").blocks,
+            //             blockBd.powerBlock(this.innerConvert(obj.symbols[1], level).blocks)
+            //         ]
+            //     }
+            // }
+            // case "Conjugate": {
+            //     return {
+            //         blocks: [blockBd.compositeBlock("\\overline", ["value"], [this.innerConvert(obj.symbols[0], level).blocks])],
+            //         prUnit: "conjugate"
+            //     }
+            // }
             case "Order": {
                 return this.order.convert(obj);
             }
-            case "Mod": {
-                return this.prCommon.opJoin(obj.symbols, () => blockBd.compositeBlock("\\bmod"), { wrapBracket: "if-op-exclude-mul-shortcut" })
-            }
+            // case "Mod": {
+            //     return this.prCommon.opJoin(obj.symbols, () => blockBd.compositeBlock("\\bmod"), { wrapBracket: "if-op-exclude-mul-shortcut" })
+            // }
             case "Subs": {
                 return this.subs.convert(obj);
             }
@@ -305,18 +309,7 @@ export class Pr2M {
             case "Sum": {
                 return this.sum.convert(obj);
             }
-            // case "Union": {
-            //     return this.prCommon.opJoin(obj.symbols, "∪", { wrapBracket: "if-op-exclude-mul-shortcut" });
-            // }
-            // case "Intersection": {
-            //     return this.prCommon.opJoin(obj.symbols, "∩", { wrapBracket: "if-op-exclude-mul-shortcut" });
-            // }
-            // case "SymmetricDifference": {
-            //     return this.prCommon.opJoin(obj.symbols, "▵", { wrapBracket: "if-op-exclude-mul-shortcut" });
-            // }
-            // case "Complement": {
-            //     return this.prCommon.opJoin(obj.symbols, "⧵", { wrapBracket: "if-op-exclude-mul-shortcut" });
-            // }
+
             case "ProductSet": {
                 if (!obj.hasVariety && obj.symbols.length >= 1) {
                     return this.convert(prTh.pow(obj.symbols[0], prTh.int(obj.symbols.length)))
@@ -388,22 +381,6 @@ export class Pr2M {
         const fracBlock = blockBd.compositeBlock("\\frac", ["value", "sub1"], [enumerator, denominator]);
         return { blocks: [fracBlock], }
     }
-
-    // private joinBy(args: P2Pr.Symbol[], text: string): BlockModel[] {
-    //     const items = args.map(a => this.innerConvert(a, 0));
-    //     let blocks: BlockModel[] = [];
-    //     for (let idx = 0; idx < items.length; idx++) {
-    //         const item = items[idx];
-    //         if (idx > 0) {
-    //             blocks = blockBd.combineMultipleBlocks(blocks, [blockBd.textBlock(text)], item.blocks);
-    //         } else {
-    //             blocks = blockBd.combineMultipleBlocks(blocks, item.blocks);
-    //         }
-    //     }
-
-    //     return blocks;
-    // }
-
 }
 
 
@@ -413,7 +390,7 @@ type CResult = Pr2M.CResult;
 export namespace Pr2M {
     export interface CResult {
         blocks: BlockModel[];
-        prUnit?: "bracket" | "op" | "not" | undefined | "pow" | "conjugate" | "func";
+        prUnit?: "bracket" | "op" | "not" | undefined | "pow" | "func";
         prOp?: "mul" | "add";
         prBracket?: P2Pr.SupportBracket;
         prMinusSign?: boolean;

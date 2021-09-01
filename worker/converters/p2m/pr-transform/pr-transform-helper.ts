@@ -287,7 +287,7 @@ class PrTransformHelper {
     }
 
     considerPresentAsSingleUnitForPow(s: Symbol, cr: Pr2M.CResult) {
-        if (cr.prUnit == "bracket" || cr.prUnit == "conjugate") {
+        if (cr.prUnit == "bracket") {
             return true;
         }
 
@@ -487,7 +487,7 @@ class PrTransformHelper {
         return { type: "Integer", kind: "Leaf", value: vl };
     }
 
-    bin(ss: Symbol[], op: string): P2Pr.BinaryOp {
+    bin(ss: Symbol[], op: P2Pr.BinaryOp["op"]): P2Pr.BinaryOp {
         return { type: "BinaryOp", kind: "Container", op, symbols: ss };
     }
 

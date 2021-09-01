@@ -65,7 +65,8 @@ export class GenericFunc extends P2PrItemBase {
             return { type: "GenericFunc", kind: "Container", func: obj.name, powerIndexPos: "all-after", symbols: this.m(obj.args) }
         }
         if (obj.name == "conjugate") {
-            return { type: "Conjugate", kind: "Container", symbols: this.m(obj.args) };
+            return prTh.over("overline", this.c(obj.args[0]));
+            // return { type: "Conjugate", kind: "Container", symbols: this.m(obj.args) };
         }
         if (obj.name == "log") {
             return { type: "GenericFunc", kind: "Container", func: obj.name, powerIndexPos: "power-after", symbols: this.m(obj.args) }

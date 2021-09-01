@@ -42,21 +42,32 @@ export class P2Pr {
             case "Sum":
             case "Subs":
             case "Add":
-            case "Mod":
             case "Order": {
                 return { type: obj.func, kind: "Container", symbols: this.m(obj.args) }
+            }
+
+            case "Mod": {
+                return prTh.bin(this.m(obj.args), { cp: "\\bmod" });
             }
 
             case "BaseDyadic": {
                 return prTh.varList(this.m(obj.args), "|", "(");
             }
 
-            case "NegativeOne":
-            case "BooleanTrue":
-            case "BooleanFalse":
-            case "NaN":
+            case "NegativeOne": {
+                return prTh.var("-1", { nativeType: obj.func });
+            }
+            case "BooleanTrue": {
+                return prTh.var("True", { nativeType: obj.func });
+            }
+            case "BooleanFalse": {
+                return prTh.var("False", { nativeType: obj.func });
+            }
+            case "NaN": {
+                return prTh.var("NaN", { nativeType: obj.func });
+            }
             case "One": {
-                return { type: obj.func, kind: "Leaf" }
+                return prTh.var("1", { nativeType: obj.func });
             }
             case "CoordSys3D": {
                 return prTh.genFunc(obj.func, this.m(obj.args));
@@ -105,7 +116,8 @@ export class P2Pr {
 
 
             case "Integer": {
-                return { type: "Integer", kind: "Leaf", value: obj.value };
+
+                // return { type: "Integer", kind: "Leaf", value: obj.value };
             }
             case "Float": {
                 return float.parse(obj.value);
@@ -151,7 +163,8 @@ export class P2Pr {
                 return { type: "ConstantSymbol", kind: "Leaf", showType: "text", name: obj.name }
             }
             case "Zero": {
-                return { type: "Zero", kind: "Leaf" }
+                return prTh.var("0", { nativeType: obj.func });
+                // return { type: "Zero", kind: "Leaf" }
             }
 
             case "Half": {
@@ -205,7 +218,7 @@ export class P2Pr {
             }
 
             case "BaseScalar": {
-                const vIdx = P2Pr.parseIntegerConstant(obj.args[0]);
+                const vIdx = prTh.extractIntegerValue(obj.args[0]);
                 const system = obj.args[1] as P.CoordSys3D;
                 const vName = system.variableNames[vIdx];
                 const sName = (system.args[0] as P.Str).text;
@@ -310,7 +323,8 @@ export class P2Pr {
 
             }
             case "SingularityFunction": {
-                return { type: "SingularityFunction", kind: "Container", symbols: this.m(obj.args) }
+                const ss = this.m(obj.args);
+                return prTh.pow(prTh.varList([ss[0]], undefined, "<"), ss[1]);
             }
             case "Cycle": {
                 if (obj.perm.length == 0) {
@@ -465,15 +479,15 @@ export class P2Pr {
         return symbols[0].type == "One" || symbols.some((c, idx) => idx > 0 && prTh.isConstant(c));
     }
 
-    static parseIntegerConstant(s: P.Basic): number {
-        switch (s.func) {
-            case "One": return 1;
-            case "Zero": return 0;
-            case "Integer": return s.value;
-        }
+    // static parseIntegerConstant(s: P.Basic): number {
+    //     switch (s.func) {
+    //         case "One": return 1;
+    //         case "Zero": return 0;
+    //         case "Integer": return s.value;
+    //     }
 
-        throw new Error("Unsupported symbol for parsing integer");
-    }
+    //     throw new Error("Unsupported symbol for parsing integer");
+    // }
 }
 
 type Symbol = P2Pr.Symbol;
@@ -488,13 +502,13 @@ export namespace P2Pr {
         kind: "Leaf"
     }
 
-    export type Symbol = Mul | C<"Add"> | L<"One"> | L<"NegativeOne"> | Integer | Var | C<"Pow"> | Matrix | C<"Frac"> | Float | L<"Half"> | C<"Sqrt"> | GenericFunc |
+    export type Symbol = Mul | C<"Add"> | L<"One"> | L<"NegativeOne"> | Var | C<"Pow"> | Matrix | C<"Frac"> | L<"Half"> | C<"Sqrt"> | GenericFunc |
         L<"NaN"> | ConstantSymbol |
-        Derivative | L<"Zero"> | Relational | C<"Binomial"> | C<"Mod"> |
-        VarList | C<"Integral"> | C<"SingularityFunction"> | Index | JsonData
-        | C<"Conjugate"> | C<"Order"> | C<"Prescript"> | C<"PrescriptIdx"> | Subs | C<"Sum"> |
+        Derivative | Relational | C<"Binomial"> |
+        VarList | C<"Integral"> | Index | JsonData
+        | C<"Order"> | C<"Prescript"> | C<"PrescriptIdx"> | Subs | C<"Sum"> |
         ProductSet | C<"Product"> | C<"Limit"> |
-        C<"Piecewise"> | L<"BooleanTrue"> | L<"BooleanFalse"> | BinaryOp | UnaryOp | OverSymbol;
+        C<"Piecewise"> | BinaryOp | UnaryOp | OverSymbol;
 
 
 
@@ -503,7 +517,6 @@ export namespace P2Pr {
     export type Integral = C<"Integral">;
     export type Add = C<"Add">;
     export type Sqrt = C<"Sqrt">;
-    export type NegativeOne = L<"NegativeOne">;
     export type Pow = C<"Pow">;
     export type Prescript = C<"Prescript">;
     export type PrescriptIdx = C<"PrescriptIdx">;
@@ -511,7 +524,7 @@ export namespace P2Pr {
 
     export interface OverSymbol extends Container {
         type: "OverSymbol";
-        op: "hat";
+        op: "hat" | "overline";
         bold?: boolean;
         symbols: [Symbol]
     }
@@ -522,7 +535,8 @@ export namespace P2Pr {
 
     export interface BinaryOp extends Container {
         type: "BinaryOp";
-        op: string;
+        op: string | { cp: "\\bmod" };
+
     }
     export interface UnaryOp extends Container {
         type: "UnaryOp";
@@ -565,21 +579,22 @@ export namespace P2Pr {
         name: string;
     }
 
-    export interface Integer extends Leaf {
-        type: "Integer";
-        value: number;
-    }
+    // export interface Integer extends Leaf {
+    //     type: "Integer";
+    //     value: number;
+    // }
 
-    export interface Float extends Leaf {
-        type: "Float";
-        value: string;
-    }
+    // export interface Float extends Leaf {
+    //     type: "Float";
+    //     value: string;
+    // }
 
     export interface Var extends Leaf {
         type: "Var" | "Raw";
         name: string;
         bold?: boolean | "blackboard";
         normalText?: boolean;
+        nativeType?: "One" | "NegativeOne" | "Zero" | "Integer" | "Float" | "NaN" | "BooleanTrue" | "BooleanFalse"
     }
 
     // export interface Raw extends Leaf {
@@ -700,7 +715,7 @@ namespace P {
 
     export interface Integer {
         func: "Integer";
-        value: number;
+        value: string;
     }
 
     export interface Float {
