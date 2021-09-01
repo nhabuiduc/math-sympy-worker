@@ -12,7 +12,7 @@ export class Derivative extends Pr2MItemBase {
             return false;
         }
 
-        return !(prTh.considerPresentAsSingleUnit(s, cr));
+        return !(prTh.considerPresentAsSingleUnitInOpCtx(s, cr));
     }
 
     private combineCounting(s1: Symbol, s2: Symbol): Symbol {

@@ -46,13 +46,13 @@ export class Pr2M {
             case "BinaryOp": {
                 const { op } = obj;
                 if (typeof op == "string") {
-                    return this.prCommon.opJoin(obj.symbols, op, { wrapBracket: "if-op-exclude-mul-shortcut" });
+                    return this.prCommon.opJoin(obj.symbols, op, obj.wrapIfMulShorthand);
                 }
-                return this.prCommon.opJoin(obj.symbols, () => blockBd.compositeBlock(op.cp), { wrapBracket: "if-op-exclude-mul-shortcut" });
+                return this.prCommon.opJoin(obj.symbols, () => blockBd.compositeBlock(op.cp), obj.wrapIfMulShorthand);
             }
             case "UnaryOp": {
                 const rsArg0 = this.innerConvert(obj.symbols[0], level);
-                const expBlocks = prTh.considerPresentAsSingleUnitForPow(obj.symbols[0], rsArg0) ? rsArg0.blocks : blockBd.wrapBetweenBrackets(rsArg0.blocks).blocks
+                const expBlocks = prTh.considerPresentAsSingleUnitInOpCtx(obj.symbols[0], rsArg0, true) ? rsArg0.blocks : blockBd.wrapBetweenBrackets(rsArg0.blocks).blocks
                 if (obj.pos == "before") {
                     return { blocks: blockBd.joinBlocks([[blockBd.textBlock(obj.op)], expBlocks,]) }
                 }
@@ -178,7 +178,7 @@ export class Pr2M {
             case "GenericFunc": {
 
                 const { name, args } = this.genericFunc.buildGenericFunc(obj);
-                return { blocks: name.concat(args), prUnit: "func" }
+                return { blocks: name.concat(args) }
             }
 
             case "Matrix": {
@@ -197,7 +197,7 @@ export class Pr2M {
                     }
                 }
 
-                return { blocks: [matrixBlock], prUnit: obj.bracket ? "bracket" : undefined };
+                return { blocks: [matrixBlock], prBracket: obj.bracket ? obj.bracket : undefined };
             }
             // case "Str": {
             //     return { blocks: [blockBd.normalText(obj.text)] }
@@ -260,7 +260,7 @@ export class Pr2M {
                     blocks: [
                         blockBd.binomBlock(this.innerConvert(obj.symbols[0], 0).blocks, this.innerConvert(obj.symbols[1], 0).blocks)
                     ],
-                    prUnit: "bracket"
+                    prBracket: "("
                 }
             }
             case "Relational": {
@@ -403,12 +403,15 @@ type CResult = Pr2M.CResult;
 export namespace Pr2M {
     export interface CResult {
         blocks: BlockModel[];
-        prUnit?: "bracket" | "op" | "not" | undefined | "pow" | "func";
-        prOp?: "mul" | "add";
+        // prUnit?: "bracket" | "op" | "not" | undefined | "pow" | "func";
+        // prOp?: "mul" | "add";
         prBracket?: P2Pr.SupportBracket;
-        prMinusSign?: boolean;
+        // prMinusSign?: boolean;
         prMul?: {
             allInShortcutForm?: boolean;
+        }
+        prPow?: {
+            powMergedInFunc?: boolean;
         }
 
         // wrapBrackets?: "[" | "(";

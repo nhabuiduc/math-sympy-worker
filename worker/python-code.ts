@@ -231,9 +231,6 @@ class __McHdl:
     def hdl_LeviCivita(self, d):
         return { 'func':'LeviCivita',  'args': self.argsMap(d.args), 'isArgsAtom': all(x.is_Atom for x in d.args) }
 
-    def hdlFunctionClass(self, expr, name):
-        return { 'func': 'FunctionClass', 'name': name, 'args': self.argsMap(expr.args) }
-
     def hdlGenericFunc(self, name, args):
         dic = {}
         dic['func'] = 'GenericFunc' 
@@ -245,10 +242,8 @@ class __McHdl:
     def hdlOthers(self, expr):
         dic = { 'func':'GenericFunc', 'args':[] }        
 
-        if hasattr(expr.__class__, '__class__') and expr.__class__.__class__.__name__ == 'FunctionClass':
-            funcName = expr.__class__.__name__
-            if funcName in ['KroneckerDelta','gamma','lowergamma','beta','Chi']:
-                return { 'func': 'SpecialFuncClass', 'name': funcName, 'args': self.argsMap(expr.args) }
+        if hasattr(expr.__class__,'__class__') and expr.__class__.__class__.__name__ == 'UndefinedFunction':
+            return { 'func': 'UndefinedFunction', 'name': expr.__class__.__name__, 'args': self.argsMap(expr.args) }
         
         if expr.__class__.__name__ == 'FunctionClass':            
             dic['name']= expr.__name__

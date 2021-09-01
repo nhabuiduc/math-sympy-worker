@@ -137,7 +137,6 @@ export class PrFracTransform implements P2Pr.IPrTransform {
             const children = symbol.symbols.map(c => this.transformNumeratorMinus(c, ctx));
             const [num, den] = children;
             if (this.isFracPartNegative(num) && !this.isFracPartNegative(den)) {
-                console.log(num, den)
                 ctx.applyFound = true;
                 return prTh.mul(prTh.negativeOne(), prTh.frac(this.removeNegativePart(num), den));
 

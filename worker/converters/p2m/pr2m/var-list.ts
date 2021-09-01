@@ -19,6 +19,7 @@ export class VarList extends Pr2MItemBase {
             blocks = blockBd.flattenBlocks(this.main.convertMaps(obj.symbols))
         }
 
+        
         if (obj.bracket) {
             return blockBd.wrapBetweenBrackets(blocks, obj.bracket, obj.rightBracket);
         }

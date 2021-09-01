@@ -53,7 +53,7 @@ export class Integral extends Pr2MItemBase {
             return false;
         }
 
-        return !(prTh.considerPresentAsSingleUnit(s, cr));
+        return !(prTh.considerPresentAsSingleUnitInOpCtx(s, cr));
     }
 
     private intBlockByCount(count: number): CompositeBlockModel {

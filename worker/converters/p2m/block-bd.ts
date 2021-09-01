@@ -74,7 +74,7 @@ class BlockBd {
     // lines(blockModel)
 
 
-    operatorFuncBlock(name: string, constantTextFuncSet: Set<string>, symbolLatexNames: { [key: string]: string }): BlockModel {
+    operatorFuncBlock(name: string, constantTextFuncSet: Set<string>, symbolLatexNames: { [key: string]: string }, forceOp:boolean): BlockModel {
         let mappedMcFuncName = sympyToMcConstantFuncs[name] || name;
         if (constantTextFuncSet.has(mappedMcFuncName)) {
             return this.opConstantBlock(name);
@@ -84,7 +84,7 @@ class BlockBd {
             mappedMcFuncName = symbolLatexNames[mappedMcFuncName];
         }
 
-        if (stringHelper.length(mappedMcFuncName) == 1) {
+        if (stringHelper.length(mappedMcFuncName) == 1 && !forceOp) {
             return blockBd.textBlock(mappedMcFuncName);
         }
 
@@ -242,17 +242,17 @@ class BlockBd {
     //     return this.wrapBetweenBrackets(this.joinBlocks(blockss, join), bracketType);
     // }
 
-    wrapBracketIfConsiderSingleUnit(s: Symbol, rs: Pr2M.CResult): Pr2M.CResult {
-        if (prTh.considerPresentAsSingleUnit(s, rs)) {
+    wrapBracketIfNotUnitInOpCtx(s: Symbol, rs: Pr2M.CResult, wrapEvenShortHand?: boolean): Pr2M.CResult {
+        if (prTh.considerPresentAsSingleUnitInOpCtx(s, rs, wrapEvenShortHand)) {
             return rs;
         }
 
         return this.wrapBetweenBrackets(rs.blocks);
     }
 
-    wrapBracketIfOp(rs: Pr2M.CResult): BlockModel[] {
-        return (rs.prUnit == "op") ? this.wrapBetweenBrackets(rs.blocks).blocks : rs.blocks;
-    }
+    // wrapBracketIfOp(rs: Pr2M.CResult): BlockModel[] {
+    //     return (rs.prUnit == "op") ? this.wrapBetweenBrackets(rs.blocks).blocks : rs.blocks;
+    // }
 
     joinBlocks(blockss: BlockModel[][], textOrBlock?: string | (() => BlockModel | BlockModel[])) {
         let rs: BlockModel[] = [];
@@ -286,7 +286,6 @@ class BlockBd {
         const latexRight = this.rightLatexBracketName(rightBracketType || bracketType);
         return {
             blocks: [blockBd.bracketBlock(latexLeft)].concat(blocks).concat([blockBd.bracketBlock(latexRight)]),
-            prUnit: "bracket",
             prBracket: bracketType,
         }
     }

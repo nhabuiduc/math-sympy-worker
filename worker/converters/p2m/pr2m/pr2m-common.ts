@@ -5,34 +5,34 @@ import { Pr2MItemBase } from "./pr2m-item-base";
 
 export class Pr2MCommon extends Pr2MItemBase {
 
-    private ifOpPowDeprecate = (item: Pr2M.CResult): boolean => {
-        return item.prUnit == "op";
-    }
-    private ifOpExcludeMulShortcutDeprecate = (item: Pr2M.CResult): boolean => {
-        if (item.prUnit != "op") {
-            return false;
-        }
+    // private ifOpPowDeprecate = (item: Pr2M.CResult): boolean => {
+    //     return item.prUnit == "op";
+    // }
+    // private ifOpExcludeMulShortcutDeprecate = (item: Pr2M.CResult): boolean => {
+    //     if (item.prUnit != "op") {
+    //         return false;
+    //     }
 
-        if (item.prOp == "mul" && item.prMul?.allInShortcutForm) {
-            return false;
-        }
+    //     if (item.prOp == "mul" && item.prMul?.allInShortcutForm) {
+    //         return false;
+    //     }
 
-        return true;
-    }
+    //     return true;
+    // }
 
-    private alwaysFalse = () => {
-        return false;
-    }
+    // private alwaysFalse = () => {
+    //     return false;
+    // }
 
-    private getDeprecate(type: Pr2MCommon.JoinOptions["wrapBracket"]): (item: Pr2M.CResult) => boolean {
-        if (!type) {
-            return this.alwaysFalse;
-        }
-        if (type == "if-op-exclude-mul-shortcut") {
-            return this.ifOpExcludeMulShortcutDeprecate;
-        }
-        return this.ifOpPowDeprecate;
-    }
+    // private getDeprecate(type: Pr2MCommon.JoinOptions["wrapBracket"]): (item: Pr2M.CResult) => boolean {
+    //     if (!type) {
+    //         return this.alwaysFalse;
+    //     }
+    //     if (type == "if-op-exclude-mul-shortcut") {
+    //         return this.ifOpExcludeMulShortcutDeprecate;
+    //     }
+    //     return this.ifOpPowDeprecate;
+    // }
 
     equals(s1: Symbol, s2: Symbol): Pr2M.CResult {
         return { blocks: blockBd.joinBlocks([this.main.convert(s1).blocks, this.main.convert(s2).blocks], "=") }
@@ -48,15 +48,13 @@ export class Pr2MCommon extends Pr2MItemBase {
         }
     }
 
-    opJoin(args: P2Pr.Symbol[], textOrBlock?: string | (() => BlockModel), options?: Pr2MCommon.JoinOptions): Pr2M.CResult {
-        options = options || { wrapBracket: "if-op" }
+    opJoin(args: P2Pr.Symbol[], textOrBlock?: string | (() => BlockModel), wrapEvenShortHand?: boolean): Pr2M.CResult {
         let items = args.map(a => this.main.convert(a));
 
         let blocks: BlockModel[] = [];
-        const deprecate = this.getDeprecate(options.wrapBracket);
         for (let idx = 0; idx < items.length; idx++) {
             const item = items[idx];
-            let curBlocks = (deprecate && deprecate(item)) ? blockBd.wrapBracketIfOp(item) : item.blocks;
+            let curBlocks = blockBd.wrapBracketIfNotUnitInOpCtx(args[idx], item, wrapEvenShortHand).blocks;
 
             if (idx == 0 || !textOrBlock) {
                 blocks = blockBd.combine2Blockss(blocks, curBlocks);
@@ -66,7 +64,7 @@ export class Pr2MCommon extends Pr2MItemBase {
             blocks = blockBd.combineMultipleBlocks(blocks, typeof textOrBlock == "string" ? [blockBd.textBlock(textOrBlock)] : [textOrBlock()], curBlocks);
         }
 
-        return { blocks, prUnit: "op" };
+        return { blocks };
     }
 }
 

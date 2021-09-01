@@ -3,7 +3,7 @@ import { _l } from "@sympy-worker/light-lodash";
 import type { P2Pr } from "../p2pr";
 import { Pr2M } from "../pr2m";
 import dequal from "deep-equal";
-import { } from "./pr-symbol-visually-info";
+import { prSymbolVisuallyInfo } from "./pr-symbol-visually-info";
 
 
 const enum EnumPosWeight {
@@ -289,35 +289,31 @@ class PrTransformHelper {
     // }
 
     considerPresentAsSingleUnitForPow(s: Symbol, cr: Pr2M.CResult) {
-        if (cr.prUnit == "bracket") {
-            return true;
-        }
+        const info = prSymbolVisuallyInfo.check(s, cr);
+        return info.prPowerIndex == "unit";
+        // if (cr.prUnit == "bracket") {
+        //     return true;
+        // }
 
-        if (s.type == "Frac") {
-            return true;
-        }
+        // if (s.type == "Frac") {
+        //     return true;
+        // }
 
-        if (this.isSingleVar(s)) {
-            return true;
-        }
+        // if (this.isSingleVar(s)) {
+        //     return true;
+        // }
 
-        if (this.isPositiveOrZeroIntegerValue(s) || this.isPositiveOrZeroFloatValue(s)) {
-            return true;
-        }
+        // if (this.isPositiveOrZeroIntegerValue(s) || this.isPositiveOrZeroFloatValue(s)) {
+        //     return true;
+        // }
     }
 
-    considerPresentAsSingleUnit(s: Symbol, cr: Pr2M.CResult) {
-        if (this.considerPresentAsSingleUnitForPow(s, cr)) {
-            return true;
+    considerPresentAsSingleUnitInOpCtx(s: Symbol, cr: Pr2M.CResult, wrapEvenShortHand?: boolean) {
+        const info = prSymbolVisuallyInfo.check(s, cr);
+        if (wrapEvenShortHand && info.isMulShorthand) {
+            return false;
         }
-
-        if (cr.prUnit == "op" && cr.prOp == "mul" && cr.prMul?.allInShortcutForm) {
-            return true;
-        }
-
-        if (s.type == "Pow" || s.type == "Frac" || cr.prUnit == "func" || s.type == "Integral" || s.type == "Derivative") {
-            return true;
-        }
+        return info.prOp == "unit";
     }
 
     isPositiveOrZeroFloatValue(s: Symbol): boolean {
@@ -414,8 +410,8 @@ class PrTransformHelper {
     varList(ss: Symbol[], op?: Partial<P2Pr.VarList>): P2Pr.VarList;
 
     varList(ss: Symbol[], separatorOrOp?: P2Pr.VarList["separator"] | Partial<P2Pr.VarList>, br?: P2Pr.VarList["bracket"], rightBr?: P2Pr.VarList["bracket"], sSpacing?: P2Pr.VarList["separatorSpacing"]): P2Pr.VarList {
-        if (typeof separatorOrOp == "string") {
-            return { type: "VarList", kind: "Container", symbols: ss, separator: separatorOrOp, bracket: br, rightBracket: rightBr, separatorSpacing: sSpacing };
+        if (typeof separatorOrOp == "string" || !separatorOrOp) {
+            return { type: "VarList", kind: "Container", symbols: ss, separator: separatorOrOp as P2Pr.VarList["separator"], bracket: br, rightBracket: rightBr, separatorSpacing: sSpacing };
         }
         return { type: "VarList", kind: "Container", symbols: ss, ...separatorOrOp };
     }
@@ -540,8 +536,8 @@ class PrTransformHelper {
         return this.int(vl)
     }
 
-    bin(ss: Symbol[], op: P2Pr.BinaryOp["op"]): P2Pr.BinaryOp {
-        return { type: "BinaryOp", kind: "Container", op, symbols: ss };
+    bin(ss: Symbol[], op: P2Pr.BinaryOp["op"], more?: Partial<P2Pr.BinaryOp>): P2Pr.BinaryOp {
+        return { type: "BinaryOp", kind: "Container", op, symbols: ss, ...more };
     }
 
     unary(s: Symbol, op: string, pos: P2Pr.UnaryOp["pos"] = "after"): P2Pr.UnaryOp {

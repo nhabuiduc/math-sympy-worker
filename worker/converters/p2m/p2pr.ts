@@ -58,10 +58,10 @@ export class P2Pr {
                 return prTh.var("-1", { nativeType: obj.func });
             }
             case "BooleanTrue": {
-                return prTh.var("True", { nativeType: obj.func });
+                return prTh.var("True", { nativeType: obj.func, normalText: true });
             }
             case "BooleanFalse": {
-                return prTh.var("False", { nativeType: obj.func });
+                return prTh.var("False", { nativeType: obj.func, normalText: true });
             }
             case "NaN": {
                 return prTh.var("NaN", { nativeType: obj.func });
@@ -83,16 +83,16 @@ export class P2Pr {
             }
 
             case "Cross": {
-                return prTh.bin(this.m(obj.args), "×");
+                return prTh.bin(this.m(obj.args), "×", { wrapIfMulShorthand: true });
             }
             case "Curl": {
-                return prTh.bin([prTh.var("∇") as Symbol].concat(this.m(obj.args)), "×");
+                return prTh.bin([prTh.var("∇") as Symbol].concat(this.m(obj.args)), "×", { wrapIfMulShorthand: true });
             }
             case "Divergence": {
-                return prTh.bin([prTh.var("∇") as Symbol].concat(this.m(obj.args)), "⋅");
+                return prTh.bin([prTh.var("∇") as Symbol].concat(this.m(obj.args)), "⋅", { wrapIfMulShorthand: true });
             }
             case "Dot": {
-                return prTh.bin(this.m(obj.args), "⋅");
+                return prTh.bin(this.m(obj.args), "⋅", { wrapIfMulShorthand: true });
             }
             case "Gradient": {
                 return prTh.unary(this.c(obj.args[0]), "∇", "before")
@@ -177,7 +177,7 @@ export class P2Pr {
                 return { type: "Matrix", kind: "Container", bracket: "[", row: obj.row, col: obj.col, symbols: this.m(obj.args) }
             }
 
-            case "SpecialFuncClass":
+            
             case "GenericFunc": {
                 return this.genericFunc.convert(obj);
             }
@@ -324,7 +324,7 @@ export class P2Pr {
             }
             case "SingularityFunction": {
                 const ss = this.m(obj.args);
-                return prTh.pow(prTh.varList([ss[0]], undefined, "<"), ss[1]);
+                return prTh.pow(prTh.varList([ss[0]], { bracket: "<" }), ss[1]);
             }
             case "Cycle": {
                 if (obj.perm.length == 0) {
@@ -541,6 +541,7 @@ export namespace P2Pr {
     export interface BinaryOp extends Container {
         type: "BinaryOp";
         op: string | { cp: "\\bmod" };
+        wrapIfMulShorthand?: boolean;
 
     }
     export interface UnaryOp extends Container {
@@ -682,7 +683,7 @@ namespace P {
         Relational | List | Dummy | F<"Poly"> | F<"Abs"> | F<"Order"> | F<"Ynm"> | F<"Znm"> | F<"Indexed"> | F<"IndexedBase"> |
         F<"PolynomialRing"> | DisplayedDomain | UndefinedFunction | F<"Integral"> | F<"Not"> | F<"And"> | F<"Or"> | F<"Implies"> |
         F<"SingularityFunction"> | F<"FallingFactorial"> | F<"RisingFactorial"> | F<"LambertW"> | F<"Mod"> |
-        Cycle | F<"Cross"> | F<"Curl"> | F<"Divergence"> | F<"Dot"> | F<"Gradient"> | F<"Laplacian"> | SpecialFuncClass |
+        Cycle | F<"Cross"> | F<"Curl"> | F<"Divergence"> | F<"Dot"> | F<"Gradient"> | F<"Laplacian"> | 
         F<"Subs"> | F<"Set"> | F<"FiniteSet"> | F<"Interval"> | F<"Range"> | SeqFormula | F<"FourierSeries"> |
         F<"Sum"> | F<"AccumulationBounds"> | U<"EmptySet"> | U<"UniversalSet"> | F<"Operator"> | F<"Union"> |
         F<"Intersection"> | F<"SymmetricDifference"> | F<"Complement"> | U<"Reals"> | U<"Naturals"> | U<"Complexes"> |
@@ -798,10 +799,7 @@ namespace P {
         func: "Cycle";
         perm: number[][];
     }
-    export interface SpecialFuncClass extends FuncArgs {
-        func: "SpecialFuncClass";
-        name: string;
-    }
+    
     export interface SeqFormula extends FuncArgs {
         func: "SeqFormula";
         freeSymbol: boolean;

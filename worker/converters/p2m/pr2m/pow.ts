@@ -20,9 +20,11 @@ export class Pow extends Pr2MItemBase {
         let { blocks: base } = arg0Cr;
         const power = this.main.convert(args[1]).blocks;
 
+        const prPow: Pr2M.CResult["prPow"] = {};
         let preventWrapBracket = false;
         if (args[0].type == "Pow" && args[0].symbols[0].type == "GenericFunc" && args[0].symbols[0].allowAncesstorPowerAtEnd) {
             preventWrapBracket = true;
+            prPow.powMergedInFunc = true;
         }
 
         if (!prTh.considerPresentAsSingleUnitForPow(args[0], arg0Cr) && !preventWrapBracket) {
@@ -32,10 +34,10 @@ export class Pow extends Pr2MItemBase {
         if (args[2]) {
             const index = this.main.convert(args[2]).blocks;
             const cBlock = blockBd.compositeBlock("\\power-index", ["powerValue", "indexValue"], [power, index]);
-            return { blocks: base.concat([cBlock]), prUnit: "pow", };
+            return { blocks: base.concat([cBlock]), };
 
         }
-        return { blocks: base.concat([blockBd.compositeBlock("\\power-index", ["powerValue"], [power])]), prUnit: "pow", }
+        return { blocks: base.concat([blockBd.compositeBlock("\\power-index", ["powerValue"], [power])]), }
     }
 
     private handlePowToGenericFunc(powArgs: P2Pr.Symbol[]): Pr2M.CResult {
@@ -50,7 +52,7 @@ export class Pow extends Pr2MItemBase {
             const index = this.main.convert(powArgs[2]).blocks;
             powerBlock = blockBd.compositeBlock("\\power-index", ["powerValue"], [power]);
             const indexBlock = blockBd.compositeBlock("\\power-index", ["indexValue"], [index]);
-            return { blocks: [...name, indexBlock, ...args, powerBlock], prUnit: "pow" }
+            return { blocks: [...name, indexBlock, ...args, powerBlock], prPow: { powMergedInFunc: true } }
         }
 
         if (powArgs[2]) {
@@ -65,7 +67,7 @@ export class Pow extends Pr2MItemBase {
 
         return {
             blocks: rsBlocks,
-            prUnit: "pow",
+            prPow: { powMergedInFunc: true }
         }
     }
 }
