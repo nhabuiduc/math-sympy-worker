@@ -7,7 +7,6 @@ import { Derivative } from "./pr2m/derivative";
 import { Integral } from "./pr2m/integral";
 import { Float } from "./pr2m/float";
 import { Mul } from "./pr2m/mul";
-import { Discrete } from "./pr2m/discrete";
 import { Add } from "./pr2m/add";
 import { Pow } from "./pr2m/pow";
 import { Order } from "./pr2m/order";
@@ -25,7 +24,6 @@ export class Pr2M {
     private integral = new Integral(this);
     private float = new Float(this);
     private mul = new Mul(this);
-    private discrete = new Discrete(this);
     private add = new Add(this);
     private pow = new Pow(this);
     private order = new Order(this);
@@ -47,6 +45,17 @@ export class Pr2M {
     private innerConvert(obj: P2Pr.Symbol, level: number): CResult {
 
         switch (obj.type) {
+            case "BinaryOp": {
+                return this.prCommon.opJoin(obj.symbols, obj.op, { wrapBracket: "if-op-exclude-mul-shortcut" });
+            }
+            case "UnaryOp": {
+                const rsArg0 = this.innerConvert(obj.symbols[0], level);
+                const expBlocks = prTh.considerPresentAsSingleUnitForPow(obj.symbols[0], rsArg0) ? rsArg0.blocks : blockBd.wrapBetweenBrackets(rsArg0.blocks).blocks
+                if (obj.pos == "before") {
+                    return { blocks: blockBd.joinBlocks([[blockBd.textBlock(obj.op)], expBlocks,]) }
+                }
+                return { blocks: blockBd.joinBlocks([expBlocks, [blockBd.textBlock(obj.op)]]) }
+            }
             case "Add": {
                 return this.add.convert(obj);
             }
@@ -58,10 +67,6 @@ export class Pr2M {
             }
             case "Float": {
                 return this.float.convert(obj);
-            }
-            case "Discrete": {
-                return this.discrete.convert(obj);
-
             }
             case "NaN": {
                 return {
@@ -86,7 +91,7 @@ export class Pr2M {
             }
             case "Raw":
             case "Var": {
-                return this.convertVarRawSymbol(obj);
+                return { blocks: [blockBd.textBlock(obj.name, blockBd.style(obj))] }
             }
             case "VarList": {
                 return this.varList.convert(obj);
@@ -94,18 +99,18 @@ export class Pr2M {
             case "Mul": {
                 return this.mul.convert(obj);
             }
-            case "VecExpr": {
-                switch (obj.op) {
-                    case "Cross": return this.prCommon.opJoin(obj.symbols, "×");
-                    case "Curl": return this.prCommon.opJoin([prTh.var("∇") as Symbol].concat(obj.symbols), "×");
-                    case "Divergence": return this.prCommon.opJoin([prTh.var("∇") as Symbol].concat(obj.symbols), "⋅");
-                    case "Dot": return this.prCommon.opJoin(obj.symbols, "⋅");
-                    case "Gradient": return this.prCommon.opJoin([prTh.var("∇") as Symbol].concat(obj.symbols));
-                    case "Laplacian": return this.prCommon.opJoin([prTh.var("▵") as Symbol].concat(obj.symbols));
-                }
+            // case "VecExpr": {
+            //     switch (obj.op) {
+            //         case "Cross": return this.prCommon.opJoin(obj.symbols, "×");
+            //         case "Curl": return this.prCommon.opJoin([prTh.var("∇") as Symbol].concat(obj.symbols), "×");
+            //         case "Divergence": return this.prCommon.opJoin([prTh.var("∇") as Symbol].concat(obj.symbols), "⋅");
+            //         case "Dot": return this.prCommon.opJoin(obj.symbols, "⋅");
+            //         case "Gradient": return this.prCommon.opJoin([prTh.var("∇") as Symbol].concat(obj.symbols));
+            //         case "Laplacian": return this.prCommon.opJoin([prTh.var("▵") as Symbol].concat(obj.symbols));
+            //     }
 
-                // return this.common.join(obj.symbols, "×");
-            }
+            //     // return this.common.join(obj.symbols, "×");
+            // }
             case "Pow": {
                 return this.pow.convert(obj);
             }
@@ -159,35 +164,6 @@ export class Pr2M {
                 const { name, args } = this.genericFunc.buildGenericFunc(obj);
                 return { blocks: name.concat(args), prUnit: "func" }
             }
-            case "Factorial": {
-                const rsArg0 = this.innerConvert(obj.symbols[0], level);
-                return {
-                    blocks: blockBd.joinBlocks([
-                        prTh.considerPresentAsSingleUnitForPow(obj.symbols[0], rsArg0) ? rsArg0.blocks : blockBd.wrapBetweenBrackets(rsArg0.blocks).blocks,
-                        [blockBd.textBlock("!")],
-                    ]),
-                    prUnit: "factorial"
-                }
-            }
-            case "Factorial2": {
-                const rsArg0 = this.innerConvert(obj.symbols[0], level);
-                return {
-                    blocks: blockBd.joinBlocks([
-                        prTh.considerPresentAsSingleUnitForPow(obj.symbols[0], rsArg0) ? rsArg0.blocks : blockBd.wrapBetweenBrackets(rsArg0.blocks).blocks,
-                        [blockBd.textBlock("!!")],
-                    ]),
-                    prUnit: "factorial"
-                }
-            }
-            case "SubFactorial": {
-                const rsArg0 = this.innerConvert(obj.symbols[0], level);
-                return {
-                    blocks: blockBd.joinBlocks([
-                        [blockBd.textBlock("!")],
-                        prTh.considerPresentAsSingleUnitForPow(obj.symbols[0], rsArg0) ? rsArg0.blocks : blockBd.wrapBetweenBrackets(rsArg0.blocks).blocks,
-                    ]),
-                }
-            }
 
             case "Matrix": {
                 const matrixBlock = blockBd.compositeBlock("\\matrix", [], []) as MatrixLikeBlockModel;
@@ -207,59 +183,62 @@ export class Pr2M {
 
                 return { blocks: [matrixBlock], prUnit: obj.bracket ? "bracket" : undefined };
             }
-            case "Str": {
-                return { blocks: [blockBd.normalText(obj.text)] }
-            }
+            // case "Str": {
+            //     return { blocks: [blockBd.normalText(obj.text)] }
+            // }
 
-            case "CoordSys3D": {
-                const { name, args } = this.genericFunc.buildGenericFunc({
-                    type: "GenericFunc", func: "CoordSys3D", kind: "Container", symbols: obj.symbols
-                })
-                return { blocks: name.concat(args) }
+            // case "CoordSys3D": {
+            //     const { name, args } = this.genericFunc.buildGenericFunc({
+            //         type: "GenericFunc", func: "CoordSys3D", kind: "Container", symbols: obj.symbols
+            //     })
+            //     return { blocks: name.concat(args) }
+            // }
+            case "OverSymbol": {
+                return { blocks: [blockBd.hat(this.convert(obj.symbols[0]).blocks, blockBd.style(obj)),] }
             }
-            case "BaseVector": {
-                return {
-                    blocks: [
-                        blockBd.hat(obj.name, { mathType: "\\mathbf" }),
-                    ]
-                }
-            }
-            case "BaseScalar": {
-                return {
-                    blocks: [
-                        blockBd.textBlock(obj.name, { mathType: "\\mathbf" }),
-                    ]
-                }
-            }
-            case "VectorZero": {
-                return {
-                    blocks: [
-                        blockBd.hat("0", { mathType: "\\mathbf" }),
-                    ]
-                }
-            }
+            // case "BaseVector": {
+            //     return {
+            //         blocks: [
+            //             blockBd.hat(obj.name, { mathType: "\\mathbf" }),
+            //         ]
+            //     }
+            // }
+            // case "BaseScalar": {
+            //     return {
+            //         blocks: [
+            //             blockBd.textBlock(obj.name, { mathType: "\\mathbf" }),
+            //         ]
+            //     }
+            // }
+            // case "VectorZero": {
+            //     return {
+            //         blocks: [
+            //             blockBd.hat("0", { mathType: "\\mathbf" }),
+            //         ]
+            //     }
+            // }
 
-            case "BaseDyadic": {
-                const first = this.innerConvert(obj.symbols[0], 0).blocks;
-                const second = this.innerConvert(obj.symbols[1], 0).blocks;
-                return blockBd.wrapBetweenBrackets(
-                    first.concat([blockBd.compositeBlock("\\middle|", [], []) as BlockModel].concat(second))
-                );
-            }
+            // case "BaseDyadic": {
+            //     const first = this.innerConvert(obj.symbols[0], 0).blocks;
+            //     const second = this.innerConvert(obj.symbols[1], 0).blocks;
+            //     return blockBd.wrapBetweenBrackets(
+            //         first.concat([blockBd.compositeBlock("\\middle|", [], []) as BlockModel].concat(second))
+            //     );
+            // }
             case "Derivative": {
                 return this.derivative.convert(obj, level);
             }
             case "Integral": {
                 return { blocks: this.integral.convert(obj) };
             }
-            case "Exp": {
-                return {
-                    blocks: [
-                        blockBd.textBlock("e"),
-                        blockBd.powerBlock(this.innerConvert(obj.symbols[0], 0).blocks)
-                    ]
-                }
-            }
+            // case "Exp": {
+            //     return {
+            //         blocks: [
+            //             blockBd.textBlock("e"),
+            //             blockBd.powerBlock(this.innerConvert(obj.symbols[0], 0).blocks)
+            //         ]
+            //     }
+            // }
             case "Binomial": {
                 return {
                     blocks: [
@@ -277,26 +256,26 @@ export class Pr2M {
                     ]
                 }
             }
-            case "Poly": {
-                const args = obj.symbols.map(c => this.innerConvert(c, 0).blocks);
-                const domain = [blockBd.normalText("Domain="), ...this.innerConvert(obj.domain, 0).blocks];
-                return blockBd.argumentBlocks(args.concat([domain]), ",")
-            }
-            case "PolynomialRing": {
-                return {
-                    blocks: [
-                        ...this.innerConvert(obj.domain, 0).blocks,
-                        ...blockBd.argumentBlocks(obj.symbols.map(s => this.innerConvert(s, 0).blocks), ",", "[").blocks,
-                    ]
-                }
-            }
-            case "DisplayedDomain": {
-                return {
-                    blocks: [
-                        blockBd.textBlock(obj.name, { mathType: "\\mathbb" })
-                    ]
-                }
-            }
+            // case "Poly": {
+            //     const domain = [blockBd.normalText("Domain="), ...this.innerConvert(obj.domain, 0).blocks];
+            //     const args = obj.symbols.map(c => this.innerConvert(c, 0).blocks);
+            //     return blockBd.argumentBlocks(args.concat([domain]), ",")
+            // }
+            // case "PolynomialRing": {
+            //     return {
+            //         blocks: [
+            //             ...this.innerConvert(obj.domain, 0).blocks,
+            //             ...blockBd.argumentBlocks(obj.symbols.map(s => this.innerConvert(s, 0).blocks), ",", "[").blocks,
+            //         ]
+            //     }
+            // }
+            // case "DisplayedDomain": {
+            //     return {
+            //         blocks: [
+            //             blockBd.textBlock(obj.name, { mathType: "\\mathbb" })
+            //         ]
+            //     }
+            // }
 
             case "SingularityFunction": {
                 return {
@@ -326,23 +305,44 @@ export class Pr2M {
             case "Sum": {
                 return this.sum.convert(obj);
             }
-            case "Union": {
-                return this.prCommon.opJoin(obj.symbols, "∪", { wrapBracket: "if-op-exclude-mul-shortcut" });
-            }
-            case "Intersection": {
-                return this.prCommon.opJoin(obj.symbols, "∩", { wrapBracket: "if-op-exclude-mul-shortcut" });
-            }
-            case "SymmetricDifference": {
-                return this.prCommon.opJoin(obj.symbols, "▵", { wrapBracket: "if-op-exclude-mul-shortcut" });
-            }
-            case "Complement": {
-                return this.prCommon.opJoin(obj.symbols, "⧵", { wrapBracket: "if-op-exclude-mul-shortcut" });
-            }
+            // case "Union": {
+            //     return this.prCommon.opJoin(obj.symbols, "∪", { wrapBracket: "if-op-exclude-mul-shortcut" });
+            // }
+            // case "Intersection": {
+            //     return this.prCommon.opJoin(obj.symbols, "∩", { wrapBracket: "if-op-exclude-mul-shortcut" });
+            // }
+            // case "SymmetricDifference": {
+            //     return this.prCommon.opJoin(obj.symbols, "▵", { wrapBracket: "if-op-exclude-mul-shortcut" });
+            // }
+            // case "Complement": {
+            //     return this.prCommon.opJoin(obj.symbols, "⧵", { wrapBracket: "if-op-exclude-mul-shortcut" });
+            // }
             case "ProductSet": {
                 if (!obj.hasVariety && obj.symbols.length >= 1) {
                     return this.convert(prTh.pow(obj.symbols[0], prTh.int(obj.symbols.length)))
                 }
                 return this.prCommon.opJoin(obj.symbols, "×");
+            }
+            case "BooleanTrue": {
+                return { blocks: [blockBd.normalText("True")] }
+            }
+            case "BooleanFalse": {
+                return { blocks: [blockBd.normalText("False")] }
+            }
+            case "Piecewise": {
+                const pairs: [BlockModel[], BlockModel[]][] = obj.symbols.map(({ symbols: ss }: P2Pr.VarList) => {
+                    const isCondTrue = ss[1].type == "BooleanTrue";
+                    return [
+                        this.convert(ss[0]).blocks,
+                        blockBd.combineBlocks([
+                            isCondTrue ? blockBd.normalText("otherwise") : blockBd.normalText("for"),
+                            blockBd.textBlock(" "),
+                            ...(isCondTrue ? [] : this.convert(ss[1]).blocks)
+                        ])
+                    ] as [BlockModel[], BlockModel[]]
+                });
+
+                return { blocks: [blockBd.matrixFromTexts(pairs, undefined, "\\cases")] }
             }
         }
 
@@ -365,21 +365,6 @@ export class Pr2M {
 
         return "="
     }
-
-    private convertVarRawSymbol(obj: { name: string, bold?: boolean | "blackboard", }): CResult {
-        let style: BlockStyle = undefined;
-        if (obj.bold == "blackboard") {
-            style = { ...style, mathType: "\\mathbb" }
-        } else if (obj.bold) {
-            style = { ...style, mathType: "\\mathbf" }
-        }
-        return {
-            blocks: [
-                blockBd.textBlock(obj.name, style)
-            ],
-        }
-    }
-
 
     private frac(numerator: BlockModel[], denominator: BlockModel[]): CResult {
         return {
@@ -428,7 +413,7 @@ type CResult = Pr2M.CResult;
 export namespace Pr2M {
     export interface CResult {
         blocks: BlockModel[];
-        prUnit?: "bracket" | "op" | "not" | undefined | "pow" | "factorial" | "conjugate" | "func";
+        prUnit?: "bracket" | "op" | "not" | undefined | "pow" | "conjugate" | "func";
         prOp?: "mul" | "add";
         prBracket?: P2Pr.SupportBracket;
         prMinusSign?: boolean;

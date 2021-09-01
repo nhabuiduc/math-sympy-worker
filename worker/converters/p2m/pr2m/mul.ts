@@ -24,7 +24,7 @@ export class Mul extends Pr2MItemBase {
                 continue;
             }
 
-            const blocksToAdd = this.shouldWrapBrackets(idx, item) ? blockBd.wrapBetweenBrackets(item.blocks).blocks : item.blocks;
+            const blocksToAdd = this.shouldWrapBrackets(curArg, item, idx == 0) ? blockBd.wrapBetweenBrackets(item.blocks).blocks : item.blocks;
 
             if (idx > 0 && (this.shouldSeparateByMulSymbol(prevAdjacentArg, symbols[idx]))) {
                 blocks = blockBd.combineMultipleBlocks(blocks, [blockBd.textBlock("×")], blocksToAdd);
@@ -73,12 +73,16 @@ export class Mul extends Pr2MItemBase {
         return this.firstShouldPosfixMul(prev) && this.secondShouldPrefixMul(cur);
     }
 
-    private shouldWrapBrackets(idx: number, cResult: Pr2M.CResult): boolean {
-        if (cResult.prUnit == "op") {
-            return true;
+    private shouldWrapBrackets(s: Symbol, cResult: Pr2M.CResult, isFirst: boolean): boolean {
+        // if (cResult.prUnit == "op") {
+        //     return true;
+        // }
+        if (isFirst && cResult.prMinusSign) {
+            return false;
         }
 
-        return cResult.prMinusSign && idx > 0;
+        return !prTh.considerPresentAsSingleUnit(s, cResult);
+
     }
 
     private secondShouldPrefixMul(s: Symbol): boolean {

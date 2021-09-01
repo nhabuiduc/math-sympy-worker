@@ -36,7 +36,7 @@ export class GenericFunc extends P2PrItemBase {
         }
 
         if (obj.name == "exp") {
-            return { type: "Exp", kind: "Container", symbols: this.m(obj.args) }
+            return prTh.pow(prTh.var("e"), this.c(obj.args[0]))
         }
         if (obj.name == "binomial") {
             return { type: "Binomial", kind: "Container", symbols: this.m(obj.args) }
@@ -44,14 +44,15 @@ export class GenericFunc extends P2PrItemBase {
         if (obj.name == "NoneType") {
             return { type: "ConstantSymbol", kind: "Leaf", showType: "text", name: "None" }
         }
+
         if (obj.name == "factorial") {
-            return { type: "Factorial", kind: "Container", symbols: this.m(obj.args) }
+            return prTh.unary(this.c(obj.args[0]), "!");
         }
         if (obj.name == "subfactorial") {
-            return { type: "SubFactorial", kind: "Container", symbols: this.m(obj.args) }
+            return prTh.unary(this.c(obj.args[0]), "!", "before");
         }
         if (obj.name == "factorial2") {
-            return { type: "Factorial2", kind: "Container", symbols: this.m(obj.args) }
+            return prTh.unary(this.c(obj.args[0]), "!!");
         }
         if (obj.name == "floor") {
             return prTh.brackets(this.m(obj.args), "floor");
@@ -259,6 +260,22 @@ export class GenericFunc extends P2PrItemBase {
         if (obj.name == "Chi") {
             genOps.forceUsingOperatorName = true;
         }
+        if (obj.name == "mathieuc") {
+            obj.name = "C";
+            genOps.powerIndexPos = "power-after";
+        }
+        if (obj.name == "mathieus") {
+            obj.name = "S";
+            genOps.powerIndexPos = "power-after";
+        }
+        if (obj.name == "mathieucprime") {
+            obj.name = "C";
+            return prTh.pow({ type: "GenericFunc", kind: "Container", func: obj.name, symbols: this.m(obj.args), allowAncesstorPowerAtEnd: true }, prTh.var("′"),)
+        }
+        if (obj.name == "mathieusprime") {
+            obj.name = "S";
+            return prTh.pow({ type: "GenericFunc", kind: "Container", func: obj.name, symbols: this.m(obj.args), allowAncesstorPowerAtEnd: true }, prTh.var("′"))
+        }
 
 
         if (ignoreParseName) {
@@ -269,6 +286,20 @@ export class GenericFunc extends P2PrItemBase {
             return { type: "GenericFunc", kind: "Container", func: cn, symbols: this.m(obj.args), ...genOps }
         })
 
+    }
+
+    convertOf(obj: P2Pr.PF<"LambertW"> | P2Pr.PF<"Ynm"> | P2Pr.PF<"Znm">) {
+        switch (obj.func) {
+            case "LambertW": {
+                return this.secondIndexOfGenericFunc({ name: "W", args: obj.args, func: "GenericFunc" });
+            }
+            case "Ynm": {
+                return this.indexPowerGenericFunc({ name: "Y", args: obj.args, func: "GenericFunc" });
+            }
+            case "Znm": {
+                return this.indexPowerGenericFunc({ name: "Z", args: obj.args, func: "GenericFunc" });
+            }
+        }
     }
 
     private m(args: P2Pr.PBasic[]): Symbol[] {
@@ -328,6 +359,37 @@ export class GenericFunc extends P2PrItemBase {
             symbols: [
                 { type: "GenericFunc", kind: "Container", func: obj.name, symbols: obj.args.slice(1).map(c => this.c(c)), ...options },
                 this.c(obj.args[0])
+            ]
+        }
+    }
+
+    private secondIndexOfGenericFunc(obj: P2Pr.PGenericFunc, options?: Partial<P2Pr.GenericFunc>): P2Pr.Symbol {
+        if (obj.args[1]) {
+            return {
+                type: "Index",
+                kind: "Container",
+                symbols: [
+                    { type: "GenericFunc", kind: "Container", func: obj.name, symbols: [this.c(obj.args[0])], ...options },
+                    this.c(obj.args[1])
+                ]
+            }
+        }
+
+        return { type: "GenericFunc", kind: "Container", func: obj.name, symbols: [this.c(obj.args[0])], ...options }
+    }
+
+    private indexPowerGenericFunc(obj: P2Pr.PGenericFunc, options?: Partial<P2Pr.GenericFunc>): P2Pr.Pow {
+        if (obj.args.length < 2) {
+            throw new Error("not enough params");
+        }
+
+        return {
+            type: "Pow",
+            kind: "Container",
+            symbols: [
+                { type: "GenericFunc", kind: "Container", func: obj.name, symbols: obj.args.slice(2).map(c => this.c(c)), ...options },
+                this.c(obj.args[1]),
+                this.c(obj.args[0]),
             ]
         }
     }

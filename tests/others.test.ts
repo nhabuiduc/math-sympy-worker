@@ -8,6 +8,10 @@ describe("3: Others", () => {
         await th.prepare(`
         x_star = Symbol('x^*')
         f = Function('f')`);
+        await th.prepare(`
+x, y, z, t, w, a, b, c, s, p = symbols('x y z t w a b c s p')
+k, m, n = symbols('k m n', integer=True)
+`)
 
         await th.prepare(defineSympyExprDumpFunc);
     });
@@ -847,7 +851,33 @@ y1111 = beta + x
     })
     
     it.only("LeviCivita", async () => {
-        expect(await th.run(`LeviCivita(x, y, z)`)).equal(`([𝛿][⛏️,[xy]])[💪,[2]]`);
+        expect(await th.run(`LeviCivita(x, y, z)`)).equal(`[𝜀][⛏️,[xyz]]`);
+        expect(await th.run(`LeviCivita(x, y, z)**2`)).equal(`([𝜀][⛏️,[xyz]])[💪,[2]]`);
+        expect(await th.run(`LeviCivita(x, y, z + 1)`)).equal(`[𝜀][⛏️,[x,y,1+z]]`);
+        expect(await th.run(`LeviCivita(x, y + 1, z)`)).equal(`[𝜀][⛏️,[x,1+y,z]]`);
+        expect(await th.run(`LeviCivita(x + 1, y, z)`)).equal(`[𝜀][⛏️,[1+x,y,z]]`);
+    })
+    
+    it.only("mathieu", async () => {
+        expect(await th.run(`mathieuc(x, y, z)`)).equal(`[C]([x,y,z])`);
+        expect(await th.run(`mathieus(x, y, z)`)).equal(`[S]([x,y,z])`);
+        expect(await th.run(`mathieuc(x, y, z)**2`)).equal(`[C]([x,y,z])[💪,[2]]`);
+        expect(await th.run(`mathieus(x, y, z)**2`)).equal(`[S]([x,y,z])[💪,[2]]`);
+        expect(await th.run(`mathieucprime(x, y, z)`)).equal(`[C][💪,[′]]([x,y,z])`);
+        expect(await th.run(`mathieusprime(x, y, z)`)).equal(`[S][💪,[′]]([x,y,z])`);
+        expect(await th.run(`mathieucprime(x, y, z)**2`)).equal(`[C][💪,[′]]([x,y,z])[💪,[2]]`);
+        expect(await th.run(`mathieusprime(x, y, z)**2`)).equal(`[S][💪,[′]]([x,y,z])[💪,[2]]`);
+    })
+    it.only("Piecewise", async () => {
+        expect(await th.run(`Piecewise((x, x < 1), (x**2, True))`)).equal(`[🏓cases,[x],[📜,[for]][ x<1],[x][💪,[2]],[📜,[otherwise]][ ]]`);
+        expect(await th.run(`Piecewise((x, x < 0), (0, x >= 0))`)).equal(`[🏓cases,[x],[📜,[for]][ x<0],[0],[📜,[otherwise]][ ]]`);
+        
+        await th.prepare(`
+A, B = symbols("A B", commutative=False)
+p = Piecewise((A**2, Eq(A, B)), (A*B, True))
+        `);
+        expect(await th.run(`p`)).equal(`[🏓cases,[A][💪,[2]],[📜,[for]][ A=B],[AB],[📜,[otherwise]][ ]]`);
+        expect(await th.run(`A*p`)).equal(`[🏓cases,[A][💪,[2]],[📜,[for]][ A=B],[AB],[📜,[otherwise]][ ]]`);
 
     })
 

@@ -17,7 +17,7 @@ class __McHdl:
         return {'func': 'UndefinedFunction', 'name': str(expr), 'args': []}
 
     def hdl_PolynomialRing(self, expr):
-        return {'func': 'PolynomialRing', 'domain': self.hdlAll(expr.domain), 'args': self.argsMap(expr.symbols) }
+        return {'func': 'PolynomialRing', 'args':[self.hdlAll(expr.domain)] + self.argsMap(expr.symbols) }
     
     def hdl_MatrixBase(self, expr):
         l = []
@@ -37,7 +37,7 @@ class __McHdl:
         return {'func':'Symbol', 'name':expr.name }
     
     def hdl_Poly(self, expr):
-        return {'func': 'Poly', 'domain': self.hdlAll(expr.domain), 'args': self.argsMap(expr.args) }
+        return {'func': 'Poly','args': [self.hdlAll(expr.domain)]+ self.argsMap(expr.args) }
 
     def hdl_Integer(self, expr):
         return {'func':'Integer', 'value':expr.p }
@@ -227,6 +227,9 @@ class __McHdl:
 
     def hdl_KroneckerDelta(self, d):
         return { 'func':'KroneckerDelta',  'args': self.argsMap(d.args), 'isArgsAtom': d.args[0].is_Atom and d.args[1].is_Atom }
+
+    def hdl_LeviCivita(self, d):
+        return { 'func':'LeviCivita',  'args': self.argsMap(d.args), 'isArgsAtom': all(x.is_Atom for x in d.args) }
 
     def hdlFunctionClass(self, expr, name):
         return { 'func': 'FunctionClass', 'name': name, 'args': self.argsMap(expr.args) }

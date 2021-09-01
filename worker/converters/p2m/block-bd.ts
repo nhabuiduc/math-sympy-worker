@@ -38,12 +38,26 @@ class BlockBd {
     bracketBlock(bracket: BlockBd.SupportBracket): BlockModel {
         return { id: generator.nextId(), type: "single", text: bracket }
     }
-    hat(text: string, style?: BlockStyle) {
-        return this.compositeBlock("\\small-hat", ["value"], [[this.textBlock(text)]], style);
+    hat(textOrBlocks: string | BlockModel[], style?: BlockStyle) {
+        if (typeof textOrBlocks == "string") {
+            return this.compositeBlock("\\small-hat", ["value"], [[this.textBlock(textOrBlocks)]], style);
+        }
+
+        return this.compositeBlock("\\small-hat", ["value"], [textOrBlocks], style);
     }
 
     normalText(text: string): BlockModel {
         return this.compositeBlock("\\text", ["textValue"], [[this.textBlock(text)]]);
+    }
+
+    style(obj: { bold?: boolean | "blackboard" }): BlockStyle {
+        let style: BlockStyle = undefined;
+        if (obj.bold == "blackboard") {
+            style = { ...style, mathType: "\\mathbb" }
+        } else if (obj.bold) {
+            style = { ...style, mathType: "\\mathbf" }
+        }
+        return style;
     }
 
     // lines(blockModel)
@@ -81,8 +95,8 @@ class BlockBd {
         return block;
     }
 
-    matrixFromTexts(texts: string[][], bracket: "(" | "["): MatrixLikeBlockModel {
-        const matrixBlock = this.compositeBlock("\\matrix", [], []) as MatrixLikeBlockModel;
+    matrixFromTexts(texts: string[][] | BlockModel[][][], bracket: "(" | "[" | undefined, matrixName: "\\matrix" | "\\cases" = "\\matrix"): MatrixLikeBlockModel {
+        const matrixBlock = this.compositeBlock(matrixName, [], []) as MatrixLikeBlockModel;
         matrixBlock.bracket = bracket;
         matrixBlock.row = texts.length;
         matrixBlock.column = texts[0].length;
@@ -90,7 +104,8 @@ class BlockBd {
         for (let rIdx = 0; rIdx < matrixBlock.row; rIdx++) {
             for (let cIdx = 0; cIdx < matrixBlock.column; cIdx++) {
                 const cellKey = tabularKeyInfoHelper.getKeyFromRowCol(rIdx, cIdx);
-                const editor = this.editorFrom([this.textBlock(texts[rIdx][cIdx])]);
+                const val = texts[rIdx][cIdx];
+                const editor = this.editorFrom(typeof val == "string" ? [blockBd.textBlock(val)] : val);
                 (matrixBlock.elements[cellKey] as EditorModel) = editor;
             }
         }
@@ -126,7 +141,7 @@ class BlockBd {
 
     compositeBlock(
         name: "\\power-index" | "\\frac" | "\\sqrt" | "\\matrix" | "\\text" | "\\small-tilde" | "\\small-hat" | "\\middle|" |
-            "\\operatorname" | "\\overline" | "\\rightarrow" | "\\bmod" | "\\prescript",
+            "\\operatorname" | "\\overline" | "\\rightarrow" | "\\bmod" | "\\prescript" | "\\cases",
         elementNames?: ("powerValue" | "indexValue" | "value" | "sub1" | "textValue")[],
         innerBlocks?: BlockModel[][],
         style?: BlockStyle): CompositeBlockModel;
@@ -212,9 +227,9 @@ class BlockBd {
         return rs;
     }
 
-    argumentBlocks(blockss: BlockModel[][], join: string, bracketType: "(" | "[" = "("): Pr2M.CResult {
-        return this.wrapBetweenBrackets(this.joinBlocks(blockss, join), bracketType);
-    }
+    // argumentBlocks(blockss: BlockModel[][], join: string, bracketType: "(" | "[" = "("): Pr2M.CResult {
+    //     return this.wrapBetweenBrackets(this.joinBlocks(blockss, join), bracketType);
+    // }
 
     wrapBracketIfConsiderSingleUnit(s: Symbol, rs: Pr2M.CResult): Pr2M.CResult {
         if (prTh.considerPresentAsSingleUnit(s, rs)) {

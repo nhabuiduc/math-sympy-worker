@@ -150,6 +150,7 @@ const commonFuncReducedMap = {
     "power-index": "💪",
     "small-hat": "🎩",
     "operatorname": "⚙️",
+    "text": "📜",
 }
 
 const constFuncs = [

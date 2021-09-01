@@ -3,6 +3,7 @@ import { _l } from "@sympy-worker/light-lodash";
 import type { P2Pr } from "../p2pr";
 import { Pr2M } from "../pr2m";
 import dequal from "deep-equal";
+import { } from "./pr-symbol-visually-info";
 
 
 const enum EnumPosWeight {
@@ -278,13 +279,23 @@ class PrTransformHelper {
     isSingleVar(s: Symbol): boolean {
         return s.type == "Var" && stringHelper.length(s.name) == 1;
     }
+    isSingleConstantName(s: Symbol): boolean {
+        return s.type == "ConstantSymbol" && stringHelper.length(s.name) == 1;
+    }
+    isSingleRawName(s: Symbol): boolean {
+        return s.type == "Raw" && stringHelper.length(s.name) == 1;
+    }
 
     considerPresentAsSingleUnitForPow(s: Symbol, cr: Pr2M.CResult) {
-        if (cr.prUnit == "bracket" || cr.prUnit == "factorial" || cr.prUnit == "conjugate") {
+        if (cr.prUnit == "bracket" || cr.prUnit == "conjugate") {
             return true;
         }
 
-        if (this.isSingleVar(s)) {
+        if (s.type == "Frac") {
+            return true;
+        }
+
+        if (this.isSingleVar(s) || this.isSingleConstantName(s) || this.isSingleRawName(s)) {
             return true;
         }
 
@@ -294,15 +305,7 @@ class PrTransformHelper {
     }
 
     considerPresentAsSingleUnit(s: Symbol, cr: Pr2M.CResult) {
-        if (cr.prUnit == "bracket" || cr.prUnit == "factorial" || cr.prUnit == "conjugate") {
-            return true;
-        }
-
-        if (this.isSingleVar(s)) {
-            return true;
-        }
-
-        if (this.isPositiveOrZeroIntegerValue(s) || this.isPositiveOrZeroFloatValue(s)) {
+        if (this.considerPresentAsSingleUnitForPow(s, cr)) {
             return true;
         }
 
@@ -310,11 +313,9 @@ class PrTransformHelper {
             return true;
         }
 
-        if (s.type == "Exp" || s.type == "Pow" || s.type == "Frac" || cr.prUnit == "func" || s.type == "Integral" || s.type == "Derivative") {
+        if (s.type == "Pow" || s.type == "Frac" || cr.prUnit == "func" || s.type == "Integral" || s.type == "Derivative") {
             return true;
         }
-
-
     }
 
     isPositiveOrZeroFloatValue(s: Symbol): boolean {
@@ -364,11 +365,21 @@ class PrTransformHelper {
         return s.type == "One" || (s.type == "Integer" && s.value == 1);
     }
 
-    var(text: string): P2Pr.Var {
-        return { type: "Var", kind: "Leaf", name: text };
+    var(text: string, more?: Partial<P2Pr.Var>): P2Pr.Var | Symbol {
+        return { type: "Var", kind: "Leaf", name: text, ...more };
     }
-    raw(text: string): P2Pr.Raw {
-        return { type: "Raw", kind: "Leaf", name: text };
+    raw(text: string, more?: Partial<P2Pr.Var>): P2Pr.Var {
+        return { type: "Raw", kind: "Leaf", name: text, ...more };
+    }
+    str(text: string): P2Pr.Var {
+        return { type: "Raw", kind: "Leaf", name: text, normalText: true };
+    }
+
+    over(op: P2Pr.OverSymbol["op"], s: Symbol | string, more?: Partial<P2Pr.OverSymbol>): P2Pr.OverSymbol {
+        if (typeof s == "string") {
+            return { type: "OverSymbol", kind: "Container", op, symbols: [this.var(s)], ...more }
+        }
+        return { type: "OverSymbol", kind: "Container", op, symbols: [s], ...more }
     }
 
     singleOrBrackets(ss: Symbol[]): Symbol {
@@ -476,7 +487,13 @@ class PrTransformHelper {
         return { type: "Integer", kind: "Leaf", value: vl };
     }
 
+    bin(ss: Symbol[], op: string): P2Pr.BinaryOp {
+        return { type: "BinaryOp", kind: "Container", op, symbols: ss };
+    }
 
+    unary(s: Symbol, op: string, pos: P2Pr.UnaryOp["pos"] = "after"): P2Pr.UnaryOp {
+        return { type: "UnaryOp", kind: "Container", op, symbols: [s], pos };
+    }
 
     frac(num: Symbol, den: Symbol): P2Pr.Frac {
         return {
