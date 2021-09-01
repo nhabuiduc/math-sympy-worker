@@ -36,11 +36,7 @@ export class PrFracTransform implements P2Pr.IPrTransform {
                             (num as P2Pr.Pow).symbols[0],
                             (den as P2Pr.Pow).symbols[0]
                         ]
-                    }, {
-                        type: "Integer",
-                        kind: "Leaf",
-                        value: foundNumber
-                    }]
+                    }, prTh.int(foundNumber)]
 
                 }
             }
@@ -55,17 +51,20 @@ export class PrFracTransform implements P2Pr.IPrTransform {
         return symbol;
     }
 
-    private findSameExactPositivePower(num: Symbol, den: Symbol): number | "not-found" {
-        if (!(num.type == "Pow" && num.symbols[1].type == "Integer" && num.symbols[1].value > 1)) {
+    private findSameExactPositivePower(num: Symbol, den: Symbol): string | "not-found" {
+        if (!(num.type == "Pow" && prTh.isPositiveInt(num.symbols[1]))) {
             return "not-found";
         }
-        if (!(den.type == "Pow" && den.symbols[1].type == "Integer" && den.symbols[1].value > 1)) {
+        if (!(den.type == "Pow" && prTh.isPositiveInt(den.symbols[1]))) {
             return "not-found";
         }
 
-        if (num.symbols[1].value == den.symbols[1].value) {
-            return num.symbols[1].value;
+        if (num.symbols[1].type == "Var" && den.symbols[1].type == "Var") {
+            if (num.symbols[1].name == den.symbols[1].name) {
+                return num.symbols[1].name;
+            }
         }
+
 
         return "not-found";
     }
@@ -75,7 +74,7 @@ export class PrFracTransform implements P2Pr.IPrTransform {
             const children = symbol.symbols.map(c => this.transformLogFrac(c));
             const [num, den] = children;
             if (num.type == "GenericFunc" && num.func == "log" && den.type == "GenericFunc" && den.func == "log") {
-                if (den.symbols.length == 1 && den.symbols[0].type == "Integer") {
+                if (den.symbols.length == 1 && prTh.isIntType(den.symbols[0])) {
                     return prTh.index(
                         {
                             type: "GenericFunc",
@@ -111,9 +110,9 @@ export class PrFracTransform implements P2Pr.IPrTransform {
             let rsSymbols: Symbol[] = [];
             let currentSign = 1;
             for (const s of children) {
-                if (s.type == "NegativeOne") {
+                if (prTh.isNegativeOne(s)) {
                     currentSign = -currentSign;
-                } else if (s.type == "One") {
+                } else if (prTh.isOne(s)) {
 
                 } else {
                     rsSymbols.push(s);
@@ -121,7 +120,7 @@ export class PrFracTransform implements P2Pr.IPrTransform {
             }
 
             if (currentSign < 0) {
-                rsSymbols = [{ type: "NegativeOne", kind: "Leaf" } as Symbol].concat(rsSymbols);
+                rsSymbols = [prTh.negativeOne() as Symbol].concat(rsSymbols);
             }
 
             return { ...symbol, symbols: rsSymbols };
@@ -157,42 +156,43 @@ export class PrFracTransform implements P2Pr.IPrTransform {
     }
 
     private isFracPartNegative(s: Symbol): s is FracSignReversableSymbol {
-        if (s.type == "NegativeOne") {
+        if (prTh.isNegativeInt(s)) {
             return true;
         }
 
-        if (s.type == "Integer" && s.value < 0) {
-            return true;
-        }
 
-        if (s.type == "Mul" && prTh.isNegativeOne(s.symbols[0])) {
-            return true;
-        }
-        if (s.type == "Mul" && s.symbols[0].type == "Integer" && s.symbols[0].value < 0) {
+        if (s.type == "Mul" && prTh.isNegativeInt(s.symbols[0])) {
             return true;
         }
     }
 
     private removeNegativePart(s: FracSignReversableSymbol): Symbol {
-        switch (s.type) {
-            case "Integer": return { ...s, value: -s.value }
-            case "NegativeOne": return { type: "One", kind: "Leaf" }
-            case "Mul": {
-                if (prTh.isNegativeOne(s.symbols[0])) {
-                    if (s.symbols.length == 2) {
-                        return s.symbols[1];
-                    }
-                    return { ...s, symbols: s.symbols.slice(1) }
-                }
+        if (s.type == "Var") {
+            if (prTh.isNegativeOne(s)) {
+                return prTh.one();
+            }
 
-                if (s.symbols[0].type == "Integer") {
-                    return {
-                        ...s,
-                        symbols: [{ ...s.symbols[0], value: -s.symbols[0].value } as Symbol].concat(s.symbols.slice(1))
-                    }
+            if (prTh.isNegativeInt(s)) {
+                return prTh.int(s.name.substr(1))
+            }
+        }
+
+        else if (s.type == "Mul") {
+            if (prTh.isNegativeOne(s.symbols[0])) {
+                if (s.symbols.length == 2) {
+                    return s.symbols[1];
+                }
+                return { ...s, symbols: s.symbols.slice(1) }
+            }
+
+            if (prTh.isNegativeInt(s.symbols[0])) {
+                return {
+                    ...s,
+                    symbols: [{ ...s.symbols[0], name: s.symbols[0].name.substr(1) } as Symbol].concat(s.symbols.slice(1))
                 }
             }
         }
+
 
         return s;
     }
@@ -307,7 +307,7 @@ export class PrFracTransform implements P2Pr.IPrTransform {
 
 
     private isInverseFrac(symbol: Symbol): symbol is P2Pr.Frac {
-        return symbol.type == "Frac" && prTh.isSymbolValueOne(symbol.symbols[0])
+        return symbol.type == "Frac" && prTh.isOne(symbol.symbols[0])
     }
 
     private transformMulFrac(symbol: Symbol): Symbol {
@@ -359,8 +359,8 @@ export class PrFracTransform implements P2Pr.IPrTransform {
     }
 
     private filterOutOneSymbol(symbols: Symbol[]): Symbol[] {
-        const rs = symbols.filter(c => !prTh.isSymbolValueOne(c));
-        return rs.length <= 0 ? [{ type: "One", kind: "Leaf" }] : rs;
+        const rs = symbols.filter(c => !prTh.isOne(c));
+        return rs.length <= 0 ? [prTh.one()] : rs;
     }
 
     private wrapMulIfRequire(symbols: Symbol[]): Symbol {
@@ -375,7 +375,7 @@ export class PrFracTransform implements P2Pr.IPrTransform {
 type Symbol = P2Pr.Symbol;
 
 
-type FracSignReversableSymbol = P2Pr.NegativeOne | P2Pr.Integer | P2Pr.Mul;
+type FracSignReversableSymbol = P2Pr.Var | P2Pr.Mul;
 
 interface TransformCtx {
     applyFound: boolean;

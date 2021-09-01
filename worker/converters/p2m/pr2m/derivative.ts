@@ -20,7 +20,7 @@ export class Derivative extends Pr2MItemBase {
             return s1 || s2;
         }
 
-        if (prTh.isIntegerValue(s1) && prTh.isIntegerValue(s2)) {
+        if (prTh.isInt(s1) && prTh.isInt(s2)) {
             return prTh.int(prTh.extractIntegerValue(s1) + prTh.extractIntegerValue(s2));
         }
 

@@ -7,24 +7,25 @@ class PrSymbolVisuallyInfo {
             return this.allUnit;
         }
 
-        switch (s.type) {
-            case "One":
-            case "Zero": {
-                return this.allUnit;
-            }
-            // case ""
-        }
+        // switch (s.type) {
+        //     case "One":
+        //     case "Zero": {
+        //         return this.allUnit;
+        //     }
+        //     // case ""
+        // }
 
-        assertUnreachable(s);
+        // assertUnreachable(s);
     }
 
-    private allUnit: CheckResult = { prOp: "unit", prPowerIndex: "unit", prShorthandMul: "unit" }
+    private allUnit: CheckResult = { prOp: "unit", prPowerIndex: "unit", prShorthandMul: "unit", prSign: false }
 }
 
 interface CheckResult {
     prOp: "unit" | "parts";
     prPowerIndex: "unit" | "parts";
     prShorthandMul: "unit" | "parts" | "right-parse-left-unit";
+    prSign: boolean;
 }
 
 

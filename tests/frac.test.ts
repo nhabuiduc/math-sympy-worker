@@ -3,7 +3,7 @@ import { testHelper as th } from "./test-helper";
 
 /** Test from: https://github.com/sympy/sympy/blob/master/sympy/printing/tests/test_latex.py */
 describe("2: Frac", () => {
-    it("convert", async () => {
+    it.only("convert", async () => {
         expect(await th.run("1/x")).equal(`[frac,[1],[x]]`);
         expect(await th.run("-S(3)/2")).equal(`[-][frac,[3],[2]]`);
         expect(await th.run("1/x**2")).equal(`[frac,[1],[x][💪,[2]]]`);

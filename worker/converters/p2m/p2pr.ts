@@ -86,10 +86,10 @@ export class P2Pr {
                 return prTh.bin(this.m(obj.args), "×");
             }
             case "Curl": {
-                return prTh.bin([prTh.var("∇")].concat(this.m(obj.args)), "×");
+                return prTh.bin([prTh.var("∇") as Symbol].concat(this.m(obj.args)), "×");
             }
             case "Divergence": {
-                return prTh.bin([prTh.var("∇")].concat(this.m(obj.args)), "⋅");
+                return prTh.bin([prTh.var("∇") as Symbol].concat(this.m(obj.args)), "⋅");
             }
             case "Dot": {
                 return prTh.bin(this.m(obj.args), "⋅");
@@ -116,7 +116,7 @@ export class P2Pr {
 
 
             case "Integer": {
-
+                return prTh.var(obj.value, { nativeType: obj.func })
                 // return { type: "Integer", kind: "Leaf", value: obj.value };
             }
             case "Float": {
@@ -141,7 +141,7 @@ export class P2Pr {
 
 
             case "NegativeInfinity": {
-                return prTh.mul(prTh.negativeOne(), { type: "ConstantSymbol", kind: "Leaf", showType: "symbol", name: "∞" })
+                return prTh.mul(prTh.negativeOne(), prTh.numberSymbol("∞"))
             }
 
             case "Infinity":
@@ -159,8 +159,8 @@ export class P2Pr {
             }
 
             case "NumberSymbol": {
-
-                return { type: "ConstantSymbol", kind: "Leaf", showType: "text", name: obj.name }
+                return prTh.numberSymbol(obj.name);
+                // return { type: "ConstantSymbol", kind: "Leaf", showType: "text", name: obj.name }
             }
             case "Zero": {
                 return prTh.var("0", { nativeType: obj.func });
@@ -203,7 +203,7 @@ export class P2Pr {
             }
 
             case "BaseVector": {
-                const vIdx = P2Pr.parseIntegerConstant(obj.args[0]);
+                const vIdx = prTh.extractIntegerValue(this.c(obj.args[0]));
                 const system = obj.args[1] as P.CoordSys3D;
                 const vName = system.vectorNames[vIdx];
                 const sName = (system.args[0] as P.Str).text;
@@ -218,7 +218,7 @@ export class P2Pr {
             }
 
             case "BaseScalar": {
-                const vIdx = prTh.extractIntegerValue(obj.args[0]);
+                const vIdx = prTh.extractIntegerValue(this.c(obj.args[0]));
                 const system = obj.args[1] as P.CoordSys3D;
                 const vName = system.variableNames[vIdx];
                 const sName = (system.args[0] as P.Str).text;
@@ -427,7 +427,13 @@ export class P2Pr {
                 return prTh.index(bloackBoardBold.map("Naturals"), prTh.var("0"))
             }
             case "ProductSet": {
-                return { type: "ProductSet", kind: "Container", hasVariety: obj.hasVariety, symbols: this.m(obj.args) }
+                const ss = this.m(obj.args);
+                if (!obj.hasVariety && ss.length >= 1) {
+                    return prTh.pow(ss[0], prTh.int(ss.length));
+                }
+                return prTh.bin(ss, "×");
+                // return this.prCommon.opJoin(obj.symbols, "×");
+                // return { type: "ProductSet", kind: "Container", hasVariety: obj.hasVariety, symbols: this.m(obj.args) }
             }
             case "ComplexRegion":
             case "ConditionSet":
@@ -476,7 +482,7 @@ export class P2Pr {
     }
 
     private detectUnevaluatedMul(symbols: Symbol[]): boolean {
-        return symbols[0].type == "One" || symbols.some((c, idx) => idx > 0 && prTh.isConstant(c));
+        return (symbols[0].type == "Var" && symbols[0].nativeType == "One") || symbols.some((c, idx) => idx > 0 && prTh.isConstant(c));
     }
 
     // static parseIntegerConstant(s: P.Basic): number {
@@ -502,12 +508,12 @@ export namespace P2Pr {
         kind: "Leaf"
     }
 
-    export type Symbol = Mul | C<"Add"> | L<"One"> | L<"NegativeOne"> | Var | C<"Pow"> | Matrix | C<"Frac"> | L<"Half"> | C<"Sqrt"> | GenericFunc |
-        L<"NaN"> | ConstantSymbol |
+    export type Symbol = Mul | C<"Add"> | Var | C<"Pow"> | Matrix | C<"Frac"> | C<"Sqrt"> | GenericFunc |
+
         Derivative | Relational | C<"Binomial"> |
         VarList | C<"Integral"> | Index | JsonData
         | C<"Order"> | C<"Prescript"> | C<"PrescriptIdx"> | Subs | C<"Sum"> |
-        ProductSet | C<"Product"> | C<"Limit"> |
+        C<"Product"> | C<"Limit"> |
         C<"Piecewise"> | BinaryOp | UnaryOp | OverSymbol;
 
 
@@ -526,7 +532,6 @@ export namespace P2Pr {
         type: "OverSymbol";
         op: "hat" | "overline";
         bold?: boolean;
-        symbols: [Symbol]
     }
 
     export interface Index extends C<"Index"> {
@@ -542,11 +547,6 @@ export namespace P2Pr {
         type: "UnaryOp";
         op: string;
         pos: "before" | "after";
-    }
-
-    export interface ProductSet extends Container {
-        type: "ProductSet";
-        hasVariety: boolean;
     }
 
     export interface VarList extends Container {
@@ -573,11 +573,11 @@ export namespace P2Pr {
         unevaluatedDetected: boolean;
     }
 
-    export interface ConstantSymbol extends Leaf {
-        type: "ConstantSymbol";
-        showType: "symbol" | "text";
-        name: string;
-    }
+    // export interface ConstantSymbol extends Leaf {
+    //     type: "ConstantSymbol";
+    //     showType: "symbol" | "text";
+    //     name: string;
+    // }
 
     // export interface Integer extends Leaf {
     //     type: "Integer";
@@ -590,11 +590,11 @@ export namespace P2Pr {
     // }
 
     export interface Var extends Leaf {
-        type: "Var" | "Raw";
+        type: "Var";
         name: string;
         bold?: boolean | "blackboard";
         normalText?: boolean;
-        nativeType?: "One" | "NegativeOne" | "Zero" | "Integer" | "Float" | "NaN" | "BooleanTrue" | "BooleanFalse"
+        nativeType?: "One" | "NegativeOne" | "Zero" | "Integer" | "Float" | "NaN" | "BooleanTrue" | "BooleanFalse" | "NumberSymbol"
     }
 
     // export interface Raw extends Leaf {

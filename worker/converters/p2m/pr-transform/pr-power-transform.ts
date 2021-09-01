@@ -9,10 +9,10 @@ export class PrPowerTransform implements P2Pr.IPrTransform {
     }
 
     private transformPositiveNumberPower(symbol: P2Pr.Symbol): P2Pr.Symbol {
-        if (symbol.type == "Pow" && symbol.symbols[0].type == "Integer" && prTh.isRationalFrac(symbol.symbols[1])) {
+        if (symbol.type == "Pow" && prTh.isIntType(symbol.symbols[0]) && prTh.isRationalFrac(symbol.symbols[1])) {
             return this.powerRationalToSqrt(symbol.symbols[0], symbol.symbols[1], symbol);
         }
-        if (symbol.type == "Pow" && symbol.symbols[1].type == "Integer" && symbol.symbols[1].value == 1) {
+        if (symbol.type == "Pow" && prTh.isOne(symbol.symbols[1])) {
             return this.transformPositiveNumberPower(symbol.symbols[0]);
         }
 
@@ -26,32 +26,24 @@ export class PrPowerTransform implements P2Pr.IPrTransform {
     private transformSpecialPower(symbol: Symbol): Symbol {
         if (symbol.type == "Pow") {
             const root = symbol.symbols[1];
-            if (root.type == "NegativeOne") {
+            if (prTh.isNegativeOne(root)) {
                 return {
                     type: "Frac",
                     kind: "Container",
-                    symbols: [{ type: "One", kind: "Leaf" }, this.transformSpecialPower(symbol.symbols[0])]
+                    symbols: [prTh.one(), this.transformSpecialPower(symbol.symbols[0])]
                 }
             }
-            if (root.type == "Integer" && root.value < 0) {
+            if (prTh.isNegativeInt(root)) {
                 return {
                     type: "Frac",
                     kind: "Container",
-                    symbols: [{ type: "One", kind: "Leaf" }, this.transformSpecialPower({
+                    symbols: [prTh.one(), this.transformSpecialPower({
                         type: "Pow",
                         kind: "Container",
-                        symbols: [symbol.symbols[0], { type: "Integer", kind: "Leaf", value: -root.value }],
+                        symbols: [symbol.symbols[0], prTh.removeNegativeIntSign(root)],
                     })]
                 }
             }
-            if (root.type == "Half") {
-                return {
-                    type: "Sqrt",
-                    kind: "Container",
-                    symbols: [this.transformSpecialPower(symbol.symbols[0])]
-                }
-            }
-
 
             if (prTh.matchRationalFrac(root, 1, 2)) {
                 return this.powerRationalToSqrt(this.transformSpecialPower(symbol.symbols[0]), root, symbol);
@@ -101,7 +93,7 @@ export class PrPowerTransform implements P2Pr.IPrTransform {
             }
         }
 
-        if (base.type == "Integer" && base.value > 0) {
+        if (prTh.isPositiveInt(base)) {
             return {
                 type: "Sqrt",
                 kind: "Container",

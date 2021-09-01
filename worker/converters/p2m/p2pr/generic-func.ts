@@ -42,7 +42,8 @@ export class GenericFunc extends P2PrItemBase {
             return { type: "Binomial", kind: "Container", symbols: this.m(obj.args) }
         }
         if (obj.name == "NoneType") {
-            return { type: "ConstantSymbol", kind: "Leaf", showType: "text", name: "None" }
+            return prTh.numberSymbol("None", { normalText: true });
+            // return { type: "ConstantSymbol", kind: "Leaf", showType: "text", name: "None" }
         }
 
         if (obj.name == "factorial") {

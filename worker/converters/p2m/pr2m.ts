@@ -5,7 +5,6 @@ import { tabularKeyInfoHelper } from "@lib-shared/tabular-key-info-helper";
 import { blockBd } from "./block-bd";
 import { Derivative } from "./pr2m/derivative";
 import { Integral } from "./pr2m/integral";
-import { Float } from "./pr2m/float";
 import { Mul } from "./pr2m/mul";
 import { Add } from "./pr2m/add";
 import { Pow } from "./pr2m/pow";
@@ -22,7 +21,6 @@ import { GenericFunc } from "./pr2m/generic-func";
 export class Pr2M {
     private derivative = new Derivative(this);
     private integral = new Integral(this);
-    private float = new Float(this);
     private mul = new Mul(this);
     private add = new Add(this);
     private pow = new Pow(this);
@@ -63,38 +61,52 @@ export class Pr2M {
             case "Add": {
                 return this.add.convert(obj);
             }
-            case "Integer": {
-                return {
-                    blocks: [blockBd.textBlock(obj.value.toString())],
-                    prMinusSign: obj.value < 0,
-                }
-            }
-            case "Float": {
-                return this.float.convert(obj);
-            }
-            case "NaN": {
-                return {
-                    blocks: [blockBd.normalText("NaN")],
-                }
-            }
-            case "ConstantSymbol": {
-                if (obj.name == "∞̃") {
-                    /**this look better */
-                    return { blocks: [blockBd.compositeBlock("\\small-tilde", ["value"], [[blockBd.textBlock("∞")]])] }
-                }
+            // case "Integer": {
+            //     return {
+            //         blocks: [blockBd.textBlock(obj.value.toString())],
+            //         prMinusSign: obj.value < 0,
+            //     }
+            // }
+            // case "Float": {
+            //     return this.float.convert(obj);
+            // }
+            // case "NaN": {
+            //     return {
+            //         blocks: [blockBd.normalText("NaN")],
+            //     }
+            // }
+            // case "ConstantSymbol": {
+            //     if (obj.name == "∞̃") {
+            //         /**this look better */
+            //         return { blocks: [blockBd.compositeBlock("\\small-tilde", ["value"], [[blockBd.textBlock("∞")]])] }
+            //     }
 
-                const foundName = this.symbolLatexNames[obj.name]
-                if (foundName) {
-                    return { blocks: [blockBd.textBlock(foundName)] }
-                }
+            //     const foundName = this.symbolLatexNames[obj.name]
+            //     if (foundName) {
+            //         return { blocks: [blockBd.textBlock(foundName)] }
+            //     }
 
-                if (obj.showType == "text") {
-                    return { blocks: [blockBd.normalText(obj.name)] };
-                }
-                return { blocks: [blockBd.textBlock(obj.name)] }
-            }
-            case "Raw":
+            //     if (obj.showType == "text") {
+            //         return { blocks: [blockBd.normalText(obj.name)] };
+            //     }
+            //     return { blocks: [blockBd.textBlock(obj.name)] }
+            // }
             case "Var": {
+                if (obj.nativeType == "NumberSymbol") {
+                    if (obj.name == "∞̃") {
+                        /**this look better */
+                        return { blocks: [blockBd.compositeBlock("\\small-tilde", ["value"], [[blockBd.textBlock("∞")]])] }
+                    }
+
+                    const foundName = this.symbolLatexNames[obj.name]
+                    if (foundName) {
+                        obj.name = foundName;
+                    }
+                }
+                if (obj.normalText) {
+                    return { blocks: [blockBd.normalText(obj.name)] }
+                }
+
                 return { blocks: [blockBd.textBlock(obj.name, blockBd.style(obj))] }
             }
             case "VarList": {
@@ -148,14 +160,14 @@ export class Pr2M {
             // case "Zero": {
             //     return { blocks: [blockBd.textBlock("0")] };
             // }
-            case "Half": {
-                return this.frac(
-                    [blockBd.textBlock("1")],
-                    [blockBd.textBlock("2")])
-            }
-            case "NegativeOne": {
-                return { blocks: [blockBd.textBlock("-1")], prMinusSign: true }
-            }
+            // case "Half": {
+            //     return this.frac(
+            //         [blockBd.textBlock("1")],
+            //         [blockBd.textBlock("2")])
+            // }
+            // case "NegativeOne": {
+            //     return { blocks: [blockBd.textBlock("-1")], prMinusSign: true }
+            // }
             case "Sqrt": {
                 if (obj.symbols.length <= 1) {
                     return { blocks: [blockBd.compositeBlock("\\sqrt", ["value"], [this.innerConvert(obj.symbols[0], 0).blocks])] }
@@ -310,21 +322,22 @@ export class Pr2M {
                 return this.sum.convert(obj);
             }
 
-            case "ProductSet": {
-                if (!obj.hasVariety && obj.symbols.length >= 1) {
-                    return this.convert(prTh.pow(obj.symbols[0], prTh.int(obj.symbols.length)))
-                }
-                return this.prCommon.opJoin(obj.symbols, "×");
-            }
-            case "BooleanTrue": {
-                return { blocks: [blockBd.normalText("True")] }
-            }
-            case "BooleanFalse": {
-                return { blocks: [blockBd.normalText("False")] }
-            }
+            // case "ProductSet": {
+            //     if (!obj.hasVariety && obj.symbols.length >= 1) {
+            //         return this.convert(prTh.pow(obj.symbols[0], prTh.int(obj.symbols.length)))
+            //     }
+            //     return this.prCommon.opJoin(obj.symbols, "×");
+            // }
+            // case "BooleanTrue": {
+            //     return { blocks: [blockBd.normalText("True")] }
+            // }
+            // case "BooleanFalse": {
+            //     return { blocks: [blockBd.normalText("False")] }
+            // }
             case "Piecewise": {
                 const pairs: [BlockModel[], BlockModel[]][] = obj.symbols.map(({ symbols: ss }: P2Pr.VarList) => {
-                    const isCondTrue = ss[1].type == "BooleanTrue";
+                    // const isCondTrue = ss[1].type == "BooleanTrue";
+                    const isCondTrue = prTh.isBooleanTrue(ss[1]);
                     return [
                         this.convert(ss[0]).blocks,
                         blockBd.combineBlocks([
@@ -359,16 +372,16 @@ export class Pr2M {
         return "="
     }
 
-    private frac(numerator: BlockModel[], denominator: BlockModel[]): CResult {
-        return {
-            blocks: [
-                blockBd.compositeBlock("\\frac", ["value", "sub1"], [
-                    numerator,
-                    denominator,
-                ])],
+    // private frac(numerator: BlockModel[], denominator: BlockModel[]): CResult {
+    //     return {
+    //         blocks: [
+    //             blockBd.compositeBlock("\\frac", ["value", "sub1"], [
+    //                 numerator,
+    //                 denominator,
+    //             ])],
 
-        }
-    }
+    //     }
+    // }
 
     private buildFrac(args: P2Pr.Symbol[]): CResult {
         if (args.length != 2) {

@@ -1,14 +1,17 @@
 import stringHelper from "@lib-shared/string-helper";
 import { P2Pr } from "../p2pr";
+import { prTh } from "../pr-transform/pr-transform-helper";
 
 class FuncToConstant {
-    map(name: string): P2Pr.ConstantSymbol {
+    map(name: string): P2Pr.Var {
         const resolved = this.funcMap[name] || name;
         if (stringHelper.length(resolved) > 1) {
-            return { type: "ConstantSymbol", kind: "Leaf", name: resolved, showType: "text" }
+            // return { type: "ConstantSymbol", kind: "Leaf", name: resolved, showType: "text" }
+            return prTh.numberSymbol(resolved, { normalText: true })
         }
 
-        return { type: "ConstantSymbol", kind: "Leaf", name: resolved, showType: "symbol" }
+        // return { type: "ConstantSymbol", kind: "Leaf", name: resolved, showType: "symbol" }
+        return prTh.numberSymbol(resolved)
     }
 
     private funcMap: { [key: string]: string } = {

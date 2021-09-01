@@ -1,10 +1,11 @@
 import { P2Pr } from "../p2pr";
+import { prTh } from "../pr-transform/pr-transform-helper";
 
 class Float {
-    parse(text: string): P2Pr.Float | P2Pr.Mul {
+    parse(text: string): P2Pr.Var | P2Pr.Mul {
         /**should not starts with e */
         if (text.indexOf("e") <= 0) {
-            return { type: "Float", kind: "Leaf", value: text };
+            return prTh.float(text);
         }
 
         let [mant, exp] = text.split("e");
@@ -15,22 +16,10 @@ class Float {
             type: "Mul",
             kind: "Container",
             unevaluatedDetected: true,
-            symbols: [{
-                type: "Float",
-                kind: "Leaf",
-                value: mant
-            }, {
+            symbols: [prTh.float(mant), {
                 type: "Pow",
                 kind: "Container",
-                symbols: [{
-                    type: "Integer",
-                    kind: "Leaf",
-                    value: 10,
-                }, {
-                    type: "Float",
-                    kind: "Leaf",
-                    value: exp
-                }]
+                symbols: [prTh.int(10), prTh.float(exp)]
             }]
         }
     }

@@ -50,28 +50,30 @@ class PrTransformHelper {
     positionWeight(s: Symbol, type: "add" | "mul"): number {
         const constantBase = type == "add" ? EnumPosWeight.ConstantInAddCtx : EnumPosWeight.ConstantInMulCtx;
         switch (s.type) {
-            case "One":
-            case "Half": {
-                return constantBase + EnumPosWeight.Integer;
-            }
+            case "Var": {
+                switch (s.nativeType) {
+                    case "One":
 
-            case "NegativeOne": {
-                return constantBase + EnumPosWeight.MinusSign + EnumPosWeight.Integer;
-            }
-            case "Integer": {
-                if (s.value > 0) {
-                    return constantBase + EnumPosWeight.Integer;
+                    case "NegativeOne": {
+                        return constantBase + EnumPosWeight.MinusSign + EnumPosWeight.Integer;
+                    }
+                    case "Integer": {
+                        if (s.name[0] != "-") {
+                            return constantBase + EnumPosWeight.Integer;
+                        }
+
+                        return constantBase + EnumPosWeight.MinusSign + EnumPosWeight.Integer;
+                    }
+                    case "Float": {
+                        if (s.name[0] == "-") {
+                            return constantBase + EnumPosWeight.MinusSign + EnumPosWeight.Float;
+                        }
+
+                        return constantBase + EnumPosWeight.Float;
+                    }
                 }
-
-                return constantBase + EnumPosWeight.MinusSign + EnumPosWeight.Integer;
             }
-            case "Float": {
-                if (s.value[0] == "-") {
-                    return constantBase + EnumPosWeight.MinusSign + EnumPosWeight.Float;
-                }
 
-                return constantBase + EnumPosWeight.Float;
-            }
             case "Frac": {
                 if (this.isConstant(s)) {
                     return constantBase + EnumPosWeight.FracConstant;
@@ -80,7 +82,7 @@ class PrTransformHelper {
                 return EnumPosWeight.Other + EnumPosWeight.Frac;
             }
             case "Mul": {
-                if (s.type == "Mul" && s.symbols.length == 2 && s.symbols[0].type == "NegativeOne" && this.isConstant(s.symbols[1])) {
+                if (s.type == "Mul" && s.symbols.length == 2 && this.isNegativeOne(s.symbols[0]) && this.isConstant(s.symbols[1])) {
                     return constantBase + EnumPosWeight.MinusSign + EnumPosWeight.FracConstant
                 }
 
@@ -100,9 +102,9 @@ class PrTransformHelper {
                 return EnumPosWeight.Other + EnumPosWeight.Var;
             }
             case "Pow": {
-                if (s.symbols[1].type == "Integer") {
+                if (s.symbols[1].type == "Var" && s.symbols[1].nativeType == "Integer") {
                     /**higher power will be in front */
-                    return EnumPosWeight.Other + EnumPosWeight.Pow + 50 - s.symbols[1].value;
+                    return EnumPosWeight.Other + EnumPosWeight.Pow + 50;
                 }
 
                 if (s.symbols[0].type == "GenericFunc") {
@@ -155,53 +157,48 @@ class PrTransformHelper {
 
     isConstant(s: Symbol): "positive" | "negative" | false {
         switch (s.type) {
-            case "Float":
-                return s.value[0] == "-" ? "negative" : "positive";
+            case "Var": {
+                switch (s.nativeType) {
+                    case "Float":
+                        return s.name[0] == "-" ? "negative" : "positive";
 
-            case "Integer":
-                return s.value > 0 ? "positive" : "negative";
-            case "NegativeOne":
-                return "negative";
-            case "Half":
-            case "One": {
-                return "positive";
+                    case "Integer":
+                        return s.name[0] == "-" ? "negative" : "positive";
+                    case "NegativeOne":
+                        return "negative";
+                    case "One": {
+                        return "positive";
+                    }
+                }
             }
+
         }
 
         if (s.type == "Frac" && this.isConstant(s.symbols[0]) && this.isConstant(s.symbols[1])) {
             return "positive";
         }
 
-        if (s.type == "Mul" && s.symbols.length == 2 && s.symbols[0].type == "NegativeOne") {
+        if (s.type == "Mul" && s.symbols.length == 2 && this.isNegativeOne(s.symbols[0])) {
             if (this.isConstant(s.symbols[1])) {
                 return "negative";
             }
         }
     }
 
-    isSymbolValueOne(symbol: Symbol): boolean {
-        if (symbol.type == "One") {
-            return true;
-        }
-
-        if (symbol.type == "Integer" && symbol.value == 1) {
-            return true;
-        }
-
-        return false;
-    }
-
     startWithMinus(symbol: Symbol): boolean {
-        if (symbol.type == "NegativeOne") {
-            return true;
+        if (symbol.type == "Var") {
+            if (symbol.nativeType == "NegativeOne") {
+                return true;
+            }
+
+            if (symbol.nativeType == "Float" && symbol.name[0] == "-") {
+                return true;
+            }
+            if (symbol.nativeType == "Integer" && symbol.name[0] == "-") {
+                return true;
+            }
         }
 
-        if (symbol.type == "Float" && symbol.value[0] == "-") {
-            return true;
-        }
-        if (symbol.type == "Integer" && symbol.value < 0) {
-            return true;
-        }
 
         if (symbol.type == "Mul" || symbol.type == "Pow") {
             return this.startWithMinus(symbol.symbols[0]);
@@ -236,18 +233,24 @@ class PrTransformHelper {
         return dequal(b1, b2);
     }
 
+    isBooleanTrue(s: Symbol) {
+        return s.type == "Var" && s.nativeType == "BooleanTrue";
+    }
+
     extractIntegerValue(s: Symbol): number {
-        if (s.type == "Zero") {
-            return 0;
-        }
-        if (s.type == "One") {
-            return 1;
-        }
-        if (s.type == "NegativeOne") {
-            return -1;
-        }
-        if (s.type == "Integer") {
-            return s.value;
+        if (s.type == "Var") {
+            if (s.nativeType == "Zero") {
+                return 0;
+            }
+            if (s.nativeType == "One") {
+                return 1;
+            }
+            if (s.nativeType == "NegativeOne") {
+                return -1;
+            }
+            if (s.nativeType == "Integer") {
+                return Number.parseInt(s.name);
+            }
         }
 
         throw new Error("Unable to extract integer value");
@@ -261,8 +264,9 @@ class PrTransformHelper {
     }
 
     isInfinity(s: Symbol): boolean {
-        return s.type == "ConstantSymbol" && s.name == "∞";
+        return s.type == "Var" && s.nativeType == "NumberSymbol" && s.name == "∞";
     }
+
     isNegativeInfinity(s: Symbol): boolean {
         return this.isMulNegativeOf(s, st => this.isInfinity(st));
     }
@@ -279,12 +283,10 @@ class PrTransformHelper {
     isSingleVar(s: Symbol): boolean {
         return s.type == "Var" && stringHelper.length(s.name) == 1;
     }
-    isSingleConstantName(s: Symbol): boolean {
-        return s.type == "ConstantSymbol" && stringHelper.length(s.name) == 1;
-    }
-    isSingleRawName(s: Symbol): boolean {
-        return s.type == "Raw" && stringHelper.length(s.name) == 1;
-    }
+
+    // isSingleConstantName(s: Symbol): boolean {
+    //     return s.type == "ConstantSymbol" && stringHelper.length(s.name) == 1;
+    // }
 
     considerPresentAsSingleUnitForPow(s: Symbol, cr: Pr2M.CResult) {
         if (cr.prUnit == "bracket") {
@@ -295,7 +297,7 @@ class PrTransformHelper {
             return true;
         }
 
-        if (this.isSingleVar(s) || this.isSingleConstantName(s) || this.isSingleRawName(s)) {
+        if (this.isSingleVar(s)) {
             return true;
         }
 
@@ -319,60 +321,79 @@ class PrTransformHelper {
     }
 
     isPositiveOrZeroFloatValue(s: Symbol): boolean {
-        if (s.type == "Float") {
-            return s.value[0] != "-";
+        if (s.type == "Var") {
+            if (s.nativeType == "Float") {
+                return s.name[0] != "-";
+            }
         }
-
     }
+
 
     isPositiveOrZeroIntegerValue(s: Symbol): boolean {
-        if (s.type == "Zero") {
-            return true;
-        }
-        if (s.type == "One") {
-            return true;
+        if (s.type == "Var") {
+            if (s.nativeType == "Zero") {
+                return true;
+            }
+            if (s.nativeType == "One") {
+                return true;
+            }
+
+            if (s.nativeType == "Integer") {
+                return s.name[0] != "-";
+            }
         }
 
-        if (s.type == "Integer") {
-            return s.value >= 0;
-        }
     }
 
-    isIntegerValue(s: Symbol): boolean {
-        if (s.type == "Zero") {
-            return true;
+    isInt(s: Symbol): boolean {
+        if (s.type == "Var") {
+            if (s.nativeType == "Zero") {
+                return true;
+            }
+            if (s.nativeType == "One") {
+                return true;
+            }
+            if (s.nativeType == "NegativeOne") {
+                return true;
+            }
+            if (s.nativeType == "Integer") {
+                return true;
+            }
         }
-        if (s.type == "One") {
-            return true;
-        }
-        if (s.type == "NegativeOne") {
-            return true;
-        }
-        if (s.type == "Integer") {
-            return true;
-        }
+
 
         return false;
     }
 
     isNegativeOne(s: Symbol) {
-        return s.type == "NegativeOne" || (s.type == "Integer" && s.value == -1);
+        return (s.type == "Var" && s.nativeType == "NegativeOne") || this.isIntType(s, "-1");
     }
     isZero(s: Symbol) {
-        return s.type == "Zero" || (s.type == "Integer" && s.value == 0);
+        return (s.type == "Var" && s.nativeType == "Zero") || this.isIntType(s, "0");;
     }
     isOne(s: Symbol) {
-        return s.type == "One" || (s.type == "Integer" && s.value == 1);
+        return (s.type == "Var" && s.nativeType == "One") || this.isIntType(s, "1");;
     }
 
-    var(text: string, more?: Partial<P2Pr.Var>): P2Pr.Var | Symbol {
+    isIntType(s: Symbol, vl?: string) {
+        if (vl === undefined) {
+            return s.type == "Var" && s.nativeType == "Integer";
+        }
+        return s.type == "Var" && s.nativeType == "Integer" && s.name == vl;
+    }
+
+
+    var(text: string, more?: Partial<P2Pr.Var>): P2Pr.Var {
         return { type: "Var", kind: "Leaf", name: text, ...more };
     }
     raw(text: string, more?: Partial<P2Pr.Var>): P2Pr.Var {
-        return { type: "Raw", kind: "Leaf", name: text, ...more };
+        return { type: "Var", kind: "Leaf", name: text, ...more };
     }
     str(text: string): P2Pr.Var {
-        return { type: "Raw", kind: "Leaf", name: text, normalText: true };
+        return { type: "Var", kind: "Leaf", name: text, normalText: true };
+    }
+    numberSymbol(text: string, more?: Partial<P2Pr.Var>): P2Pr.Var {
+        return { type: "Var", kind: "Leaf", name: text, nativeType: "NumberSymbol", ...more };
     }
 
     over(op: P2Pr.OverSymbol["op"], s: Symbol | string, more?: Partial<P2Pr.OverSymbol>): P2Pr.OverSymbol {
@@ -405,8 +426,8 @@ class PrTransformHelper {
         }
     }
 
-    int(vl: number): P2Pr.Integer {
-        return { type: "Integer", kind: "Leaf", value: vl }
+    int(vl: number | string): P2Pr.Symbol {
+        return this.var(vl.toString(), { nativeType: "Integer" })
     }
 
     index(base: Symbol, index: Symbol, more?: Partial<P2Pr.Index>): P2Pr.Index {
@@ -472,19 +493,51 @@ class PrTransformHelper {
     }
 
 
+    zero() {
+        return this.var("0", { nativeType: "Zero" });
+    }
+    one() {
+        return this.var("1", { nativeType: "One" });
+    }
+    negativeOne() {
+        return this.var("-1", { nativeType: "NegativeOne" });
+    }
+    isPositiveInt(s: Symbol): s is P2Pr.Var {
+        if (this.isOne(s)) {
+            return true;
+        }
+        return s.type == "Var" && s.nativeType == "Integer" && s.name[0] != "-";
+    }
+    isNegativeInt(s: Symbol): s is P2Pr.Var {
+        if (this.isNegativeOne(s)) {
+            return true;
+        }
+        return s.type == "Var" && s.nativeType == "Integer" && s.name[0] == "-";
+    }
+
+    removeNegativeIntSign(s: Symbol) {
+        if (this.isNegativeOne(s)) {
+            return this.one();
+        }
+
+        if (this.isNegativeInt(s)) {
+            return this.int(s.name.substr(1))
+        }
+        return s;
+    }
 
     integerOrSpecial(vl: number): P2Pr.Symbol {
         if (vl == 0) {
-            return { type: "Zero", kind: "Leaf" }
+            return this.zero();
         }
         if (vl == 1) {
-            return { type: "One", kind: "Leaf" }
+            return this.one()
         }
         if (vl == -1) {
-            return { type: "NegativeOne", kind: "Leaf" }
+            return this.negativeOne();
         }
 
-        return { type: "Integer", kind: "Leaf", value: vl };
+        return this.int(vl)
     }
 
     bin(ss: Symbol[], op: P2Pr.BinaryOp["op"]): P2Pr.BinaryOp {
@@ -502,11 +555,8 @@ class PrTransformHelper {
             symbols: [num, den]
         }
     }
-
-
-
-    negativeOne(): P2Pr.NegativeOne {
-        return { type: "NegativeOne", kind: "Leaf" };
+    float(val: string): P2Pr.Var {
+        return this.var(val, { nativeType: "Float" });
     }
 }
 

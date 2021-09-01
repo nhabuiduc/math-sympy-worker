@@ -803,17 +803,17 @@ y1111 = beta + x
     })
 
 
-    it.only("dict", async () => {
+    it("dict", async () => {
         expect(await th.run(`{Rational(1): 1, x**2: 2, x: 3, x**3: 4}`)).equal(`{[1:1,x][💪,[2]][:2,x:3,x][💪,[3]][:4]}`);
         expect(await th.run(`Dict({Rational(1): 1, x**2: 2, x: 3, x**3: 4})`)).equal(`{[x][💪,[3]][:4,x:3,1:1,x][💪,[2]][:2]}`);
 
     })
 
-    it.only("list", async () => {
+    it("list", async () => {
         expect(await th.run(`[Symbol('omega1'), Symbol('a'), Symbol('alpha')]`)).equal(`[[𝜔][⛏️,[1]][,a,𝛼]]`);
     })
 
-    it.only("Rational2", async () => {
+    it("Rational2", async () => {
         expect(await th.run(`-Rational(1, 2)`)).equal(`[-][frac,[1],[2]]`);
         expect(await th.run(`Rational(-1, 2)`)).equal(`[-][frac,[1],[2]]`);
         expect(await th.run(`Rational(1, -2)`)).equal(`[-][frac,[1],[2]]`);
@@ -823,12 +823,12 @@ y1111 = beta + x
 
     })
 
-    it.only("inverse", async () => {
+    it("inverse", async () => {
         expect(await th.run(`1/x`)).equal(`[frac,[1],[x]]`);
         expect(await th.run(`1/(x + y)`)).equal(`[frac,[1],[x+y]]`);
     });
 
-    it.only("DiracDelta", async () => {
+    it("DiracDelta", async () => {
         expect(await th.run(`DiracDelta(x)`)).equal(`[𝛿]([x])`);
         expect(await th.run(`DiracDelta(x)**2`)).equal(`[𝛿]([x])[💪,[2]]`);
         expect(await th.run(`DiracDelta(x, 0)`)).equal(`[𝛿]([x])`);
@@ -837,12 +837,12 @@ y1111 = beta + x
 
     })
 
-    it.only("Heaviside", async () => {
+    it("Heaviside", async () => {
         expect(await th.run(`Heaviside(x)`)).equal(`[𝜃]([x])`);
         expect(await th.run(`Heaviside(x)**2`)).equal(`([𝜃]([x]))[💪,[2]]`);
     })
 
-    it.only("KroneckerDelta", async () => {
+    it("KroneckerDelta", async () => {
     
         expect(await th.run(`KroneckerDelta(x, y)`)).equal(`[𝛿][⛏️,[xy]]`);
         expect(await th.run(`KroneckerDelta(x, y + 1)`)).equal(`[𝛿][⛏️,[x,1+y]]`);
@@ -850,7 +850,7 @@ y1111 = beta + x
         expect(await th.run(`Pow(KroneckerDelta(x, y), 2, evaluate=False)`)).equal(`([𝛿][⛏️,[xy]])[💪,[2]]`);
     })
     
-    it.only("LeviCivita", async () => {
+    it("LeviCivita", async () => {
         expect(await th.run(`LeviCivita(x, y, z)`)).equal(`[𝜀][⛏️,[xyz]]`);
         expect(await th.run(`LeviCivita(x, y, z)**2`)).equal(`([𝜀][⛏️,[xyz]])[💪,[2]]`);
         expect(await th.run(`LeviCivita(x, y, z + 1)`)).equal(`[𝜀][⛏️,[x,y,1+z]]`);
@@ -858,7 +858,7 @@ y1111 = beta + x
         expect(await th.run(`LeviCivita(x + 1, y, z)`)).equal(`[𝜀][⛏️,[1+x,y,z]]`);
     })
     
-    it.only("mathieu", async () => {
+    it("mathieu", async () => {
         expect(await th.run(`mathieuc(x, y, z)`)).equal(`[C]([x,y,z])`);
         expect(await th.run(`mathieus(x, y, z)`)).equal(`[S]([x,y,z])`);
         expect(await th.run(`mathieuc(x, y, z)**2`)).equal(`[C]([x,y,z])[💪,[2]]`);
@@ -868,7 +868,7 @@ y1111 = beta + x
         expect(await th.run(`mathieucprime(x, y, z)**2`)).equal(`[C][💪,[′]]([x,y,z])[💪,[2]]`);
         expect(await th.run(`mathieusprime(x, y, z)**2`)).equal(`[S][💪,[′]]([x,y,z])[💪,[2]]`);
     })
-    it.only("Piecewise", async () => {
+    it("Piecewise", async () => {
         expect(await th.run(`Piecewise((x, x < 1), (x**2, True))`)).equal(`[🏓cases,[x],[📜,[for]][ x<1],[x][💪,[2]],[📜,[otherwise]][ ]]`);
         expect(await th.run(`Piecewise((x, x < 0), (0, x >= 0))`)).equal(`[🏓cases,[x],[📜,[for]][ x<0],[0],[📜,[otherwise]][ ]]`);
         
@@ -876,8 +876,8 @@ y1111 = beta + x
 A, B = symbols("A B", commutative=False)
 p = Piecewise((A**2, Eq(A, B)), (A*B, True))
         `);
-        expect(await th.run(`p`)).equal(`[🏓cases,[A][💪,[2]],[📜,[for]][ A=B],[AB],[📜,[otherwise]][ ]]`);
-        expect(await th.run(`A*p`)).equal(`[🏓cases,[A][💪,[2]],[📜,[for]][ A=B],[AB],[📜,[otherwise]][ ]]`);
+        // expect(await th.run(`p`)).equal(`[🏓cases,[A][💪,[2]],[📜,[for]][ A=B],[AB],[📜,[otherwise]][ ]]`);
+        // expect(await th.run(`A*p`)).equal(`[🏓cases,[A][💪,[2]],[📜,[for]][ A=B],[AB],[📜,[otherwise]][ ]]`);
 
     })
 
