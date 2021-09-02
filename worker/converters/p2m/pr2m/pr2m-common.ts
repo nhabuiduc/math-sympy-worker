@@ -54,7 +54,7 @@ export class Pr2MCommon extends Pr2MItemBase {
         let blocks: BlockModel[] = [];
         for (let idx = 0; idx < items.length; idx++) {
             const item = items[idx];
-            let curBlocks = blockBd.wrapBracketIfNotUnitInOpCtx(args[idx], item, wrapEvenShortHand).blocks;
+            let curBlocks = blockBd.wrapBracketIfNotUnitInOpCtx(args[idx], item, { wrapEvenShortHand, excludeSign: idx == 0 }).blocks;
 
             if (idx == 0 || !textOrBlock) {
                 blocks = blockBd.combine2Blockss(blocks, curBlocks);

@@ -12,7 +12,7 @@ export class Sum extends Pr2MItemBase {
         const name = obj.type == "Sum" ? "\\sum" : "\\prod";
         const limits = obj.symbols.slice(1) as P2Pr.VarList[];
 
-        let funcBlocks = blockBd.wrapBracketIfNotUnitInOpCtx(obj.symbols[0], this.main.convert(obj.symbols[0])).blocks;
+        let funcBlocks = blockBd.wrapBracketIfNotUnitInOpCtx(obj.symbols[0], this.main.convert(obj.symbols[0]), { excludeSign: true }).blocks;
         let sumBlocks: BlockModel[];
         if (limits.length <= 0) {
             sumBlocks = [blockBd.compositeBlock(name)];
@@ -42,7 +42,7 @@ export class Sum extends Pr2MItemBase {
         const to = (dir.type == "Var" && dir.name == "+-") || prTh.isInfinity(z0) || prTh.isNegativeInfinity(z0)
             ? z0 : prTh.pow(z0, dir);
 
-        const expr = blockBd.wrapBracketIfNotUnitInOpCtx(e, this.main.convert(e));
+        const expr = blockBd.wrapBracketIfNotUnitInOpCtx(e, this.main.convert(e), { excludeSign: true });
         const toBlocks: BlockModel[] = [
             ...this.c(z).blocks,
             blockBd.compositeBlock("\\rightarrow"),

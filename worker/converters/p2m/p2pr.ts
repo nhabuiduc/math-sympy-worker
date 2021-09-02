@@ -73,10 +73,10 @@ export class P2Pr {
                 return prTh.genFunc(obj.func, this.m(obj.args));
             }
             case "Factorial": {
-                return prTh.unary(this.c(obj.args[0]), "!");
+                return prTh.unary(this.c(obj.args[0]), "!", "after");
             }
             case "Factorial2": {
-                return prTh.unary(this.c(obj.args[0]), "!!");
+                return prTh.unary(this.c(obj.args[0]), "!!", "after");
             }
             case "SubFactorial": {
                 return prTh.unary(this.c(obj.args[0]), "!", "before");
@@ -177,7 +177,7 @@ export class P2Pr {
                 return { type: "Matrix", kind: "Container", bracket: "[", row: obj.row, col: obj.col, symbols: this.m(obj.args) }
             }
 
-            
+
             case "GenericFunc": {
                 return this.genericFunc.convert(obj);
             }
@@ -683,7 +683,7 @@ namespace P {
         Relational | List | Dummy | F<"Poly"> | F<"Abs"> | F<"Order"> | F<"Ynm"> | F<"Znm"> | F<"Indexed"> | F<"IndexedBase"> |
         F<"PolynomialRing"> | DisplayedDomain | UndefinedFunction | F<"Integral"> | F<"Not"> | F<"And"> | F<"Or"> | F<"Implies"> |
         F<"SingularityFunction"> | F<"FallingFactorial"> | F<"RisingFactorial"> | F<"LambertW"> | F<"Mod"> |
-        Cycle | F<"Cross"> | F<"Curl"> | F<"Divergence"> | F<"Dot"> | F<"Gradient"> | F<"Laplacian"> | 
+        Cycle | F<"Cross"> | F<"Curl"> | F<"Divergence"> | F<"Dot"> | F<"Gradient"> | F<"Laplacian"> |
         F<"Subs"> | F<"Set"> | F<"FiniteSet"> | F<"Interval"> | F<"Range"> | SeqFormula | F<"FourierSeries"> |
         F<"Sum"> | F<"AccumulationBounds"> | U<"EmptySet"> | U<"UniversalSet"> | F<"Operator"> | F<"Union"> |
         F<"Intersection"> | F<"SymmetricDifference"> | F<"Complement"> | U<"Reals"> | U<"Naturals"> | U<"Complexes"> |
@@ -799,7 +799,7 @@ namespace P {
         func: "Cycle";
         perm: number[][];
     }
-    
+
     export interface SeqFormula extends FuncArgs {
         func: "SeqFormula";
         freeSymbol: boolean;

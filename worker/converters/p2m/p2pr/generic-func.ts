@@ -47,13 +47,13 @@ export class GenericFunc extends P2PrItemBase {
         }
 
         if (obj.name == "factorial") {
-            return prTh.unary(this.c(obj.args[0]), "!");
+            return prTh.unary(this.c(obj.args[0]), "!", "after");
         }
         if (obj.name == "subfactorial") {
             return prTh.unary(this.c(obj.args[0]), "!", "before");
         }
         if (obj.name == "factorial2") {
-            return prTh.unary(this.c(obj.args[0]), "!!");
+            return prTh.unary(this.c(obj.args[0]), "!!", "after");
         }
         if (obj.name == "floor") {
             return prTh.brackets(this.m(obj.args), "floor");

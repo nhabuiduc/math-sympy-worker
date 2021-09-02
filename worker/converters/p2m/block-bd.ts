@@ -74,7 +74,7 @@ class BlockBd {
     // lines(blockModel)
 
 
-    operatorFuncBlock(name: string, constantTextFuncSet: Set<string>, symbolLatexNames: { [key: string]: string }, forceOp:boolean): BlockModel {
+    operatorFuncBlock(name: string, constantTextFuncSet: Set<string>, symbolLatexNames: { [key: string]: string }, forceOp: boolean): BlockModel {
         let mappedMcFuncName = sympyToMcConstantFuncs[name] || name;
         if (constantTextFuncSet.has(mappedMcFuncName)) {
             return this.opConstantBlock(name);
@@ -238,21 +238,14 @@ class BlockBd {
         return rs;
     }
 
-    // argumentBlocks(blockss: BlockModel[][], join: string, bracketType: "(" | "[" = "("): Pr2M.CResult {
-    //     return this.wrapBetweenBrackets(this.joinBlocks(blockss, join), bracketType);
-    // }
 
-    wrapBracketIfNotUnitInOpCtx(s: Symbol, rs: Pr2M.CResult, wrapEvenShortHand?: boolean): Pr2M.CResult {
-        if (prTh.considerPresentAsSingleUnitInOpCtx(s, rs, wrapEvenShortHand)) {
+    wrapBracketIfNotUnitInOpCtx(s: Symbol, rs: Pr2M.CResult, ops?: { wrapEvenShortHand?: boolean, excludeSign?: boolean }): Pr2M.CResult {
+        if (prTh.considerPresentAsSingleUnitInOpCtx(s, rs, ops)) {
             return rs;
         }
 
         return this.wrapBetweenBrackets(rs.blocks);
     }
-
-    // wrapBracketIfOp(rs: Pr2M.CResult): BlockModel[] {
-    //     return (rs.prUnit == "op") ? this.wrapBetweenBrackets(rs.blocks).blocks : rs.blocks;
-    // }
 
     joinBlocks(blockss: BlockModel[][], textOrBlock?: string | (() => BlockModel | BlockModel[])) {
         let rs: BlockModel[] = [];

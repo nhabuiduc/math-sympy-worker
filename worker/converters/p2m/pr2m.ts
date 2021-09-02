@@ -52,7 +52,7 @@ export class Pr2M {
             }
             case "UnaryOp": {
                 const rsArg0 = this.innerConvert(obj.symbols[0], level);
-                const expBlocks = prTh.considerPresentAsSingleUnitInOpCtx(obj.symbols[0], rsArg0, true) ? rsArg0.blocks : blockBd.wrapBetweenBrackets(rsArg0.blocks).blocks
+                const expBlocks = prTh.considerPresentAsSingleUnitInOpCtx(obj.symbols[0], rsArg0, { wrapEvenShortHand: true }) ? rsArg0.blocks : blockBd.wrapBetweenBrackets(rsArg0.blocks).blocks
                 if (obj.pos == "before") {
                     return { blocks: blockBd.joinBlocks([[blockBd.textBlock(obj.op)], expBlocks,]) }
                 }

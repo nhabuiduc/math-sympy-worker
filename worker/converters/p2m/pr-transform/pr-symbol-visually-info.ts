@@ -14,6 +14,9 @@ class PrSymbolVisuallyInfo {
                 return this.allParts;
             }
             case "UnaryOp": {
+                if (s.pos == "after") {
+                    return { prOp: "unit", prPowerIndex: "unit", prShorthandMul: "parts", prSign: false }
+                }
                 return { prOp: "unit", prPowerIndex: "parts", prShorthandMul: "parts", prSign: false }
             }
             case "Add": {
@@ -64,14 +67,46 @@ class PrSymbolVisuallyInfo {
                 return this.allParts;
             }
             case "Mul": {
+                const itemsLength = s.symbols.length;
                 if (c?.prMul?.allInShortcutForm) {
-                    if (!prTh.isNegativeInt(s.symbols[0])) {
-                        return { prOp: "unit", prPowerIndex: "parts", prShorthandMul: "parts", prSign: false, isMulShorthand: true }
+                    if (prTh.isNegativeInt(s.symbols[0])) {
+                        return {
+                            ...this.allPartsSign,
+                            prExcludeSign: "unit",
+                            mulMoreInfo: {
+                                isAllShorthand: true,
+                                singleItem: itemsLength <= 2 ? "when-exclude-negative-one" : false
+                            }
+                        }
                     }
-                    return { ...this.allPartsSign, prExcludeSign: "unit", isMulShorthand: true }
+
+                    return {
+                        prOp: "unit",
+                        prPowerIndex: "parts",
+                        prShorthandMul: "parts",
+                        prSign: false,
+                        mulMoreInfo: {
+                            isAllShorthand: true,
+                            singleItem: itemsLength == 1
+                        }
+                    }
+
                 }
 
-                return { prOp: "parts", prPowerIndex: "parts", prShorthandMul: "parts", prSign: prTh.isNegativeInt(s.symbols[0]) }
+                if (itemsLength == 1) {
+                    return this.allUnit;
+                }
+
+                return {
+                    prOp: "parts",
+                    prPowerIndex: "parts",
+                    prShorthandMul: "parts",
+                    prSign: prTh.isNegativeInt(s.symbols[0]),
+                    mulMoreInfo: {
+                        isAllShorthand: false,
+                        singleItem: itemsLength == 1,
+                    }
+                }
             }
             case "Pow": {
                 if (c?.prPow?.powMergedInFunc) {
@@ -89,9 +124,11 @@ class PrSymbolVisuallyInfo {
             case "JsonData": {
                 return this.allParts;
             }
-            case "Derivative":
+            case "Derivative": {
+                return { prOp: "unit", prPowerIndex: "parts", prShorthandMul: "right-parts-left-unit", prSign: false, }
+            }
             case "GenericFunc": {
-                return { prOp: "unit", prPowerIndex: "parts", prShorthandMul: "parts", prSign: false, }
+                return { prOp: "unit", prPowerIndex: "parts", prShorthandMul: "unit", prSign: false, }
             }
             case "Matrix": {
                 if (s.bracket) {
@@ -135,7 +172,10 @@ interface CheckResult {
     prPowerIndex: "unit" | "parts";
     prShorthandMul: "unit" | "parts" | "right-parts-left-unit";
     prSign: boolean;
-    isMulShorthand?: boolean;
+    mulMoreInfo?: {
+        isAllShorthand: boolean;
+        singleItem: boolean | "when-exclude-negative-one";
+    }
     prExcludeSign?: "unit";
 }
 

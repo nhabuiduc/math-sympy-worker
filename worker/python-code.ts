@@ -231,6 +231,18 @@ class __McHdl:
     def hdl_LeviCivita(self, d):
         return { 'func':'LeviCivita',  'args': self.argsMap(d.args), 'isArgsAtom': all(x.is_Atom for x in d.args) }
 
+    def hdl_Complexes(self, d):
+        return { 'func':'Complexes',  'args': [] }
+
+    def hdl_Naturals(self, d):
+        return { 'func':'Naturals',  'args': [] }
+
+    def hdl_Naturals0(self, d):
+        return { 'func':'Naturals0',  'args': [] }
+
+    def hdl_Integers(self, d):
+        return { 'func':'Integers',  'args': [] }
+
     def hdlGenericFunc(self, name, args):
         dic = {}
         dic['func'] = 'GenericFunc' 

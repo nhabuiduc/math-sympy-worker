@@ -308,9 +308,13 @@ class PrTransformHelper {
         // }
     }
 
-    considerPresentAsSingleUnitInOpCtx(s: Symbol, cr: Pr2M.CResult, wrapEvenShortHand?: boolean) {
+    considerPresentAsSingleUnitInOpCtx(s: Symbol, cr: Pr2M.CResult, ops?: { wrapEvenShortHand?: boolean, excludeSign?: boolean }) {
         const info = prSymbolVisuallyInfo.check(s, cr);
-        if (wrapEvenShortHand && info.isMulShorthand) {
+        if (ops?.excludeSign && info.prSign && info.prExcludeSign == "unit") {            
+            return true;
+        }
+        
+        if (ops?.wrapEvenShortHand && info.mulMoreInfo?.isAllShorthand && (!info.mulMoreInfo?.singleItem || info.mulMoreInfo?.singleItem == "when-exclude-negative-one")) {
             return false;
         }
         return info.prOp == "unit";
@@ -540,7 +544,7 @@ class PrTransformHelper {
         return { type: "BinaryOp", kind: "Container", op, symbols: ss, ...more };
     }
 
-    unary(s: Symbol, op: string, pos: P2Pr.UnaryOp["pos"] = "after"): P2Pr.UnaryOp {
+    unary(s: Symbol, op: string, pos: P2Pr.UnaryOp["pos"]): P2Pr.UnaryOp {
         return { type: "UnaryOp", kind: "Container", op, symbols: [s], pos };
     }
 

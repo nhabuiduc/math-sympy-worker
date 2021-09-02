@@ -11,7 +11,6 @@ export class Mul extends Pr2MItemBase {
     convert(obj: P2Pr.Mul): Pr2M.CResult {
         const { symbols } = obj;
         const items = symbols.map(a => this.main.convert(a));
-        // let blocks: BlockModel[] = [];
         let isNegative = false;
 
         let prevAdjacentArg: Symbol;
@@ -42,19 +41,15 @@ export class Mul extends Pr2MItemBase {
             if (idx > 0 && shouldSepratedByMul) {
                 blockss.push([blockBd.textBlock("×")]);
                 blockss.push(blocksToAdd);
-                // blocks = blockBd.combineMultipleBlocks(blocks, [blockBd.textBlock("×")], blocksToAdd);
                 allInShortcutForm = false;
             } else {
                 blockss.push(blocksToAdd);
-                // blocks = blockBd.combine2Blockss(blocks, blocksToAdd);
             }
 
             prevAdjacentArg = symbols[idx];
         }
 
         if (isNegative) {
-            // return this.makeRs(true, allInShortcutForm, blockBd.combine2Blockss([blockBd.textBlock("-")], blocks), obj);
-            // return this.makeRs(true, allInShortcutForm, blockBd.combine2Blockss([blockBd.textBlock("-")], blocks), obj);
             blockss.unshift([blockBd.textBlock("-")]);
 
         }
@@ -63,21 +58,14 @@ export class Mul extends Pr2MItemBase {
     }
 
     private makeRs(isNegative: boolean, allInShortcutForm: boolean, blocks: BlockModel[], obj: P2Pr.Mul): Pr2M.CResult {
-        // let prUnit: Pr2M.CResult["prUnit"] = "op";
-        // let prOp: Pr2M.CResult["prOp"] = "mul";
         let prMulInfo: Pr2M.CResult["prMul"] = { allInShortcutForm };
         if (isNegative && obj.symbols.length <= 2) {
-            // prUnit = undefined;
-            // prOp = undefined;
             prMulInfo = undefined;
 
         } else if (obj.symbols.length <= 1) {
-            // prUnit = undefined;
-            // prOp = undefined;
-            prMulInfo = undefined;
+            prMulInfo = { allInShortcutForm: true };
         }
 
-        // return { blocks, prMinusSign: isNegative, prUnit, prOp, prMul: prMulInfo }
         return { blocks, prMul: prMulInfo }
     }
 
@@ -93,14 +81,11 @@ export class Mul extends Pr2MItemBase {
     }
 
     private shouldWrapBrackets(s: Symbol, cResult: Pr2M.CResult, isFirst: boolean, isShortcut: boolean): boolean | "wrap-if-shortcut-after" {
-        // if (cResult.prUnit == "op") {
-        //     return true;
-        // }
-        if (isFirst) {
+        const checked = prSymbolVisuallyInfo.check(s, cResult);
+        if (isFirst && checked.prOp == "parts" && checked.prSign && checked.prExcludeSign == "unit") {
             return false;
         }
 
-        const checked = prSymbolVisuallyInfo.check(s, cResult);
         if (isShortcut) {
             if (checked.prShorthandMul == "parts") {
                 return true;

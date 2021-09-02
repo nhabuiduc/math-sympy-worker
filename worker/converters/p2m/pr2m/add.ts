@@ -14,7 +14,7 @@ export class Add extends Pr2MItemBase {
         for (let idx = 0; idx < items.length; idx++) {
             const item = items[idx];
             const checkRs = prSymbolVisuallyInfo.check(args[idx], item);
-            const blocksToAdd = (idx > 0 && checkRs.prOp == "parts" && (!checkRs.prSign || checkRs.prExcludeSign != "unit")) ? blockBd.wrapBetweenBrackets(item.blocks).blocks : item.blocks;
+            const blocksToAdd = this.shouldWrapBrackets(checkRs) ? blockBd.wrapBetweenBrackets(item.blocks).blocks : item.blocks;
             if (idx == 0) {
                 blocks = blockBd.combine2Blockss(blocks, blocksToAdd);
                 continue;
@@ -31,11 +31,10 @@ export class Add extends Pr2MItemBase {
         return { blocks };
     }
 
-    // private shouldWrapBracketItem(cr: Pr2M.CResult): boolean {
-    //     if (cr.prUnit == "op") {
-    //         return cr.prOp != "add" && cr.prOp != "mul"
-    //     }
-
-    //     return false;
-    // }
+    private shouldWrapBrackets(checked: ReturnType<typeof prSymbolVisuallyInfo["check"]>) {
+        if (checked.prOp == "parts" && checked.prSign && checked.prExcludeSign == "unit") {
+            return false;
+        }
+        return checked.prOp != "unit"
+    }
 }

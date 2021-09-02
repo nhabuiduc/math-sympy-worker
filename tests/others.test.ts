@@ -3,7 +3,7 @@ import { expect } from "chai";
 import { testHelper as th } from "./test-helper";
 
 /** Test from: https://github.com/sympy/sympy/blob/master/sympy/printing/tests/test_latex.py */
-describe.only("3: Others", () => {
+describe("3: Others", () => {
     before(async () => {
         await th.prepare(`
         x_star = Symbol('x^*')
@@ -168,7 +168,8 @@ tau, Tau, TAU, taU = symbols('tau, Tau, TAU, taU')
         expect(await th.run("Symbol('omega') ** Symbol('beta')")).equal(`[𝜔][💪,[𝛽]]`);
     })
 
-    it.only("functions", async () => {
+    it("functions", async () => {
+        await th.prepare(`from sympy import beta`)
         expect(await th.run("exp(x)")).equal(`[e][💪,[x]]`);
         expect(await th.run("exp(1) + exp(2)")).equal(`[e+e][💪,[2]]`);
 
@@ -458,7 +459,7 @@ Psi_indexed = IndexedBase(Symbol('Psi', complex=True, real=False))`);
 
     })
 
-    it.skip("derivatives", async () => {
+    it("derivatives", async () => {
 
         expect(await th.run(`diff(x**3, x, evaluate=False)`)).equal(`[frac,[d],[dx]][x][💪,[3]]`);
         expect(await th.run(`diff(sin(x) + x**2, x, evaluate=False)`)).equal(`[frac,[d],[dx]]([x][💪,[2]][+][sin,]([x]))`);
@@ -475,7 +476,8 @@ Psi_indexed = IndexedBase(Symbol('Psi', complex=True, real=False))`);
         expect(await th.run(`diff(diff(f(x, y), x, evaluate=False), y, evaluate=False)`)).equal(`[frac,[∂][💪,[2]],[∂y∂x]][f]([x,y])`);
         expect(await th.run(`diff(diff(diff(f(x, y), x, evaluate=False), x, evaluate=False), y, evaluate=False)`)).equal(`[frac,[∂][💪,[3]],[∂y∂x][💪,[2]]][f]([x,y])`);
 
-        expect(await th.run(`diff(-diff(y**2,x,evaluate=False),x,evaluate=False)`)).equal(`[frac,[d],[dx]][-][frac,[d],[dx]][y][💪,[2]]`);
+        expect(await th.run(`diff(-diff(y**2,x,evaluate=False),x,evaluate=False)`)).equal(`[frac,[d],[dx]][-][frac,[d],[dx]][y][💪,[2]]`);//
+
         expect(await th.run(`diff(diff(-diff(diff(y,x,evaluate=False),x,evaluate=False),x,evaluate=False),x,evaluate=False)`)).equal(`[frac,[d][💪,[2]],[dx][💪,[2]]][-][frac,[d][💪,[2]],[dx][💪,[2]]][y]`);
 
         expect(await th.run(`diff(Integral(exp(-x*y), (x, 0, oo)), y, evaluate=False)`)).equal(`[frac,[d],[dy]][int,[0],[∞]][e][💪,[-xy]][ dx]`);
@@ -527,12 +529,13 @@ x2 = Symbol('x2')
 
     it("sets", async () => {
 
-        expect(await th.run(`set([x*y, x**2])`)).equal(`{[x][💪,[2]][,xy]}`);
-        expect(await th.run(`frozenset([x*y, x**2])`)).equal(`{[x][💪,[2]][,xy]}`);
+        const possibleCorrects=[`{[x][💪,[2]][,xy]}`,`{[xy,x][💪,[2]]}`]
+        expect(await th.run(`set([x*y, x**2])`)).oneOf(possibleCorrects);
+        expect(await th.run(`frozenset([x*y, x**2])`)).oneOf(possibleCorrects);
         expect(await th.run(`set(range(1, 6))`)).equal(`{[1,2,3,4,5]}`);
 
         await th.prepare(`s = FiniteSet`);
-        expect(await th.run(`s(*[x*y, x**2])`)).equal(`{[x][💪,[2]][,xy]}`);
+        expect(await th.run(`s(*[x*y, x**2])`)).oneOf(possibleCorrects);
         expect(await th.run(`s(*range(1, 6))`)).equal(`{[1,2,3,4,5]}`);
     })
 
@@ -595,7 +598,7 @@ b = Symbol('b')
         expect(await th.run(`SeqFormula(b*a**2, (a, 0, 2))`)).equal(`[[0,b,4b]]`);
     });
 
-    it.skip("FourierSeries", async () => {
+    it("FourierSeries", async () => {
         expect(await th.run(`fourier_series(x, (x, -pi, pi))`)).equal(`[-][sin,]([2x])[+2][sin,]([x])[+][frac,[2][sin,]([3x]),[3]][+…]`);
 
     })
@@ -631,7 +634,7 @@ b = Symbol('b')
         expect(await th.run(`S.UniversalSet`)).equal(`[U,mathbb]`);
     })
 
-    it.skip("commutator", async () => {
+    it("commutator", async () => {
         await th.prepare(` 
 A = Operator('A')
 B = Operator('B')
@@ -720,7 +723,7 @@ P2 = ProductSet(C, D)
 
     });
 
-    it.skip("Complexes", async () => {
+    it("Complexes", async () => {
         expect(await th.run(`S.Complexes`)).equal(`[C,mathbb]`);
     });
 
@@ -746,7 +749,7 @@ P2 = ProductSet(C, D)
         expect(await th.run(`ConditionSet(x, Eq(x**2, 1), S.UniversalSet)`)).equal(`{[x ][middle|,][ x][💪,[2]][=1]}`);
 
     })
-    it.skip("ComplexRegion", async () => {
+    it("ComplexRegion", async () => {
         expect(await th.run(`ComplexRegion(Interval(3, 5)*Interval(4, 6))`)).equal(`{[iy+x ][middle|,][ x,y∈][[3,5]][×][[4,6]]}`);
         expect(await th.run(`ComplexRegion(Interval(0, 1)*Interval(0, 2*pi), polar=True)`)).equal(`{([i][sin,]([𝜃])[+][cos,]([𝜃]))[r ][middle|,][ r,𝜃∈][[0,1]][×][[0,2𝜋])}`);
 
@@ -806,7 +809,7 @@ y1111 = beta + x
 
     it("dict", async () => {
         expect(await th.run(`{Rational(1): 1, x**2: 2, x: 3, x**3: 4}`)).equal(`{[1:1,x][💪,[2]][:2,x:3,x][💪,[3]][:4]}`);
-        expect(await th.run(`Dict({Rational(1): 1, x**2: 2, x: 3, x**3: 4})`)).equal(`{[x][💪,[3]][:4,x:3,1:1,x][💪,[2]][:2]}`);
+        expect(await th.run(`Dict({Rational(1): 1, x**2: 2, x: 3, x**3: 4})`)).equal(`{[x:3,x][💪,[3]][:4,1:1,x][💪,[2]][:2]}`);
 
     })
 
@@ -814,7 +817,7 @@ y1111 = beta + x
         expect(await th.run(`[Symbol('omega1'), Symbol('a'), Symbol('alpha')]`)).equal(`[[𝜔][⛏️,[1]][,a,𝛼]]`);
     })
 
-    it.skip("Rational2", async () => {
+    it("Rational2", async () => {
         expect(await th.run(`-Rational(1, 2)`)).equal(`[-][frac,[1],[2]]`);
         expect(await th.run(`Rational(-1, 2)`)).equal(`[-][frac,[1],[2]]`);
         expect(await th.run(`Rational(1, -2)`)).equal(`[-][frac,[1],[2]]`);
@@ -869,7 +872,7 @@ y1111 = beta + x
         expect(await th.run(`mathieucprime(x, y, z)**2`)).equal(`[C][💪,[′]]([x,y,z])[💪,[2]]`);
         expect(await th.run(`mathieusprime(x, y, z)**2`)).equal(`[S][💪,[′]]([x,y,z])[💪,[2]]`);
     })
-    it("Piecewise", async () => {
+    it.only("Piecewise", async () => {
         expect(await th.run(`Piecewise((x, x < 1), (x**2, True))`)).equal(`[🏓cases,[x],[📜,[for]][ x<1],[x][💪,[2]],[📜,[otherwise]][ ]]`);
         expect(await th.run(`Piecewise((x, x < 0), (0, x >= 0))`)).equal(`[🏓cases,[x],[📜,[for]][ x<0],[0],[📜,[otherwise]][ ]]`);
 
