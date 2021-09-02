@@ -310,10 +310,10 @@ class PrTransformHelper {
 
     considerPresentAsSingleUnitInOpCtx(s: Symbol, cr: Pr2M.CResult, ops?: { wrapEvenShortHand?: boolean, excludeSign?: boolean }) {
         const info = prSymbolVisuallyInfo.check(s, cr);
-        if (ops?.excludeSign && info.prSign && info.prExcludeSign == "unit") {            
+        if (ops?.excludeSign && info.prSign && info.prExcludeSign == "unit") {
             return true;
         }
-        
+
         if (ops?.wrapEvenShortHand && info.mulMoreInfo?.isAllShorthand && (!info.mulMoreInfo?.singleItem || info.mulMoreInfo?.singleItem == "when-exclude-negative-one")) {
             return false;
         }
@@ -441,7 +441,7 @@ class PrTransformHelper {
         return { type: "VarList", kind: "Container", symbols: [base], bracket: br, separator: "," };
     }
 
-    matrix(ss: Symbol[][] | { ss: Symbol[], row: number, col: number }, bracket?: "(" | "["): P2Pr.Matrix {
+    matrix(ss: Symbol[][] | { ss: Symbol[], row: number, col: number }, bracket: "(" | "[" | undefined): P2Pr.Matrix {
         let flattenSs: Symbol[];
         let row = 1;
         let col = 1;
@@ -450,7 +450,7 @@ class PrTransformHelper {
             row = ss.length;
             col = ss[0].length;
         } else {
-            flattenSs == ss.ss;
+            flattenSs = ss.ss;
             row = ss.row;
             col = ss.col;
         }

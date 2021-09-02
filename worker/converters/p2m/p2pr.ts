@@ -12,6 +12,7 @@ import { funcToConstant } from "./p2pr/func-to-constant";
 import { bloackBoardBold } from "./p2pr/blackboard-bold";
 import { _l } from "@sympy-worker/light-lodash";
 import { Set as SetP2Pr } from "./p2pr/set";
+import { NDimArray } from "./p2pr/dim-array";
 
 export class P2Pr {
 
@@ -20,6 +21,7 @@ export class P2Pr {
     public nameParser: NameParser;
     private genericFunc: GenericFunc;
     private set: SetP2Pr;
+    private nDimArray = new NDimArray(this);
     constructor(symbolLatexNames: { [key: string]: string }) {
         this.nameParser = new NameParser(symbolLatexNames);
         this.symbol = new SymbolP2Pr(this.nameParser);
@@ -117,7 +119,6 @@ export class P2Pr {
 
             case "Integer": {
                 return prTh.var(obj.value, { nativeType: obj.func })
-                // return { type: "Integer", kind: "Leaf", value: obj.value };
             }
             case "Float": {
                 return float.parse(obj.value);
@@ -160,11 +161,9 @@ export class P2Pr {
 
             case "NumberSymbol": {
                 return prTh.numberSymbol(obj.name);
-                // return { type: "ConstantSymbol", kind: "Leaf", showType: "text", name: obj.name }
             }
             case "Zero": {
                 return prTh.var("0", { nativeType: obj.func });
-                // return { type: "Zero", kind: "Leaf" }
             }
 
             case "Half": {
@@ -249,7 +248,6 @@ export class P2Pr {
             }
             case "Point": {
                 return { type: "GenericFunc", kind: "Container", func: (obj.args[0] as P.Str).text, symbols: this.m(obj.args) }
-                // return { type: "Point", kind: "Container", name: (obj.args[0] as P.Str).text, symbols: obj.args.map(c => this.innerConvert(c)) }
             }
 
             case "Poly": {
@@ -259,7 +257,6 @@ export class P2Pr {
                     prTh.varList([prTh.str("Domain="), d]),
                 ], ",", "(")
 
-                // return { type: "PolynomialRing", kind: "Container", symbols: this.m(obj.args), domain: this.c(obj.domain) }
             }
             case "PolynomialRing": {
                 const [d, ...ss] = this.m(obj.args);
@@ -272,13 +269,6 @@ export class P2Pr {
             case "Derivative": {
                 return { type: "Derivative", kind: "Container", partial: obj.partial, symbols: this.m(obj.args) }
             }
-
-            // case "BooleanTrue": {
-            //     return { type: "ConstantSymbol", kind: "Leaf", showType: "text", name: "True" }
-            // }
-            // case "BooleanFalse": {
-            //     return { type: "ConstantSymbol", kind: "Leaf", showType: "text", name: "False" }
-            // }
 
             case "Relational": {
                 return { type: "Relational", kind: "Container", relOp: obj.relOp, symbols: this.m(obj.args) }
@@ -293,13 +283,8 @@ export class P2Pr {
                 }
             }
 
-            // case "Poly": {
-            //     return { type: "Poly", kind: "Container", symbols: this.m(obj.args), domain: this.c(obj.domain) }
-            // }
-
             case "DisplayedDomain": {
                 return prTh.var(obj.name, { bold: "blackboard" })
-                // return { type: "DisplayedDomain", kind: "Leaf", name: obj.name }
             }
 
             case "Integral": {
@@ -432,8 +417,6 @@ export class P2Pr {
                     return prTh.pow(ss[0], prTh.int(ss.length));
                 }
                 return prTh.bin(ss, "×");
-                // return this.prCommon.opJoin(obj.symbols, "×");
-                // return { type: "ProductSet", kind: "Container", hasVariety: obj.hasVariety, symbols: this.m(obj.args) }
             }
             case "ComplexRegion":
             case "ConditionSet":
@@ -467,7 +450,9 @@ export class P2Pr {
             case "Exp": {
                 return prTh.pow(prTh.var("e"), this.c(obj.args[0]))
             }
-
+            case "NDimArray": {
+                return this.nDimArray.convert(obj);
+            }
         }
 
 
@@ -484,16 +469,6 @@ export class P2Pr {
     private detectUnevaluatedMul(symbols: Symbol[]): boolean {
         return (symbols[0].type == "Var" && symbols[0].nativeType == "One") || symbols.some((c, idx) => idx > 0 && prTh.isConstant(c));
     }
-
-    // static parseIntegerConstant(s: P.Basic): number {
-    //     switch (s.func) {
-    //         case "One": return 1;
-    //         case "Zero": return 0;
-    //         case "Integer": return s.value;
-    //     }
-
-    //     throw new Error("Unsupported symbol for parsing integer");
-    // }
 }
 
 type Symbol = P2Pr.Symbol;
@@ -519,7 +494,6 @@ export namespace P2Pr {
 
 
     export type Frac = C<"Frac">;
-    // export type Tuple = C<"Tuple">;
     export type Integral = C<"Integral">;
     export type Add = C<"Add">;
     export type Sqrt = C<"Sqrt">;
@@ -558,37 +532,10 @@ export namespace P2Pr {
         rightBracket?: SupportBracket;
     }
 
-    // export interface VecExpr extends Container {
-    //     type: "VecExpr";
-    //     op: "Cross" | "Curl" | "Divergence" | "Dot" | "Gradient" | "Laplacian";
-    // }
-
-    // export interface Discrete extends Container {
-    //     type: "Discrete";
-    //     op: "Not" | "And" | "Or" | "Implies";
-    // }
-
-
     export interface Mul extends Container {
         type: "Mul";
         unevaluatedDetected: boolean;
     }
-
-    // export interface ConstantSymbol extends Leaf {
-    //     type: "ConstantSymbol";
-    //     showType: "symbol" | "text";
-    //     name: string;
-    // }
-
-    // export interface Integer extends Leaf {
-    //     type: "Integer";
-    //     value: number;
-    // }
-
-    // export interface Float extends Leaf {
-    //     type: "Float";
-    //     value: string;
-    // }
 
     export interface Var extends Leaf {
         type: "Var";
@@ -597,12 +544,6 @@ export namespace P2Pr {
         normalText?: boolean;
         nativeType?: "One" | "NegativeOne" | "Zero" | "Integer" | "Float" | "NaN" | "BooleanTrue" | "BooleanFalse" | "NumberSymbol"
     }
-
-    // export interface Raw extends Leaf {
-    //     type: "Raw";
-    //     name: string;
-    //     bold?: boolean | "blackboard"
-    // }
 
     export interface JsonData extends Leaf {
         type: "JsonData";
@@ -627,11 +568,6 @@ export namespace P2Pr {
         isUndefinedFunction?: boolean;
     }
 
-    // export interface Str extends Leaf {
-    //     type: "Str";
-    //     text: string;
-    // }
-
     export interface Derivative extends Container {
         type: "Derivative";
         partial: boolean;
@@ -642,12 +578,6 @@ export namespace P2Pr {
         type: "Relational";
         relOp: "==" | ">" | "<" | "<=" | ">=" | "!=";
     }
-
-    // export interface Poly extends Container {
-    //     type: "Poly";
-    //     domain: Symbol;
-    // }
-
 
     export interface IPrTransform {
         transform(symbol: Symbol, ops: P2Pr.TransformOptions): Symbol;
@@ -689,7 +619,7 @@ namespace P {
         F<"Intersection"> | F<"SymmetricDifference"> | F<"Complement"> | U<"Reals"> | U<"Naturals"> | U<"Complexes"> |
         U<"Rationals"> | U<"Integers"> | U<"Naturals0"> | ProductSet | F<"ImageSet"> | F<"Lambda"> | F<"ConditionSet"> |
         F<"ComplexRegion"> | F<"Contains"> | F<"Product"> | F<"Limit"> | F<"DiracDelta"> | F<"Heaviside"> | KroneckerDelta |
-        LeviCivita | F<"Piecewise"> | F<"Factorial"> | F<"Factorial2"> | F<"SubFactorial"> | F<"Exp"> |
+        LeviCivita | F<"Piecewise"> | F<"Factorial"> | F<"Factorial2"> | F<"SubFactorial"> | F<"Exp"> | F<"NDimArray"> |
         UnknownFunc;
 
     export interface KroneckerDelta extends F<"KroneckerDelta"> {
@@ -783,11 +713,6 @@ namespace P {
         func: "List";
         separator: "," | ";",
     }
-
-    // export interface Poly extends FuncArgs {
-    //     func: "Poly";
-    //     domain: Basic,
-    // }
 
     export interface UndefinedFunction extends FuncArgs {
         func: "UndefinedFunction";

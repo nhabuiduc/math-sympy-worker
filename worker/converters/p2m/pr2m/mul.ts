@@ -29,8 +29,9 @@ export class Mul extends Pr2MItemBase {
             const shouldSepratedByMul = this.shouldSeparateByMulSymbol(prevAdjacentArg, symbols[idx]);
             let shouldWrap: boolean = false;
             if (lastBracketChecked == "wrap-if-shortcut-after") {
-                shouldWrap = true;
+                blockss[blockss.length - 1] = blockBd.wrapBetweenBrackets(blockss[blockss.length - 1]).blocks;
                 lastBracketChecked = this.shouldWrapBrackets(curArg, item, idx == 0, !shouldSepratedByMul);
+                shouldWrap = lastBracketChecked === true;
             } else {
                 lastBracketChecked = this.shouldWrapBrackets(curArg, item, idx == 0, !shouldSepratedByMul);
                 shouldWrap = lastBracketChecked === true;

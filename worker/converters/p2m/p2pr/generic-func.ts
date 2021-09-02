@@ -20,7 +20,7 @@ export class GenericFunc extends P2PrItemBase {
                 prTh.matrix([
                     this.m(obj.args.slice(4, 6)).map(c => prTh.removeVarListBracket(c)),
                     this.m(obj.args.slice(6, 8)).map(c => prTh.removeVarListBracket(c)),
-                ]),
+                ], "["),
                 this.c(obj.args[8]),
             ], "|", "(")])
         }
@@ -30,7 +30,7 @@ export class GenericFunc extends P2PrItemBase {
                 prTh.matrix([
                     this.m(obj.args.slice(2, 3)).map(c => prTh.removeVarListBracket(c)),
                     this.m(obj.args.slice(3, 4)).map(c => prTh.removeVarListBracket(c)),
-                ]),
+                ], "["),
                 this.c(obj.args[4]),
             ], "|", "(")])
         }
@@ -302,14 +302,6 @@ export class GenericFunc extends P2PrItemBase {
                 return this.indexPowerGenericFunc({ name: "Z", args: obj.args, func: "GenericFunc" });
             }
         }
-    }
-
-    private m(args: P2Pr.PBasic[]): Symbol[] {
-        return this.main.m(args);
-    }
-
-    private c(obj: P2Pr.PBasic): Symbol {
-        return this.main.c(obj);
     }
 
     private indexPowerBracketGenericFunc(obj: Omit<P2Pr.PGenericFunc, "func">, powConsumeCount: number, options?: Partial<P2Pr.GenericFunc>): P2Pr.Pow {

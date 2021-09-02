@@ -243,6 +243,21 @@ class __McHdl:
     def hdl_Integers(self, d):
         return { 'func':'Integers',  'args': [] }
 
+    def hdl_NDimArray(self, d):
+        from sympy.tensor.array import NDimArray
+        def expandAll(arr):
+            rs=[]
+            for item in arr:
+                if isinstance(item, NDimArray):
+                   rs= rs + expandAll(item)
+                else:
+                    rs.append(item)
+            return rs
+        
+        args = expandAll(d)  
+        return { 'func':'NDimArray',  'args': [self.hdlAll(tuple(args))] + [self.hdlAll(d.shape)] }
+
+
     def hdlGenericFunc(self, name, args):
         dic = {}
         dic['func'] = 'GenericFunc' 

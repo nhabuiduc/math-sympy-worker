@@ -529,7 +529,7 @@ x2 = Symbol('x2')
 
     it("sets", async () => {
 
-        const possibleCorrects=[`{[x][💪,[2]][,xy]}`,`{[xy,x][💪,[2]]}`]
+        const possibleCorrects = [`{[x][💪,[2]][,xy]}`, `{[xy,x][💪,[2]]}`]
         expect(await th.run(`set([x*y, x**2])`)).oneOf(possibleCorrects);
         expect(await th.run(`frozenset([x*y, x**2])`)).oneOf(possibleCorrects);
         expect(await th.run(`set(range(1, 6))`)).equal(`{[1,2,3,4,5]}`);
@@ -880,9 +880,57 @@ y1111 = beta + x
 A, B = symbols("A B", commutative=False)
 p = Piecewise((A**2, Eq(A, B)), (A*B, True))
         `);
-        // expect(await th.run(`p`)).equal(`[🏓cases,[A][💪,[2]],[📜,[for]][ A=B],[AB],[📜,[otherwise]][ ]]`);
-        // expect(await th.run(`A*p`)).equal(`[🏓cases,[A][💪,[2]],[📜,[for]][ A=B],[AB],[📜,[otherwise]][ ]]`);
+        expect(await th.run(`p`)).equal(`[🏓cases,[A][💪,[2]],[📜,[for]][ A=B],[AB],[📜,[otherwise]][ ]]`);
+        expect(await th.run(`A*p`)).equal(`[A][🏓cases,[A][💪,[2]],[📜,[for]][ A=B],[AB],[📜,[otherwise]][ ]]`);
+        expect(await th.run(`p*A`)).equal(`([🏓cases,[A][💪,[2]],[📜,[for]][ A=B],[AB],[📜,[otherwise]][ ]])[A]`);
+        expect(await th.run(`Piecewise((x, x < 1), (x**2, x < 2))`)).equal(`[🏓cases,[x],[📜,[for]][ x<1],[x][💪,[2]],[📜,[for]][ x<2]]`);
+    })
 
+    it.only("Matrix", async () => {
+        expect(await th.run(`Matrix([[1 + x, y], [y, x - 1]])`)).equal(`[[🏓]matrix,[1+x],[y],[y],[-1+x]]`);
+        expect(await th.run(`Matrix(1, 11, range(11))`)).equal(`[[🏓]matrix,[0],[1],[2],[3],[4],[5],[6],[7],[8],[9],[10]]`);
+
+    })
+    it.only("matrix_with_functions", async () => {
+        await th.prepare(`
+        t = symbols('t')
+        theta1 = symbols('theta1', cls=Function)`);
+
+        expect(await th.run(`Matrix([[sin(theta1(t)), cos(theta1(t))],[cos(theta1(t).diff(t)), sin(theta1(t).diff(t))]])`))
+            .equal(`[[🏓]matrix,[sin,]([𝜃][⛏️,[1]]([t])),[cos,]([𝜃][⛏️,[1]]([t])),[cos,]([frac,[d],[dt]][𝜃][⛏️,[1]]([t])),[sin,]([frac,[d],[dt]][𝜃][⛏️,[1]]([t]))]`);
+
+    })
+    it.only("NDimArray", async () => {
+        const arrNames = `ImmutableDenseNDimArray, ImmutableSparseNDimArray,MutableDenseNDimArray, MutableSparseNDimArray`.split(",");
+        // const arrNames = `MutableSparseNDimArray`.split(",");
+        for (let idx = 0; idx < arrNames.length; idx++) {
+            const arrName = arrNames[idx];
+            await th.prepare(`M = ${arrName}(x)`);
+            expect(await th.run(`M`)).equal(`[x]`);
+            await th.prepare(`
+M = ${arrName}([[1 / x, y], [z, w]])
+M1 = ${arrName}([1 / x, y, z])
+
+M2 = tensorproduct(M1, M)
+M3 = tensorproduct(M, M)
+
+`);
+            expect(await th.run(`M`)).equal(`[[🏓]matrix,[frac,[1],[x]],[y],[z],[w]]`);
+            expect(await th.run(`M1`)).equal(`[[🏓]matrix,[frac,[1],[x]],[y],[z]]`);
+            expect(await th.run(`M2`)).equal(`[[🏓]matrix,[[🏓]matrix,[frac,[1],[x][💪,[2]]],[frac,[y],[x]],[frac,[z],[x]],[frac,[w],[x]]],[[🏓]matrix,[frac,[y],[x]],[y][💪,[2]],[yz],[wy]],[[🏓]matrix,[frac,[z],[x]],[yz],[z][💪,[2]],[wz]]]`);
+            expect(await th.run(`M3`)).equal(`[[🏓]matrix,[[🏓]matrix,[frac,[1],[x][💪,[2]]],[frac,[y],[x]],[frac,[z],[x]],[frac,[w],[x]]],[[🏓]matrix,[frac,[y],[x]],[y][💪,[2]],[yz],[wy]],[[🏓]matrix,[frac,[z],[x]],[yz],[z][💪,[2]],[wz]],[[🏓]matrix,[frac,[w],[x]],[wy],[wz],[w][💪,[2]]]]`);
+
+            await th.prepare(`
+Mrow = ${arrName}([[x, y, 1/z]])
+Mcolumn = ${arrName}([[x], [y], [1/z]])
+Mcol2 = ${arrName}([Mcolumn.tolist()])
+            `)
+
+            expect(await th.run(`Mrow`)).equal(`[[🏓]matrix,[[🏓]matrix,[x],[y],[frac,[1],[z]]]]`);
+            expect(await th.run(`Mcolumn`)).equal(`[[🏓]matrix,[x],[y],[frac,[1],[z]]]`);
+            expect(await th.run(`Mcol2`)).equal(`[[🏓]matrix,[[🏓]matrix,[x],[y],[frac,[1],[z]]]]`);
+
+        }
     })
 
 });
