@@ -6,19 +6,24 @@ import { testHelper as th } from "./test-helper";
 describe("3: Others", () => {
     before(async () => {
         await th.prepare(`
-        x_star = Symbol('x^*')
-        f = Function('f')`);
-        await th.prepare(`
-x, y, z, t, w, a, b, c, s, p = symbols('x y z t w a b c s p')
-k, m, n = symbols('k m n', integer=True)
-`)
+x_star = Symbol('x^*')
+f = Function('f')
+`);
+
 
         await th.prepare(defineSympyExprDumpFunc);
     });
 
+    beforeEach(async () => {
+        await th.prepare(`
+x, y, z, t, w, a, b, c, s, p = symbols('x y z t w a b c s p')
+k, m, n = symbols('k m n', integer=True)
+`)
+    })
+
     it("symbol with multiple characters", async () => {
-        expect(await th.run("x_star**2")).equal(`([x^*])[💪,[2]]`);
-        expect(await th.run("Derivative(f(x_star), x_star,2)")).equal(`[frac,[d][💪,[2]],[d]([x^*])[💪,[2]]][f]([x^*])`);
+        expect(await th.run("x_star**2")).equal(`([x][💪,[*]])[💪,[2]]`);
+        expect(await th.run("Derivative(f(x_star), x_star,2)")).equal(`[frac,[d][💪,[2]],[d]([x][💪,[*]])[💪,[2]]][f]([x][💪,[*]])`);
 
         expect(await th.run("2*Integral(x, x)/3")).equal(`[frac,[2][int,][x dx],[3]]`);
     });
@@ -400,8 +405,7 @@ from sympy.abc import x, z`);
 
 
 
-        expect(await th.run(`meijerg(Tuple(pi, pi, x), Tuple(1),
-(0, 1), Tuple(1, 2, 3/pi), z)`)).equal(`[C][💪,[2,3],[4,5]]([🏓matrix,[𝜋,𝜋,x],[1],[0,1],[1,2,][frac,[3],[𝜋]]][middle|,][z])`);
+        expect(await th.run(`meijerg(Tuple(pi, pi, x), Tuple(1),(0, 1), Tuple(1, 2, 3/pi), z)`)).equal(`[C][💪,[2,3],[4,5]]([🏓matrix,[𝜋,𝜋,x],[1],[0,1],[1,2,][frac,[3],[𝜋]]][middle|,][z])`);
 
         expect(await th.run(`meijerg(Tuple(), Tuple(1), (0,), Tuple(), z)`)).equal(`[C][💪,[1,0],[1,1]]([🏓matrix,,[1],[0],][middle|,][z])`);
         expect(await th.run(`hyper((x, 2), (3,), z)`)).equal(`[prescript,[2]][F][⛏️,[1]]([🏓matrix,[x,2],[3]][middle|,][z])`);
@@ -604,7 +608,7 @@ b = Symbol('b')
     })
 
     it("FormalPowerSeries", async () => {
-        expect(await th.run(`fps(log(1 + x))`)).equal(`[sum,[k=1],[∞]][-][frac,([-1])[💪,[-k]][x][💪,[k]],[k]]`);
+        expect(await th.run(`fps(log(1 + x))`)).equal(`[sum,[k=1],[∞]][-][frac,[x][💪,[k]],([-1])[💪,[k]][k]]`);
 
     })
 
@@ -872,7 +876,7 @@ y1111 = beta + x
         expect(await th.run(`mathieucprime(x, y, z)**2`)).equal(`[C][💪,[′]]([x,y,z])[💪,[2]]`);
         expect(await th.run(`mathieusprime(x, y, z)**2`)).equal(`[S][💪,[′]]([x,y,z])[💪,[2]]`);
     })
-    it.only("Piecewise", async () => {
+    it("Piecewise", async () => {
         expect(await th.run(`Piecewise((x, x < 1), (x**2, True))`)).equal(`[🏓cases,[x],[📜,[for]][ x<1],[x][💪,[2]],[📜,[otherwise]][ ]]`);
         expect(await th.run(`Piecewise((x, x < 0), (0, x >= 0))`)).equal(`[🏓cases,[x],[📜,[for]][ x<0],[0],[📜,[otherwise]][ ]]`);
 
@@ -886,12 +890,12 @@ p = Piecewise((A**2, Eq(A, B)), (A*B, True))
         expect(await th.run(`Piecewise((x, x < 1), (x**2, x < 2))`)).equal(`[🏓cases,[x],[📜,[for]][ x<1],[x][💪,[2]],[📜,[for]][ x<2]]`);
     })
 
-    it.only("Matrix", async () => {
+    it("Matrix", async () => {
         expect(await th.run(`Matrix([[1 + x, y], [y, x - 1]])`)).equal(`[[🏓]matrix,[1+x],[y],[y],[-1+x]]`);
         expect(await th.run(`Matrix(1, 11, range(11))`)).equal(`[[🏓]matrix,[0],[1],[2],[3],[4],[5],[6],[7],[8],[9],[10]]`);
 
     })
-    it.only("matrix_with_functions", async () => {
+    it("matrix_with_functions", async () => {
         await th.prepare(`
         t = symbols('t')
         theta1 = symbols('theta1', cls=Function)`);
@@ -900,7 +904,8 @@ p = Piecewise((A**2, Eq(A, B)), (A*B, True))
             .equal(`[[🏓]matrix,[sin,]([𝜃][⛏️,[1]]([t])),[cos,]([𝜃][⛏️,[1]]([t])),[cos,]([frac,[d],[dt]][𝜃][⛏️,[1]]([t])),[sin,]([frac,[d],[dt]][𝜃][⛏️,[1]]([t]))]`);
 
     })
-    it.only("NDimArray", async () => {
+    it("NDimArray", async () => {
+        await th.prepare(`x, y, z, t, w, a, b, c, s, p = symbols('x y z t w a b c s p')`)
         const arrNames = `ImmutableDenseNDimArray, ImmutableSparseNDimArray,MutableDenseNDimArray, MutableSparseNDimArray`.split(",");
         // const arrNames = `MutableSparseNDimArray`.split(",");
         for (let idx = 0; idx < arrNames.length; idx++) {
@@ -931,6 +936,77 @@ Mcol2 = ${arrName}([Mcolumn.tolist()])
             expect(await th.run(`Mcol2`)).equal(`[[🏓]matrix,[[🏓]matrix,[x],[y],[frac,[1],[z]]]]`);
 
         }
+    })
+
+    it("mul_symbol", async () => {
+        expect(await th.run(`4*4**x`)).equal(`[4×4][💪,[x]]`);
+        expect(await th.run(`4*x`)).equal(`[4x]`);
+    })
+    it("issue_4381", async () => {
+        await th.prepare(`y4381 = 4*4**log(2)`)
+        expect(await th.run(`y4381`)).equal(`[4×4][💪,[log,]([2])]`);
+        expect(await th.run(`1/y4381`)).equal(`[frac,[1],[4×4][💪,[log,]([2])]]`);
+    })
+    it("issue_4576", async () => {
+        expect(await th.run(`Symbol("beta_13_2")`)).equal("[𝛽][⛏️,[13_2]]");
+        expect(await th.run(`Symbol("beta_132_20")`)).equal("[𝛽][⛏️,[132_20]]");
+        expect(await th.run(`Symbol("beta_13")`)).equal("[𝛽][⛏️,[13]]");
+        expect(await th.run(`Symbol("x_a_b")`)).equal("[x][⛏️,[a_b]]");
+        expect(await th.run(`Symbol("x_1_2_3")`)).equal("[x][⛏️,[1_2_3]]");
+        expect(await th.run(`Symbol("x_a_b1")`)).equal("[x][⛏️,[a_b1]]");
+        expect(await th.run(`Symbol("x_a_1")`)).equal("[x][⛏️,[a_1]]");
+        expect(await th.run(`Symbol("x_1_a")`)).equal("[x][⛏️,[1_a]]");
+        expect(await th.run(`Symbol("x_1^aa")`)).equal("[x][💪,[aa],[1]]");
+        expect(await th.run(`Symbol("x_1__aa")`)).equal("[x][⛏️,[1__aa]]");
+        expect(await th.run(`Symbol("x_11^a")`)).equal("[x][💪,[a],[11]]");
+        expect(await th.run(`Symbol("x_11__a")`)).equal("[x][⛏️,[11__a]]");
+        expect(await th.run(`Symbol("x_a_a_a_a")`)).equal("[x][⛏️,[a_a_a_a]]");
+        expect(await th.run(`Symbol("x_a_a^a^a")`)).equal("[x][⛏️,[a_a^a^a]]");
+        expect(await th.run(`Symbol("x_a_a__a__a")`)).equal("[x][⛏️,[a_a__a__a]]");
+        expect(await th.run(`Symbol("alpha_11")`)).equal("[𝛼][⛏️,[11]]");
+        expect(await th.run(`Symbol("alpha_11_11")`)).equal("[𝛼][⛏️,[11_11]]");
+        expect(await th.run(`Symbol("alpha_alpha")`)).equal("[𝛼][⛏️,[𝛼]]");
+        expect(await th.run(`Symbol("alpha^aleph")`)).equal("[𝛼][💪,[aleph]]");
+        expect(await th.run(`Symbol("alpha__aleph")`)).equal("[𝛼][⛏️,[_aleph]]");
+
+        /**unicode */
+        expect(await th.run(`Symbol("𝜔")`)).equal("[𝜔]");
+        expect(await th.run(`Symbol("𝜔2")`)).equal("[𝜔][⛏️,[2]]");
+        expect(await th.run(`Symbol("𝜔_𝛽")`)).equal("[𝜔][⛏️,[𝛽]]");
+    });
+
+    it("pow_fraction", async () => {
+        expect(await th.run(`exp(-x)/2`)).equal("[frac,[1],[2e][💪,[x]]]");
+        expect(await th.run(`3**-x/2`)).equal("[frac,[1],[2×3][💪,[x]]]");
+
+    });
+
+    it.skip("noncommutative", async () => {
+        await th.prepare(`A, B, C = symbols('A,B,C', commutative=False)`);
+        expect(await th.run(`A*B*C**-1`)).equal("[frac,[1],[2×3][💪,[x]]]");
+        expect(await th.run(`A*B*C**-1`)).equal("[frac,[1],[2×3][💪,[x]]]");
+        expect(await th.run(`C**-1*A*B`)).equal("[frac,[1],[2×3][💪,[x]]]");
+        expect(await th.run(`A*C**-1*B`)).equal("[frac,[1],[2×3][💪,[x]]]");
+
+    })
+    it.skip("order", async () => {
+        expect(await th.run(`x**3 + x**2*y + y**4 + 3*x*y**3`)).equal("[frac,[1],[2×3][💪,[x]]]");
+    });
+
+    it("Lambda", async () => {
+        expect(await th.run(`Lambda(x, x + 1)`)).equal("([x↦1+x])");
+        expect(await th.run(`Lambda((x, y), x + 1)`)).equal("(([x,y])[↦1+x])");
+        expect(await th.run(`Lambda(x, x)`)).equal("([x↦x])");
+    })
+
+    it.only("PolyElement", async () => {
+        await th.prepare(`
+Ruv, u, v = ring("u,v", ZZ)
+Rxyz, x, y, z = ring("x,y,z", Ruv)
+        `);
+
+        expect(await th.run(`x - x`)).equal("([x↦x])");
+
     })
 
 });

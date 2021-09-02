@@ -20,7 +20,7 @@ export class GenericFunc extends P2PrItemBase {
                 prTh.matrix([
                     this.m(obj.args.slice(4, 6)).map(c => prTh.removeVarListBracket(c)),
                     this.m(obj.args.slice(6, 8)).map(c => prTh.removeVarListBracket(c)),
-                ], "["),
+                ], undefined),
                 this.c(obj.args[8]),
             ], "|", "(")])
         }
@@ -30,7 +30,7 @@ export class GenericFunc extends P2PrItemBase {
                 prTh.matrix([
                     this.m(obj.args.slice(2, 3)).map(c => prTh.removeVarListBracket(c)),
                     this.m(obj.args.slice(3, 4)).map(c => prTh.removeVarListBracket(c)),
-                ], "["),
+                ], undefined),
                 this.c(obj.args[4]),
             ], "|", "(")])
         }

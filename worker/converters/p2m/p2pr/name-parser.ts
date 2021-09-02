@@ -12,13 +12,13 @@ export class NameParser {
             return this.handleJsonIdx(name, splitIdx, func);
         }
 
-        let endWithNumberMatch = name.match(/^([a-zA-Z]+)([\d]+)$/);
+        let endWithNumberMatch = name.match(/^([^\d\_\^]+)([\d]+)$/);
         if (endWithNumberMatch) {
             endWithNumberMatch = endWithNumberMatch.map(c => this.nameMap(c));
             return this.handleNumberIdx(endWithNumberMatch[1], endWithNumberMatch[2], func);
         }
 
-        let indexPowerMatch = name.match(/^([\w]+)_([\w]+)\^([\w]+)$/);
+        let indexPowerMatch = name.match(/^([^\_\^]+)_([^\_\^]+)\^(.+)$/);
         if (indexPowerMatch) {
             indexPowerMatch = indexPowerMatch.map(c => this.nameMap(c));
             return prTh.pow(
@@ -29,7 +29,7 @@ export class NameParser {
         }
 
 
-        let powerIndexMatch = name.match(/^([\w]+)\^([\w]+)_([\w]+)$/);
+        let powerIndexMatch = name.match(/^([^\_\^]+)\^([^\_\^]+)\_(.+)$/);
         if (powerIndexMatch) {
             powerIndexMatch = powerIndexMatch.map(c => this.nameMap(c));
             return prTh.pow(
@@ -39,13 +39,13 @@ export class NameParser {
             )
         }
 
-        let indexMatch = name.match(/^([\w]+)_([\w]+)$/);
+        let indexMatch = name.match(/^([^\_\^]+)\_(.+)$/);
         if (indexMatch) {
             indexMatch = indexMatch.map(c => this.nameMap(c));
             return prTh.index(func(indexMatch[1]), prTh.var(indexMatch[2]));
         }
 
-        let powerMatch = name.match(/^([\w]+)\^([\w]+)$/);
+        let powerMatch = name.match(/^([^\_\^]+)\^(.+)$/);
         if (powerMatch) {
             powerMatch = powerMatch.map(c => this.nameMap(c));
             return prTh.pow(func(powerMatch[1]), prTh.var(powerMatch[2]));

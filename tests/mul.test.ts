@@ -3,6 +3,13 @@ import { testHelper as th } from "./test-helper";
 
 /** Test from: https://github.com/sympy/sympy/blob/master/sympy/printing/tests/test_latex.py */
 describe("1: Mul", () => {
+    beforeEach(async () => {
+        await th.prepare(`
+x, y, z, t, w, a, b, c, s, p = symbols('x y z t w a b c s p')
+k, m, n = symbols('k m n', integer=True)
+`)
+    });
+
     it("convert", async () => {
         expect(await th.run("x+10")).equal(`[10+x]`);
         expect(await th.run("x**2")).equal(`[x][💪,[2]]`);
@@ -26,6 +33,6 @@ describe("1: Mul", () => {
         expect(await th.run("Mul(4, 3, 2, 1+z, 0, y, x, evaluate=False)")).equal(`[4×3×2]([1+z])[0yx]`);
         expect(await th.run("Mul(Rational(2, 3), Rational(5, 7), evaluate=False)")).equal(`[frac,[2],[3]][frac,[5],[7]]`);
     });
-    
+
 })
 

@@ -453,6 +453,19 @@ export class P2Pr {
             case "NDimArray": {
                 return this.nDimArray.convert(obj);
             }
+            case "Lambda": {
+                const [first, second] = this.m(obj.args);
+                return prTh.varList([
+                    prTh.singleOrBrackets((first as P2Pr.VarList).symbols),
+                    prTh.var("↦"),
+                    second,
+                ], { bracket: "(" })
+            }
+            case "IdentityFunction":{
+                return prTh.varList([
+                    prTh.var("x↦x")
+                ], { bracket: "(" })
+            }
         }
 
 
@@ -484,7 +497,6 @@ export namespace P2Pr {
     }
 
     export type Symbol = Mul | C<"Add"> | Var | C<"Pow"> | Matrix | C<"Frac"> | C<"Sqrt"> | GenericFunc |
-
         Derivative | Relational | C<"Binomial"> |
         VarList | C<"Integral"> | Index | JsonData
         | C<"Order"> | C<"Prescript"> | C<"PrescriptIdx"> | Subs | C<"Sum"> |
@@ -620,6 +632,7 @@ namespace P {
         U<"Rationals"> | U<"Integers"> | U<"Naturals0"> | ProductSet | F<"ImageSet"> | F<"Lambda"> | F<"ConditionSet"> |
         F<"ComplexRegion"> | F<"Contains"> | F<"Product"> | F<"Limit"> | F<"DiracDelta"> | F<"Heaviside"> | KroneckerDelta |
         LeviCivita | F<"Piecewise"> | F<"Factorial"> | F<"Factorial2"> | F<"SubFactorial"> | F<"Exp"> | F<"NDimArray"> |
+        F<"Lambda"> | U<"IdentityFunction"> |
         UnknownFunc;
 
     export interface KroneckerDelta extends F<"KroneckerDelta"> {

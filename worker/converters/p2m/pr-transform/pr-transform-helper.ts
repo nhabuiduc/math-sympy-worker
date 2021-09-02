@@ -207,6 +207,8 @@ class PrTransformHelper {
         return false;
     }
 
+
+
     matchRationalFrac(s: Symbol, num: number, den?: number): s is P2Pr.Frac {
         if (!this.isRationalFrac(s)) {
             return false;
@@ -271,8 +273,8 @@ class PrTransformHelper {
         return this.isMulNegativeOf(s, st => this.isInfinity(st));
     }
 
-    isMulNegativeOf(s: Symbol, predicate: (sToTest: Symbol) => boolean): boolean {
-        return s.type == "Mul" && s.symbols.length == 2 && this.isNegativeOne(s.symbols[0]) && predicate(s.symbols[1]);
+    isMulNegativeOf(s: Symbol, predicate?: (sToTest: Symbol) => boolean): s is P2Pr.Mul {
+        return s.type == "Mul" && s.symbols.length == 2 && this.isNegativeOne(s.symbols[0]) && (!predicate || predicate(s.symbols[1]));
     }
 
 
@@ -515,7 +517,7 @@ class PrTransformHelper {
         return s.type == "Var" && s.nativeType == "Integer" && s.name[0] == "-";
     }
 
-    removeNegativeIntSign(s: Symbol) {
+    removeNegativeSign(s: Symbol) {
         if (this.isNegativeOne(s)) {
             return this.one();
         }
@@ -523,7 +525,11 @@ class PrTransformHelper {
         if (this.isNegativeInt(s)) {
             return this.int(s.name.substr(1))
         }
-        return s;
+        if (this.isMulNegativeOf(s)) {
+            return s.symbols[1];
+        }
+
+        throw new Error("Unable to detect to remove");
     }
 
     integerOrSpecial(vl: number): P2Pr.Symbol {

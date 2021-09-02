@@ -25,47 +25,39 @@ export class PrPowerTransform implements P2Pr.IPrTransform {
 
     private transformSpecialPower(symbol: Symbol): Symbol {
         if (symbol.type == "Pow") {
-            const root = symbol.symbols[1];
+            const ss = symbol.symbols.map(s => this.transformSpecialPower(s))
+            const root = ss[1];
             if (prTh.isNegativeOne(root)) {
-                return {
-                    type: "Frac",
-                    kind: "Container",
-                    symbols: [prTh.one(), this.transformSpecialPower(symbol.symbols[0])]
-                }
+                return prTh.frac(prTh.one(), ss[0]);
             }
-            if (prTh.isNegativeInt(root)) {
-                return {
-                    type: "Frac",
-                    kind: "Container",
-                    symbols: [prTh.one(), this.transformSpecialPower({
-                        type: "Pow",
-                        kind: "Container",
-                        symbols: [symbol.symbols[0], prTh.removeNegativeIntSign(root)],
-                    })]
-                }
+            if (prTh.isNegativeInt(root) || prTh.isMulNegativeOf(root)) {
+                return prTh.frac(
+                    prTh.one(),
+                    prTh.pow(ss[0], prTh.removeNegativeSign(root))
+                )
             }
 
             if (prTh.matchRationalFrac(root, 1, 2)) {
-                return this.powerRationalToSqrt(this.transformSpecialPower(symbol.symbols[0]), root, symbol);
+                return this.powerRationalToSqrt(ss[0], root, { ...symbol, symbols: ss });
 
             }
             if (prTh.matchRationalFrac(root, 1)) {
-                return this.powerRationalToSqrt(this.transformSpecialPower(symbol.symbols[0]), root, symbol);
+                return this.powerRationalToSqrt(ss[0], root, { ...symbol, symbols: ss });
             }
 
             let allowMergeIdx = true;
-            if (symbol.symbols[0].type == "Index" && symbol.symbols[0].noPowMerge) {
+            if (ss[0].type == "Index" && ss[0].noPowMerge) {
                 allowMergeIdx = false;
             }
-            if (symbol.symbols[0].type == "Index" && symbol.symbols[0].symbols[0].type == "GenericFunc" && symbol.symbols[0].symbols[0].powerIndexPos == "wrap-all") {
+            if (ss[0].type == "Index" && ss[0].symbols[0].type == "GenericFunc" && ss[0].symbols[0].powerIndexPos == "wrap-all") {
                 allowMergeIdx = false;
             }
-            if (symbol.symbols[0].type == "Index" && !symbol.symbols[2] && allowMergeIdx) {
-                symbol.symbols.push(symbol.symbols[0].symbols[1]);
-                symbol.symbols[0] = symbol.symbols[0].symbols[0];
+            if (ss[0].type == "Index" && !ss[2] && allowMergeIdx) {
+                ss.push(ss[0].symbols[1]);
+                ss[0] = ss[0].symbols[0];
             }
 
-            return { ...symbol, symbols: symbol.symbols.map(s => this.transformSpecialPower(s)) }
+            return { ...symbol, symbols: ss }
         }
 
         if (symbol.kind == "Container") {

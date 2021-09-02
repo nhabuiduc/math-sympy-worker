@@ -212,15 +212,7 @@ class __McHdl:
 
     def hdl_ComplexRegion(self, p):
         return {'func':'ComplexRegion',  'args': self.argsMap([p.expr, p.variables, p.sets])}
-
-    def hdl_dict(self, d):
-        items = []
-
-        for key in d.keys():
-            val = d[key]
-            items.append(Tuple(key,val))
-        
-        return { 'func':'GenericFunc', 'name':'dict',  'args': self.argsMap(items) }
+    
     
     def hdl_Dict(self, d):
         return { 'func':'GenericFunc', 'name':'dict',  'args': self.argsMap(d.args) }
@@ -298,6 +290,9 @@ class __McHdl:
         return dic
 
     def hdlAll(self, expr):
+        if expr.__class__.__name__ == 'dict':
+            return self.hdlDict(expr)
+        
         result = self.callIfExistsInHierarchy(expr)
         if result == None:
             return self.hdlOthers(expr)
@@ -324,6 +319,15 @@ class __McHdl:
 
     def argsMap(self, args):
         return list(map(self.hdlAll,args))
+
+    def hdlDict(self, d):
+        items = []
+
+        for key in d.keys():
+            val = d[key]
+            items.append(Tuple(key,val))
+        
+        return { 'func':'GenericFunc', 'name':'dict',  'args': self.argsMap(items) }
     
 def ___mcSympyExprDump(expr):
     # print(expr.func)
