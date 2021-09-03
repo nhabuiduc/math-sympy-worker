@@ -518,6 +518,38 @@ export class P2Pr {
                     }
                 }
             }
+            case "UnifiedTransform": {
+                const ss = this.m(obj.args);
+                if (obj.inversed) {
+                    return prTh.varList([
+                        prTh.pow(
+                            prTh.var(obj.name, { bold: "calligraphic", forceConsiderAsUnit: true }),
+                            prTh.negativeOne(),
+                            ss[1],
+                            { preventTransform: true }
+                        ),
+                        prTh.brackets(ss[0], "["),
+                        prTh.brackets(ss[2], "("),
+                    ])
+                }
+
+                return prTh.varList([
+                    prTh.index(
+                        prTh.var(obj.name, { bold: "calligraphic", forceConsiderAsUnit: true }),
+                        ss[1]
+                    ),
+                    prTh.brackets(ss[0], "["),
+                    prTh.brackets(ss[2], "("),
+                ])
+            }
+            case "PolynomialRingBase": {
+                const ss = this.m(obj.args);
+                const base = prTh.varList([ss[0], prTh.brackets(prTh.extractIfVarList(ss[1]), "[")]);
+                if (obj.inversed) {
+                    base.symbols.unshift(prTh.pow(prTh.var("S"), prTh.negativeOne(), prTh.var("<"), { preventTransform: true }))
+                }
+                return base;
+            }
 
         }
 
@@ -549,7 +581,7 @@ export namespace P2Pr {
         kind: "Leaf"
     }
 
-    export type Symbol = Mul | C<"Add"> | Var | C<"Pow"> | Matrix | C<"Frac"> | C<"Sqrt"> | GenericFunc |
+    export type Symbol = Mul | C<"Add"> | Var | Pow | Matrix | C<"Frac"> | C<"Sqrt"> | GenericFunc |
         Derivative | Relational | C<"Binomial"> |
         VarList | C<"Integral"> | Index | JsonData
         | C<"Order"> | C<"Prescript"> | C<"PrescriptIdx"> | Subs | C<"Sum"> |
@@ -562,10 +594,14 @@ export namespace P2Pr {
     export type Integral = C<"Integral">;
     export type Add = C<"Add">;
     export type Sqrt = C<"Sqrt">;
-    export type Pow = C<"Pow">;
+
     export type Prescript = C<"Prescript">;
     export type PrescriptIdx = C<"PrescriptIdx">;
     export type Subs = C<"Subs">;
+
+    export interface Pow extends C<"Pow"> {
+        preventTransform?: boolean;
+    }
 
     export interface OverSymbol extends Container {
         type: "OverSymbol";
@@ -606,9 +642,10 @@ export namespace P2Pr {
     export interface Var extends Leaf {
         type: "Var";
         name: string;
-        bold?: boolean | "blackboard";
+        bold?: boolean | "blackboard" | "calligraphic";
         normalText?: boolean;
-        nativeType?: "One" | "NegativeOne" | "Zero" | "Integer" | "Float" | "NaN" | "BooleanTrue" | "BooleanFalse" | "NumberSymbol" | "None"
+        nativeType?: "One" | "NegativeOne" | "Zero" | "Integer" | "Float" | "NaN" | "BooleanTrue" | "BooleanFalse" | "NumberSymbol" | "None";
+        forceConsiderAsUnit?: boolean;
     }
 
     export interface JsonData extends Leaf {
@@ -689,9 +726,17 @@ namespace P {
         F<"ComplexRegion"> | F<"Contains"> | F<"Product"> | F<"Limit"> | F<"DiracDelta"> | F<"Heaviside"> | KroneckerDelta |
         LeviCivita | F<"Piecewise"> | F<"Factorial"> | F<"Factorial2"> | F<"SubFactorial"> | F<"Exp"> | F<"NDimArray"> |
         U<"IdentityFunction"> | F<"PolyElement"> | F<"PolyRing"> | F<"FracElement"> | F<"FractionField"> |
-        F<"ComplexRootOf"> | F<"MatrixSlice"> | U<"NoneType"> | RandomDomain | F<"PythonRational"> |
+        F<"ComplexRootOf"> | F<"MatrixSlice"> | U<"NoneType"> | RandomDomain | F<"PythonRational"> | UnifiedTransform |
+        PolynomialRingBase |
         UnknownFunc;
 
+    export interface UnifiedTransform extends F<"UnifiedTransform"> {
+        inversed: boolean;
+        name: string;
+    }
+    export interface PolynomialRingBase extends F<"PolynomialRingBase"> {
+        inversed: boolean;
+    }
     export interface RandomDomain extends F<"RandomDomain"> {
         subType: "boolean" | "set" | "symbols";
     }

@@ -61,11 +61,14 @@ class BlockBd {
         return this.compositeBlock("\\text", ["textValue"], [[this.textBlock(text)]]);
     }
 
-    style(obj: { bold?: boolean | "blackboard" }): BlockStyle {
+    style(obj: { bold?: boolean | "blackboard" | "calligraphic" }): BlockStyle {
         let style: BlockStyle = undefined;
         if (obj.bold == "blackboard") {
             style = { ...style, mathType: "\\mathbb" }
-        } else if (obj.bold) {
+        } else if (obj.bold == "calligraphic") {
+            style = { ...style, mathType: "\\mathcal" }
+        }
+        else if (obj.bold) {
             style = { ...style, mathType: "\\mathbf" }
         }
         return style;

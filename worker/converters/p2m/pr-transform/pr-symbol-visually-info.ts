@@ -23,6 +23,9 @@ class PrSymbolVisuallyInfo {
                 return this.allParts;
             }
             case "Var": {
+                if (s.forceConsiderAsUnit) {
+                    return this.allUnit;
+                }
                 switch (s.nativeType) {
                     case "Float":
                     case "Integer": {

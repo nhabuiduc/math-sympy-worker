@@ -272,13 +272,39 @@ class __McHdl:
 
     def hdl_FracElement(self,d):
         return {'func': 'FracElement', 'args':self.argsMap([d.numer, d.denom]) }
-        
+
     def hdl_PythonRational(self,d):
         return {'func': 'PythonRational', 'args':self.argsMap([d.numerator, d.denominator]) }
 
     def hdl_RootSum(self,d):
         return {'func': 'RootSum', 'args': self.argsMap([d.expr]) if d.fun is  S.IdentityFunction  else self.argsMap([d.expr, d.fun]) }
+    
+    def hdl_MellinTransform(self,d):
+        return {'func':'UnifiedTransform', 'name':'M',  'args': self.argsMap(d.args)}
+    def hdl_InverseMellinTransform(self,d):
+        return {'func':'UnifiedTransform','name':'M', 'args': self.argsMap(d.args), 'inversed':True }
+    def hdl_LaplaceTransform(self,d):
+        return {'func':'UnifiedTransform','name':'L', 'args': self.argsMap(d.args)}
+    def hdl_InverseLaplaceTransform(self,d):
+        return {'func':'UnifiedTransform','name':'L', 'args': self.argsMap(d.args), 'inversed':True }
+    def hdl_FourierTransform(self,d):
+        return {'func':'UnifiedTransform','name':'F', 'args': self.argsMap(d.args)}
+    def hdl_InverseFourierTransform(self,d):
+        return {'func':'UnifiedTransform','name':'F', 'args': self.argsMap(d.args), 'inversed':True }
+    def hdl_SineTransform(self,d):
+        return {'func':'UnifiedTransform','name':'SIN', 'args': self.argsMap(d.args)}
+    def hdl_InverseSineTransform(self,d):
+        return {'func':'UnifiedTransform','name':'SIN', 'args': self.argsMap(d.args), 'inversed':True }
+    def hdl_CosineTransform(self,d):
+        return {'func':'UnifiedTransform','name':'COS', 'args': self.argsMap(d.args)}
+    def hdl_InverseCosineTransform(self,d):
+        return {'func':'UnifiedTransform','name':'COS', 'args': self.argsMap(d.args), 'inversed':True } 
 
+    def hdl_PolynomialRingBase(self,d):
+        return {'func':'PolynomialRingBase', 'args': self.argsMap([d.domain,d.symbols]), 'inversed': not d.is_Poly } 
+
+
+            
     def hdl_MatrixSlice(self,d):
         def myslice(x, dim):
             x = list(x)

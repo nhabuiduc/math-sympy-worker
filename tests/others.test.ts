@@ -1205,7 +1205,7 @@ R = QQ[x, y]
         expect(await th.run(`R.convert(x + y)`)).equal("[x+y]");
     });
 
-    it.only("integral_transforms", async () => {
+    it("integral_transforms", async () => {
         await th.prepare(`
 x = Symbol("x")
 k = Symbol("k")
@@ -1214,6 +1214,46 @@ a = Symbol("a")
 b = Symbol("b")    
                 `);
 
-        expect(await th.run(`MellinTransform(f(x), x, k)`)).equal("[frac,[x],[x+y]]");
+        expect(await th.run(`MellinTransform(f(x), x, k)`)).equal("[M,mathcal][⛏️,[x]][[f]([x])]([k])");
+        expect(await th.run(`InverseMellinTransform(f(k), k, x, a, b)`)).equal("[M,mathcal][💪,[-1],[k]][[f]([k])]([x])");
+        expect(await th.run(`LaplaceTransform(f(x), x, k)`)).equal("[L,mathcal][⛏️,[x]][[f]([x])]([k])");
+        expect(await th.run(`InverseLaplaceTransform(f(k), k, x, (a, b))`)).equal("[L,mathcal][💪,[-1],[k]][[f]([k])]([x])");
+        expect(await th.run(`FourierTransform(f(x), x, k)`)).equal("[F,mathcal][⛏️,[x]][[f]([x])]([k])");
+        expect(await th.run(`InverseFourierTransform(f(k), k, x)`)).equal("[F,mathcal][💪,[-1],[k]][[f]([k])]([x])");
+        expect(await th.run(`CosineTransform(f(x), x, k)`)).equal("[COS,mathcal][⛏️,[x]][[f]([x])]([k])");
+        expect(await th.run(`InverseCosineTransform(f(k), k, x)`)).equal("[COS,mathcal][💪,[-1],[k]][[f]([k])]([x])");
+        expect(await th.run(`SineTransform(f(x), x, k)`)).equal("[SIN,mathcal][⛏️,[x]][[f]([x])]([k])");
+        expect(await th.run(`InverseSineTransform(f(k), k, x)`)).equal("[SIN,mathcal][💪,[-1],[k]][[f]([k])]([x])");
+    });
+
+    it.only("PolynomialRingBase", async () => {
+
+        await th.prepare(`
+from sympy.polys.domains import QQ
+                `);
+
+        expect(await th.run(`QQ.old_poly_ring(x, y)`)).equal("[Q,mathbb][[x,y]]");
+        expect(await th.run(`QQ.old_poly_ring(x, y, order="ilex")`)).equal("[S][💪,[-1],[<]][Q,mathbb][[x,y]]");
+
+    })
+    it.only("categories", async () => {
+        await th.prepare(`
+from sympy.categories import (Object, IdentityMorphism,NamedMorphism, Category, Diagram,DiagramGrid)
+
+A1 = Object("A1")
+A2 = Object("A2")
+A3 = Object("A3")
+
+f1 = NamedMorphism(A1, A2, "f1")
+f2 = NamedMorphism(A2, A3, "f2")
+id_A1 = IdentityMorphism(A1)
+
+K1 = Category("K1")
+        
+                        `);
+
+        expect(await th.run(`A1`)).equal("[A][⛏️,[1]]");
+        expect(await th.run(`f1`)).equal("[A][⛏️,[1]]");
+
     })
 });

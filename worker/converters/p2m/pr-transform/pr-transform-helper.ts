@@ -494,11 +494,12 @@ class PrTransformHelper {
         }
     }
 
-    pow(base: Symbol, root: Symbol, index?: Symbol): P2Pr.Pow {
+    pow(base: Symbol, root: Symbol, index?: Symbol, more?: Partial<P2Pr.Pow>): P2Pr.Pow {
         const rs: P2Pr.Pow = {
             type: "Pow",
             kind: "Container",
-            symbols: [base, root]
+            symbols: [base, root],
+            ...more
         }
         if (index) {
             rs.symbols.push(index);
