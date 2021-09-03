@@ -40,6 +40,7 @@ export class P2Pr {
     c(obj: P.Basic): Symbol {
         switch (obj.func) {
 
+            case "Frac":
             case "Piecewise":
             case "Limit":
             case "Product":
@@ -127,7 +128,7 @@ export class P2Pr {
             }
             case "Dummy":
             case "Symbol": {
-                return this.symbol.parse(obj.name);
+                return this.symbol.parse(obj.name, obj.bold);
             }
             case "Mul": {
                 const symbols = this.m(obj.args);
@@ -550,6 +551,69 @@ export class P2Pr {
                 }
                 return base;
             }
+            case "Morphism": {
+                const ss = this.m(obj.args);
+                return prTh.bin(ss, { cp: "\\rightarrow" });
+            }
+            case "NamedMorphism": {
+                const ss = this.m(obj.args);
+                return prTh.varList([ss[0], prTh.var(":"), prTh.bin(ss.slice(1), { cp: "\\rightarrow" })])
+            }
+            case "CompositeMorphism": {
+                const ss = this.m(obj.args);
+                const names = prTh.extractIfVarList(ss[0]).reverse();
+                return prTh.varList([prTh.varList(names, "∘"), prTh.var(":"), prTh.bin(ss.slice(1), { cp: "\\rightarrow" })])
+            }
+            case "Category": {
+                const s = obj.args[0] as P.Symbol;
+                return this.c({ ...s, bold: true });
+            }
+            case "Diagram": {
+                const ss = this.m(obj.args);
+                if (ss[1]) {
+                    return prTh.varList([ss[0], prTh.var("⟹"), ss[1]]);
+                }
+                return ss[0]
+            }
+            case "DiagramGrid": {
+                const ss = this.m(obj.args).map(c => prTh.isNone(c) ? prTh.var("") : c);
+                return prTh.matrix({ ss, row: obj.row, col: obj.col }, undefined, { prType: "array" })
+            }
+            case "FreeModule": {
+                const ss = this.m(obj.args);
+                return prTh.pow(ss[0], ss[1], undefined, { preventBracketWrap: true });
+            }
+            case "SubModule": {
+                const ss = this.m(obj.args);
+                return prTh.varList(prTh.extractIfVarList(ss[0]), ",", "<")
+            }
+            case "FreeModuleElement": {
+                const ss = this.m(obj.args);
+                return prTh.varList(ss, ",", "[")
+            }
+            case "DMP": {
+                const ss = this.m(obj.args);
+                return ss[0]
+            }
+            case "MatrixHomomorphism": {
+                const ss = this.m(obj.args);
+                return prTh.varList([
+                    ss[0],
+                    prTh.var(":"),
+                    ss[1],
+                    prTh.var("→", { latexName: "\\rightarrow" }),
+                    ss[2],
+                ])
+            }
+            case "Tr": {
+                return prTh.genFunc("tr", [this.c(obj.args[0])])
+            }
+            case "Adjoint": {
+                return prTh.pow(this.c(obj.args[0]), prTh.var("†"))
+            }
+            case "Transpose": {
+                return prTh.pow(this.c(obj.args[0]), prTh.var("T"))
+            }
 
         }
 
@@ -601,6 +665,7 @@ export namespace P2Pr {
 
     export interface Pow extends C<"Pow"> {
         preventTransform?: boolean;
+        preventBracketWrap?: boolean;
     }
 
     export interface OverSymbol extends Container {
@@ -615,7 +680,7 @@ export namespace P2Pr {
 
     export interface BinaryOp extends Container {
         type: "BinaryOp";
-        op: string | { cp: "\\bmod" };
+        op: string | { cp: "\\bmod" | "\\rightarrow" };
         wrapIfMulShorthand?: boolean;
 
     }
@@ -628,7 +693,7 @@ export namespace P2Pr {
     export interface VarList extends Container {
         type: "VarList";
         bracket?: SupportBracket;
-        separator?: "," | ";" | "|" | ":";
+        separator?: "," | ";" | "|" | ":" | "∘";
         separatorSpacing?: "before" | "after" | "around";
         rightBracket?: SupportBracket;
         wrapOnJoinIfRequire?: boolean;
@@ -642,10 +707,11 @@ export namespace P2Pr {
     export interface Var extends Leaf {
         type: "Var";
         name: string;
-        bold?: boolean | "blackboard" | "calligraphic";
+        bold?: P.BoldType;
         normalText?: boolean;
         nativeType?: "One" | "NegativeOne" | "Zero" | "Integer" | "Float" | "NaN" | "BooleanTrue" | "BooleanFalse" | "NumberSymbol" | "None";
         forceConsiderAsUnit?: boolean;
+        latexName?: "\\rightarrow";
     }
 
     export interface JsonData extends Leaf {
@@ -657,7 +723,8 @@ export namespace P2Pr {
         type: "Matrix"
         row: number;
         col: number;
-        bracket?: "(" | "["
+        bracket?: "(" | "[";
+        prType?: "matrix" | "array";
 
     }
 
@@ -706,6 +773,7 @@ export namespace P2Pr {
     export type PF<T extends string> = P.F<T>;
     export type PU<T extends string> = P.U<T>;
     export type PPFuncArgs = P.FuncArgs;
+    export type BoldType = P.BoldType;
 }
 
 namespace P {
@@ -727,7 +795,9 @@ namespace P {
         LeviCivita | F<"Piecewise"> | F<"Factorial"> | F<"Factorial2"> | F<"SubFactorial"> | F<"Exp"> | F<"NDimArray"> |
         U<"IdentityFunction"> | F<"PolyElement"> | F<"PolyRing"> | F<"FracElement"> | F<"FractionField"> |
         F<"ComplexRootOf"> | F<"MatrixSlice"> | U<"NoneType"> | RandomDomain | F<"PythonRational"> | UnifiedTransform |
-        PolynomialRingBase |
+        PolynomialRingBase | F<"Morphism"> | F<"NamedMorphism"> | F<"CompositeMorphism"> | F<"Category"> | F<"Diagram"> | DiagramGrid |
+        F<"FreeModule"> | F<"SubModule"> | F<"FreeModuleElement"> | F<"DMP"> | F<"Frac"> | F<"MatrixHomomorphism"> | F<"Tr"> |
+        F<"Adjoint"> | F<"Transpose">|
         UnknownFunc;
 
     export interface UnifiedTransform extends F<"UnifiedTransform"> {
@@ -759,6 +829,7 @@ namespace P {
     export interface Symbol {
         func: "Symbol";
         name: string;
+        bold?: boolean | "blackboard" | "calligraphic";
     }
 
 
@@ -789,6 +860,11 @@ namespace P {
         row: number;
         col: number;
     }
+    export interface DiagramGrid extends FuncArgs {
+        func: "DiagramGrid"
+        row: number;
+        col: number;
+    }
 
     export interface GenericFunc extends FuncArgs {
         func: "GenericFunc";
@@ -806,10 +882,12 @@ namespace P {
         vectorNames: string[];
     }
 
+    export type BoldType = boolean | "blackboard" | "calligraphic";
 
     export interface Dummy {
         func: "Dummy";
         name: string;
+        bold?: BoldType;
     }
 
 

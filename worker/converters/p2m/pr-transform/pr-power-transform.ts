@@ -41,7 +41,7 @@ export class PrPowerTransform implements P2Pr.IPrTransform {
         return symbol;
     }
 
-    private transformMergeIndex(symbol: Symbol) {
+    private transformMergeIndex(symbol: Symbol): Symbol {
         if (this.isAllow(symbol)) {
             const ss = symbol.symbols.map(s => this.transformMergeIndex(s))
 

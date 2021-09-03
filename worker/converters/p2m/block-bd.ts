@@ -61,7 +61,7 @@ class BlockBd {
         return this.compositeBlock("\\text", ["textValue"], [[this.textBlock(text)]]);
     }
 
-    style(obj: { bold?: boolean | "blackboard" | "calligraphic" }): BlockStyle {
+    style(obj: { bold?: P2Pr.BoldType }): BlockStyle {
         let style: BlockStyle = undefined;
         if (obj.bold == "blackboard") {
             style = { ...style, mathType: "\\mathbb" }
@@ -155,7 +155,7 @@ class BlockBd {
 
 
     compositeBlock(
-        name: "\\power-index" | "\\frac" | "\\sqrt" | "\\matrix" | "\\text" | "\\small-tilde" | "\\small-hat" | "\\middle|" |
+        name: "\\power-index" | "\\frac" | "\\sqrt" | "\\matrix" | "\\array" | "\\text" | "\\small-tilde" | "\\small-hat" | "\\middle|" |
             "\\operatorname" | "\\overline" | "\\rightarrow" | "\\bmod" | "\\prescript" | "\\cases",
         elementNames?: ("powerValue" | "indexValue" | "value" | "sub1" | "textValue")[],
         innerBlocks?: BlockModel[][],

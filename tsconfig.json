@@ -8,6 +8,9 @@
     "moduleResolution": "node",
     "noUnusedParameters": true,
     "noUnusedLocals": true,
+    "noImplicitAny": true,
+    "noImplicitOverride": true,
+    "noImplicitThis": true,
     "rootDir": "./",
     "baseUrl": "./",
     "paths": {

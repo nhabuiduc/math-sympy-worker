@@ -11,8 +11,8 @@ exports.mochaGlobalSetup = async function () {
     console.log(pyodide.runRaw);
     const casEngineProcess = new CasEngineProcess(pyodide, { constantTextFuncs: [], symbolLatexNames: {} })
     global.XMLHttpRequest = XMLHttpRequest;
-    global.casEngineProcess = casEngineProcess;
-    global.pyodide = pyodide;
+    (global as any).casEngineProcess = casEngineProcess;
+    (global as any).pyodide = pyodide;
 
     await casEngineProcess.processRaw(defineAllSetupFuncs, false);
     await casEngineProcess.processRaw(`

@@ -4,8 +4,8 @@ export class Symbol {
     constructor(private nameParser: NameParser) {
     }
 
-    parse(name: string): P2Pr.Symbol {
-        return this.nameParser.parse(name, (cn) => ({ type: "Var", kind: "Leaf", name: cn }))
+    parse(name: string, boldType?: P2Pr.BoldType): P2Pr.Symbol {
+        return this.nameParser.parse(name, (cn) => ({ type: "Var", kind: "Leaf", name: cn, bold: boldType }), boldType)
     }
 }
 

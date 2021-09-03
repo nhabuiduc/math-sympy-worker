@@ -80,7 +80,10 @@ export class Pr2M {
                         obj.name = foundName;
                     }
                 }
-                
+                if (obj.latexName == "\\rightarrow") {
+                    return { blocks: [blockBd.compositeBlock("\\rightarrow")] }
+                }
+
                 if (obj.normalText) {
                     return { blocks: [blockBd.normalText(obj.name)] }
                 }
@@ -136,7 +139,8 @@ export class Pr2M {
             }
 
             case "Matrix": {
-                const matrixBlock = blockBd.compositeBlock("\\matrix", [], []) as MatrixLikeBlockModel;
+                const latex = obj.prType == "array" ? "\\array" : "\\matrix"
+                const matrixBlock = blockBd.compositeBlock(latex, [], []) as MatrixLikeBlockModel;
                 matrixBlock.bracket = obj.bracket;
                 matrixBlock.row = obj.row;
                 matrixBlock.column = obj.col;

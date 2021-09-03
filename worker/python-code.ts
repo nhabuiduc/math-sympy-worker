@@ -303,6 +303,86 @@ class __McHdl:
     def hdl_PolynomialRingBase(self,d):
         return {'func':'PolynomialRingBase', 'args': self.argsMap([d.domain,d.symbols]), 'inversed': not d.is_Poly } 
 
+    def hdl_Morphism(self,d):
+        return {'func':'Morphism', 'args': self.argsMap([d.domain,d.codomain]) } 
+
+    def hdl_NamedMorphism(self,d):
+        from sympy import Symbol
+        return {'func':'NamedMorphism', 'args': self.argsMap([Symbol(d.name), d.domain,d.codomain]) } 
+
+    def hdl_IdentityMorphism(self,d):
+        from sympy import Symbol
+        return {'func':'NamedMorphism', 'args': self.argsMap([Symbol('id'), d.domain,d.codomain]) } 
+
+    def hdl_CompositeMorphism(self,d):
+        from sympy import Symbol
+        return {'func':'CompositeMorphism', 'args': self.argsMap([[Symbol(component.name) for component in d.components], d.domain,d.codomain]) } 
+
+    def hdl_Category(self,d):
+        from sympy import Symbol
+        return {'func':'Category', 'args': self.argsMap([Symbol(d.name)]) } 
+
+    def hdl_Diagram(self,d):
+        if not d.premises:
+            return {'func':'EmptySet'}
+        args = [d.premises]
+        if d.conclusions:
+            args.append(d.conclusions)
+        return {'func':'Diagram', 'args': self.argsMap(args) } 
+
+    def hdl__Object(self,d):
+        return this.hdlAll(Symbol(d.name))
+
+    def hdl_DiagramGrid(self,d):
+        args=[]
+        for i in range(d.height):
+            for j in range(d.width):
+               args.append(d[i,j])
+        return {'func':'DiagramGrid', 'args': self.argsMap(args), 'row': d.height, 'col': d.width } 
+
+    def hdl_FreeModule(self,d):
+        return {'func':'FreeModule', 'args': self.argsMap([d.ring,d.rank]), } 
+
+    def hdl_DMP(self,p):
+        try:
+            if p.ring is not None:
+                # TODO incorporate order
+                # return self._print(p.ring.to_sympy(p))
+                return {'func':'DMP', 'args': self.argsMap([p.ring.to_sympy(p)]), } 
+        except SympifyError:
+            pass
+        #return self._print(repr(p))
+        return {'func':'DMP', 'args': self.argsMap([repr(p)]), } 
+       
+    def hdl_DMF(self,p):
+        return hdl_DMP(p)
+
+    def hdl_FreeModuleElement(self,d):
+        return {'func':'FreeModuleElement', 'args': self.argsMap(d), } 
+
+    def hdl_SubModule(self,d):
+        return {'func':'SubModule', 'args': self.argsMap([d.gens]), } 
+
+    def hdl_ModuleImplementedIdeal(self,d):
+        return {'func':'SubModule', 'args': self.argsMap([[x for [x] in d._module.gens]]), } 
+
+    def hdl_QuotientRing(self,d):
+        return {'func':'Frac', 'args': self.argsMap([d.ring,d.base_ideal]) } 
+
+    def hdl_QuotientRingElement(self,d):
+        return {'func':'Add', 'args': self.argsMap([d.data,d.ring.base_ideal]) } 
+
+    def hdl_QuotientModuleElement(self,d):
+        return {'func':'Add', 'args': self.argsMap([d.data,d.module.killed_module]) } 
+
+    def hdl_QuotientModule(self,d):
+        return {'func':'Frac', 'args': self.argsMap([d.base,d.killed_module]) } 
+
+    def hdl_MatrixHomomorphism(self,h):
+        return {'func':'MatrixHomomorphism', 'args': self.argsMap([h._sympy_matrix(),h.domain,h.codomain]) } 
+
+    def hdl_MatPow(self,h):
+        return {'func':'Pow', 'args': self.argsMap(h.args) } 
 
             
     def hdl_MatrixSlice(self,d):

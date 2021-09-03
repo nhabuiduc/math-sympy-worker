@@ -1226,7 +1226,7 @@ b = Symbol("b")
         expect(await th.run(`InverseSineTransform(f(k), k, x)`)).equal("[SIN,mathcal][💪,[-1],[k]][[f]([k])]([x])");
     });
 
-    it.only("PolynomialRingBase", async () => {
+    it("PolynomialRingBase", async () => {
 
         await th.prepare(`
 from sympy.polys.domains import QQ
@@ -1236,7 +1236,7 @@ from sympy.polys.domains import QQ
         expect(await th.run(`QQ.old_poly_ring(x, y, order="ilex")`)).equal("[S][💪,[-1],[<]][Q,mathbb][[x,y]]");
 
     })
-    it.only("categories", async () => {
+    it("categories", async () => {
         await th.prepare(`
 from sympy.categories import (Object, IdentityMorphism,NamedMorphism, Category, Diagram,DiagramGrid)
 
@@ -1253,7 +1253,86 @@ K1 = Category("K1")
                         `);
 
         expect(await th.run(`A1`)).equal("[A][⛏️,[1]]");
-        expect(await th.run(`f1`)).equal("[A][⛏️,[1]]");
+        expect(await th.run(`f1`)).equal("[f][⛏️,[1]][:A][⛏️,[1]][rightarrow,][A][⛏️,[2]]");
+        expect(await th.run(`id_A1`)).equal("[id:A][⛏️,[1]][rightarrow,][A][⛏️,[1]]");
+        expect(await th.run(`f2*f1`)).equal("[f][⛏️,[2]][∘f][⛏️,[1]][:A][⛏️,[1]][rightarrow,][A][⛏️,[3]]");
+        expect(await th.run(`K1`)).equal("[K,bf][⛏️,[1,bf]]");
+        expect(await th.run(`Diagram()`)).equal("[∅]");
+        expect(await th.run(`Diagram({f1: "unique", f2: S.EmptySet})`)).equal("{[id:A][⛏️,[2]][rightarrow,][A][⛏️,[2]][:∅,f][⛏️,[2]][:A][⛏️,[2]][rightarrow,][A][⛏️,[3]][:∅,id:A][⛏️,[1]][rightarrow,][A][⛏️,[1]][:∅,f][⛏️,[2]][∘f][⛏️,[1]][:A][⛏️,[1]][rightarrow,][A][⛏️,[3]][:∅,f][⛏️,[1]][:A][⛏️,[1]][rightarrow,][A][⛏️,[2]][:]{[unique]}[,id:A][⛏️,[3]][rightarrow,][A][⛏️,[3]][:∅]}");
+        expect(await th.run(`Diagram({f1: "unique", f2: S.EmptySet}, {f2 * f1: "unique"})`)).equal("{[id:A][⛏️,[2]][rightarrow,][A][⛏️,[2]][:∅,f][⛏️,[2]][:A][⛏️,[2]][rightarrow,][A][⛏️,[3]][:∅,id:A][⛏️,[1]][rightarrow,][A][⛏️,[1]][:∅,f][⛏️,[2]][∘f][⛏️,[1]][:A][⛏️,[1]][rightarrow,][A][⛏️,[3]][:∅,f][⛏️,[1]][:A][⛏️,[1]][rightarrow,][A][⛏️,[2]][:]{[unique]}[,id:A][⛏️,[3]][rightarrow,][A][⛏️,[3]][:∅]}[⟹]{[f][⛏️,[2]][∘f][⛏️,[1]][:A][⛏️,[1]][rightarrow,][A][⛏️,[3]][:]{[unique]}}");
 
+        await th.prepare(`
+# A linear diagram.
+A = Object("A")
+B = Object("B")
+C = Object("C")
+f = NamedMorphism(A, B, "f")
+g = NamedMorphism(B, C, "g")
+d = Diagram([f, g])
+grid = DiagramGrid(d)
+
+        `);
+
+        expect(await th.run(`grid`)).equal("[🏓array,[A],[B],[],[C]]");
+    })
+
+    it("Modules", async () => {
+        await th.prepare(`
+from sympy.polys.domains import QQ
+from sympy.polys.agca import homomorphism
+
+R = QQ.old_poly_ring(x, y)
+F = R.free_module(2)
+M = F.submodule([x, y], [1, x**2])
+I = R.ideal(x**2, y)
+Q = F / M
+h = homomorphism(QQ.old_poly_ring(x).free_module(2),QQ.old_poly_ring(x).free_module(2), [0, 0])
+        `);
+
+        expect(await th.run(`F`)).equal("[Q,mathbb][[x,y]][💪,[2]]");
+        expect(await th.run(`M`)).equal("<[[x,y]][,][[1,x][💪,[2]]]>");
+        expect(await th.run(`I`)).equal("<[x][💪,[2]][,y]>");
+        expect(await th.run(`Q`)).equal("[frac,[Q,mathbb][[x,y]][💪,[2]],<[[x,y]][,][[1,x][💪,[2]]]>]");
+        expect(await th.run(`Q.submodule([1, x**3/2], [2, y])`)).equal("<[[1,][frac,[x][💪,[3]],[2]]][+]<[[x,y]][,][[1,x][💪,[2]]]>[,][[2,y]][+]<[[x,y]][,][[1,x][💪,[2]]]>>");
+        expect(await th.run(`h`)).equal("[[🏓]matrix,[0],[0],[0],[0]][:][Q,mathbb][[x]][💪,[2]][rightarrow,][Q,mathbb][[x]][💪,[2]]");
+    });
+
+    it.only("QuotientRing", async () => {
+        await th.prepare(`
+from sympy.polys.domains import QQ
+R = QQ.old_poly_ring(x)/[x**2 + 1]    
+        `);
+
+        expect(await th.run(`R`)).equal("[frac,[Q,mathbb][[x]],<[1+x][💪,[2]]>]");
+        expect(await th.run(`R.one`)).equal("[1+]<[1+x][💪,[2]]>");
+
+    })
+    it.only("Tr", async () => {
+        await th.prepare(`
+A, B = symbols('A B', commutative=False)
+t = Tr(A*B)
+        `);
+
+        expect(await th.run(`t`)).equal("[⚙️,[tr]]([AB])");
+    })
+    it.only("Adjoint", async () => {
+        await th.prepare(`
+from sympy.matrices import MatrixSymbol, Adjoint, Inverse, Transpose
+X = MatrixSymbol('X', 2, 2)
+Y = MatrixSymbol('Y', 2, 2)
+        `);
+
+        expect(await th.run(`Adjoint(X)`)).equal('[X][💪,[†]]');
+        expect(await th.run(`Adjoint(X + Y)`)).equal('([X+Y])[💪,[†]]');
+        expect(await th.run(`Adjoint(X) + Adjoint(Y)`)).equal('[X][💪,[†]][+Y][💪,[†]]');
+        expect(await th.run(`Adjoint(X*Y)`)).equal('([XY])[💪,[†]]');
+        expect(await th.run(`Adjoint(Y)*Adjoint(X)`)).equal('[Y][💪,[†]][X][💪,[†]]');
+        expect(await th.run(`Adjoint(X**2)`)).equal('([X][💪,[2]])[💪,[†]]');
+        expect(await th.run(`Adjoint(X)**2`)).equal('([X][💪,[†]])[💪,[2]]');
+        expect(await th.run(`Adjoint(Inverse(X))`)).equal('([frac,[1],[X]])[💪,[†]]');
+        expect(await th.run(`Inverse(Adjoint(X))`)).equal('[frac,[1],[X][💪,[†]]]');
+        expect(await th.run(`Adjoint(Transpose(X))`)).equal('([X][💪,[T]])[💪,[†]]');
+        expect(await th.run(`Transpose(Adjoint(X))`)).equal('([X][💪,[†]])[💪,[T]]');
+        expect(await th.run(`Transpose(Adjoint(X) + Y)`)).equal('([X][💪,[†]][+Y])[💪,[T]]');
     })
 });

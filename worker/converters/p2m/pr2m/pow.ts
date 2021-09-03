@@ -21,7 +21,7 @@ export class Pow extends Pr2MItemBase {
         const power = this.main.convert(args[1]).blocks;
 
         const prPow: Pr2M.CResult["prPow"] = {};
-        let preventWrapBracket = false;
+        let preventWrapBracket = obj.preventBracketWrap;
         if (args[0].type == "Pow" && args[0].symbols[0].type == "GenericFunc" && args[0].symbols[0].allowAncesstorPowerAtEnd) {
             preventWrapBracket = true;
             prPow.powMergedInFunc = true;

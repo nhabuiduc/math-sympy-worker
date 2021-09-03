@@ -2,8 +2,9 @@ import stringHelper from "@lib-shared/string-helper";
 import { _l } from "@sympy-worker/light-lodash";
 import type { P2Pr } from "../p2pr";
 import { Pr2M } from "../pr2m";
-import dequal from "deep-equal";
+import dequal from "fast-deep-equal";
 import { prSymbolVisuallyInfo } from "./pr-symbol-visually-info";
+
 
 
 const enum EnumPosWeight {
@@ -458,6 +459,7 @@ class PrTransformHelper {
     int(vl: number | string): P2Pr.Symbol {
         return this.var(vl.toString(), { nativeType: "Integer" })
     }
+    
 
     index(base: Symbol, index: Symbol, more?: Partial<P2Pr.Index>): P2Pr.Index {
         return { type: "Index", kind: "Container", symbols: [base, index], ...more };
@@ -470,7 +472,7 @@ class PrTransformHelper {
         return { type: "VarList", kind: "Container", symbols: [base], bracket: br, separator: "," };
     }
 
-    matrix(ss: Symbol[][] | { ss: Symbol[], row: number, col: number }, bracket: "(" | "[" | undefined): P2Pr.Matrix {
+    matrix(ss: Symbol[][] | { ss: Symbol[], row: number, col: number }, bracket: "(" | "[" | undefined, more?: Partial<P2Pr.Matrix>): P2Pr.Matrix {
         let flattenSs: Symbol[];
         let row = 1;
         let col = 1;
@@ -491,6 +493,7 @@ class PrTransformHelper {
             col,
             kind: "Container",
             symbols: flattenSs,
+            ...more,
         }
     }
 

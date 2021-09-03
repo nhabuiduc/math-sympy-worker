@@ -51,16 +51,16 @@ export class Pr2MCommon extends Pr2MItemBase {
 
     opJoin(args: P2Pr.Symbol[], textOrBlock?: string | (() => BlockModel), wrapBehavior?: "wrapEvenShortHand" | ((s: Symbol, rs: Pr2M.CResult, idx: number) => boolean)): Pr2M.CResult {
         let items = args.map(a => this.main.convert(a));
-
         let blocks: BlockModel[] = [];
         for (let idx = 0; idx < items.length; idx++) {
             const item = items[idx];
             let shouldWrap = false;
             if (!wrapBehavior || wrapBehavior == "wrapEvenShortHand") {
-                shouldWrap = prTh.considerPresentAsSingleUnitInOpCtx(args[idx], item, { wrapEvenShortHand: wrapBehavior == "wrapEvenShortHand", excludeSign: idx == 0 })
+                shouldWrap = !prTh.considerPresentAsSingleUnitInOpCtx(args[idx], item, { wrapEvenShortHand: wrapBehavior == "wrapEvenShortHand", excludeSign: idx == 0 })
             } else {
                 shouldWrap = wrapBehavior(args[idx], item, idx);
             }
+            
             // let curBlocks = blockBd.wrapBracketIfNotUnitInOpCtx(args[idx], item, { wrapEvenShortHand, excludeSign: idx == 0 }).blocks;
             let curBlocks = shouldWrap ? blockBd.wrapBetweenBrackets(item.blocks).blocks : item.blocks;
 
