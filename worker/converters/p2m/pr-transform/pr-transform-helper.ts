@@ -140,19 +140,43 @@ class PrTransformHelper {
     list(ss: Symbol[]): P2Pr.VarList {
         return { type: "VarList", bracket: "(", kind: "Container", separator: ",", symbols: ss };
     }
-    mul(s1: Symbol, s2: Symbol): P2Pr.Mul {
-        if (s1.type == "Mul" && s2.type == "Mul") {
-            return { ...s1, symbols: s1.symbols.concat(s2.symbols), unevaluatedDetected: false }
-        }
-        if (s1.type == "Mul") {
-            return { ...s1, symbols: s1.symbols.concat([s2]), unevaluatedDetected: false }
-        }
-        if (s2.type == "Mul") {
-            return { ...s2, symbols: [s1 as Symbol].concat(s2.symbols), unevaluatedDetected: false }
+    add(ss: Symbol[]): P2Pr.Add {
+        return { type: "Add", kind: "Container", symbols: ss };
+    }
+
+    mulOf(...ss: Symbol[]): P2Pr.Mul {
+        return this.mul(ss);
+    }
+    mul(ss: Symbol[]): P2Pr.Mul {
+        return { type: "Mul", kind: "Container", symbols: ss, unevaluatedDetected: false }
+        // return ss.reduce((prev, cur) => prev ? this.mulOf2(prev, cur) : cur, undefined as P2Pr.Mul) as P2Pr.Mul;
+    }
+
+    zeroOrSingleOr(ss: Symbol[], or: "mul" | "add") {
+        if (ss.length <= 0) {
+            return this.zero();
         }
 
-        return { type: "Mul", unevaluatedDetected: false, kind: "Container", symbols: [s1, s2] };
+        if (ss.length == 1) {
+            return ss[0];
+        }
+
+        return or == "add" ? this.add(ss) : this.mul(ss);
     }
+
+    // mulOf2(s1: Symbol, s2: Symbol): P2Pr.Mul {
+    //     if (s1.type == "Mul" && s2.type == "Mul") {
+    //         return { ...s1, symbols: s1.symbols.concat(s2.symbols), unevaluatedDetected: false }
+    //     }
+    //     if (s1.type == "Mul") {
+    //         return { ...s1, symbols: s1.symbols.concat([s2]), unevaluatedDetected: false }
+    //     }
+    //     if (s2.type == "Mul") {
+    //         return { ...s2, symbols: [s1 as Symbol].concat(s2.symbols), unevaluatedDetected: false }
+    //     }
+
+    //     return { type: "Mul", unevaluatedDetected: false, kind: "Container", symbols: [s1, s2] };
+    // }
 
 
     isConstant(s: Symbol): "positive" | "negative" | false {
@@ -232,6 +256,9 @@ class PrTransformHelper {
 
 
     basicEquals(b1: P2Pr.PBasic, b2: P2Pr.PBasic): boolean {
+        return dequal(b1, b2);
+    }
+    symbolEquals(b1: P2Pr.Symbol, b2: P2Pr.Symbol): boolean {
         return dequal(b1, b2);
     }
 

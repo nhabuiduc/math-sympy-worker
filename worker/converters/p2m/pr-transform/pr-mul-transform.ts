@@ -7,7 +7,7 @@ export class PrMulTransform implements P2Pr.IPrTransform {
         if (ops.orderMul) {
             symbol = this.orderTransform(symbol);
         }
-        
+
         return symbol;
     }
 

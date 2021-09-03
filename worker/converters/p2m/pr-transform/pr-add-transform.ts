@@ -4,6 +4,7 @@ import { prTh } from "./pr-transform-helper";
 
 export class PrAddTransform implements P2Pr.IPrTransform {
     transform(symbol: Symbol, ops: P2Pr.TransformOptions): Symbol {
+        symbol = this.flattenAdd(symbol);
         if (ops.orderAdd) {
             return this.orderTransform(symbol);
         }
@@ -44,6 +45,30 @@ export class PrAddTransform implements P2Pr.IPrTransform {
         }
 
         return symbols;
+    }
+
+    private flattenAdd(symbol: Symbol): Symbol {
+        if (symbol.type == "Add") {
+            return { ...symbol, symbols: this.flattenAddWith(symbol.symbols.map(s => this.flattenAdd(s))) }
+        }
+
+        if (symbol.kind == "Container") {
+            return { ...symbol, symbols: symbol.symbols.map(s => this.flattenAdd(s)) }
+        }
+
+        return symbol;
+    }
+
+    private flattenAddWith(symbols: Symbol[]): Symbol[] {
+        let rs: Symbol[] = [];
+        for (const s of symbols) {
+            if (s.type == "Add") {
+                rs = rs.concat(s.symbols);
+            } else {
+                rs = rs.concat([s]);
+            }
+        }
+        return rs;
     }
 }
 

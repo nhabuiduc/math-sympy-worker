@@ -13,6 +13,7 @@ import { bloackBoardBold } from "./p2pr/blackboard-bold";
 import { _l } from "@sympy-worker/light-lodash";
 import { Set as SetP2Pr } from "./p2pr/set";
 import { NDimArray } from "./p2pr/dim-array";
+import { PolyElement } from "./p2pr/poly-element";
 
 export class P2Pr {
 
@@ -22,6 +23,7 @@ export class P2Pr {
     private genericFunc: GenericFunc;
     private set: SetP2Pr;
     private nDimArray = new NDimArray(this);
+    private polyElement = new PolyElement(this);
     constructor(symbolLatexNames: { [key: string]: string }) {
         this.nameParser = new NameParser(symbolLatexNames);
         this.symbol = new SymbolP2Pr(this.nameParser);
@@ -142,7 +144,7 @@ export class P2Pr {
 
 
             case "NegativeInfinity": {
-                return prTh.mul(prTh.negativeOne(), prTh.numberSymbol("∞"))
+                return prTh.mulOf(prTh.negativeOne(), prTh.numberSymbol("∞"))
             }
 
             case "Infinity":
@@ -258,13 +260,7 @@ export class P2Pr {
                 ], ",", "(")
 
             }
-            case "PolynomialRing": {
-                const [d, ...ss] = this.m(obj.args);
-                return prTh.varList([
-                    d,
-                    prTh.varList(ss, ",", "[")
-                ])
-            }
+
 
             case "Derivative": {
                 return { type: "Derivative", kind: "Container", partial: obj.partial, symbols: this.m(obj.args) }
@@ -461,10 +457,23 @@ export class P2Pr {
                     second,
                 ], { bracket: "(" })
             }
-            case "IdentityFunction":{
+            case "IdentityFunction": {
                 return prTh.varList([
                     prTh.var("x↦x")
                 ], { bracket: "(" })
+            }
+
+            case "PolyRing":
+            case "PolynomialRing": {
+                const [d, ss] = this.m(obj.args);
+                return prTh.varList([
+                    d,
+                    prTh.varList((ss as P2Pr.VarList).symbols, ",", "[")
+                ])
+            }
+
+            case "PolyElement": {
+                return this.polyElement.convert(obj);
             }
         }
 
@@ -613,6 +622,7 @@ export namespace P2Pr {
     export type PBasic = P.Basic;
     export type PF<T extends string> = P.F<T>;
     export type PU<T extends string> = P.U<T>;
+    export type PPFuncArgs = P.FuncArgs;
 }
 
 namespace P {
@@ -632,7 +642,7 @@ namespace P {
         U<"Rationals"> | U<"Integers"> | U<"Naturals0"> | ProductSet | F<"ImageSet"> | F<"Lambda"> | F<"ConditionSet"> |
         F<"ComplexRegion"> | F<"Contains"> | F<"Product"> | F<"Limit"> | F<"DiracDelta"> | F<"Heaviside"> | KroneckerDelta |
         LeviCivita | F<"Piecewise"> | F<"Factorial"> | F<"Factorial2"> | F<"SubFactorial"> | F<"Exp"> | F<"NDimArray"> |
-        F<"Lambda"> | U<"IdentityFunction"> |
+        F<"Lambda"> | U<"IdentityFunction"> | F<"PolyElement"> | F<"PolyRing"> |
         UnknownFunc;
 
     export interface KroneckerDelta extends F<"KroneckerDelta"> {

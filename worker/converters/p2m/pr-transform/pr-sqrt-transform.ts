@@ -31,7 +31,7 @@ export class PrSqrtTransform implements P2Pr.IPrTransform {
             const sqrt: P2Pr.Sqrt = {
                 type: "Sqrt",
                 kind: "Container",
-                symbols: [prTh.mul(last.symbols[0], (cur as P2Pr.Sqrt).symbols[0])]
+                symbols: [prTh.mulOf(last.symbols[0], (cur as P2Pr.Sqrt).symbols[0])]
             };
             if (last.symbols[1]) {
                 sqrt.symbols.push(last.symbols[1]);

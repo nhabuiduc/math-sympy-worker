@@ -10,10 +10,11 @@ export abstract class P2PrItemBase {
         },) {
     }
 
-    m(args: P2Pr.PBasic[]): Symbol[] {
+    protected m(args: P2Pr.PBasic[]): Symbol[] {
         return this.main.m(args);
     }
-    c(obj: P2Pr.PBasic): Symbol {
+    
+    protected c(obj: P2Pr.PBasic): Symbol {
         return this.main.c(obj);
     }
 

@@ -15,9 +15,7 @@ class __McHdl:
 
     def hdl_UndefinedFunction(self, expr):
         return {'func': 'UndefinedFunction', 'name': str(expr), 'args': []}
-
-    def hdl_PolynomialRing(self, expr):
-        return {'func': 'PolynomialRing', 'args':[self.hdlAll(expr.domain)] + self.argsMap(expr.symbols) }
+    
     
     def hdl_MatrixBase(self, expr):
         l = []
@@ -249,6 +247,14 @@ class __McHdl:
         args = expandAll(d)  
         return { 'func':'NDimArray',  'args': [self.hdlAll(tuple(args))] + [self.hdlAll(d.shape)] }
 
+    def hdl_PolynomialRing(self, d):
+        return {'func': 'PolynomialRing', 'args':self.argsMap([d.domain, d.symbols]) }
+
+    def hdl_PolyRing(self,d):
+        return {'func': 'PolyRing', 'args':self.argsMap([d.domain, d.symbols, d.ngens, d.zero_monom]) }
+
+    def hdl_PolyElement(self,d):
+        return {'func': 'PolyElement', 'args':self.argsMap([d.ring, d.terms()]) }
 
     def hdlGenericFunc(self, name, args):
         dic = {}

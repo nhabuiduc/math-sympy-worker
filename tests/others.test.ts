@@ -1005,7 +1005,15 @@ Ruv, u, v = ring("u,v", ZZ)
 Rxyz, x, y, z = ring("x,y,z", Ruv)
         `);
 
-        expect(await th.run(`x - x`)).equal("([x↦x])");
+        expect(await th.run(`x - x`)).equal("[0]");
+        expect(await th.run(`x - 1`)).equal("[x-1]");
+        expect(await th.run(`x + 1`)).equal("[x+1]");
+        expect(await th.run(`(u**2 + 3*u*v + 1)*x**2*y + u + 1`)).equal("([u][💪,[2]][+3uv+1])[x][💪,[2]][y+u+1]");
+        expect(await th.run(`(u**2 + 3*u*v + 1)*x**2*y + (u + 1)*x`)).equal("([u][💪,[2]][+3uv+1])[x][💪,[2]][y+]([u+1])[x]");
+        expect(await th.run(`(u**2 + 3*u*v + 1)*x**2*y + (u + 1)*x + 1`)).equal("([u][💪,[2]][+3uv+1])[x][💪,[2]][y+]([u+1])[x+1]");
+        expect(await th.run(`(-u**2 + 3*u*v - 1)*x**2*y - (u + 1)*x - 1`)).equal("([-u][💪,[2]][+3uv-1])[x][💪,[2]][y+]([-u-1])[x-1]");
+        expect(await th.run(`-(v**2 + v + 1)*x + 3*u*v + 1`)).equal("([-v][💪,[2]][-v-1])[x+3uv+1]");
+        expect(await th.run(`-(v**2 + v + 1)*x - 3*u*v + 1`)).equal("([-v][💪,[2]][-v-1])[x-3uv+1]");
 
     })
 
