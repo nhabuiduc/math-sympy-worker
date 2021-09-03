@@ -1,12 +1,13 @@
 import { blockBd } from "../block-bd";
 import { P2Pr } from "../p2pr";
+import { prTh } from "../pr-transform/pr-transform-helper";
 import { Pr2M } from "../pr2m";
 import { Pr2MItemBase } from "./pr2m-item-base";
 
 export class VarList extends Pr2MItemBase {
     convert(obj: P2Pr.VarList): Pr2M.CResult {
         if (!obj.bracket && !obj.separator) {
-            return { blocks: blockBd.flattenBlocks(this.main.convertMaps(obj.symbols)) }
+            return { blocks: blockBd.flattenBlocks(this.mapBlocksAndWrapIfRequire(obj.symbols, obj.wrapOnJoinIfRequire)) }
         }
 
         let blocks: BlockModel[];
@@ -14,16 +15,29 @@ export class VarList extends Pr2MItemBase {
         if (obj.separator) {
 
             const separator = this.buildSeparatorBlock(obj.separator, obj.separatorSpacing);
-            blocks = blockBd.joinBlocks(this.main.convertMaps(obj.symbols), separator)
+            blocks = blockBd.joinBlocks(this.mapBlocksAndWrapIfRequire(obj.symbols, obj.wrapOnJoinIfRequire), separator)
         } else {
-            blocks = blockBd.flattenBlocks(this.main.convertMaps(obj.symbols))
+            blocks = blockBd.flattenBlocks(this.mapBlocksAndWrapIfRequire(obj.symbols, obj.wrapOnJoinIfRequire))
         }
 
-        
+
         if (obj.bracket) {
             return blockBd.wrapBetweenBrackets(blocks, obj.bracket, obj.rightBracket);
         }
         return { blocks }
+    }
+
+    private mapBlocksAndWrapIfRequire(ss: Symbol[], wrapOnJoinIfRequire: boolean): BlockModel[][] {
+        if (!wrapOnJoinIfRequire) {
+            return this.main.convertMaps(ss);
+        }
+        return ss.map(s => {
+            const rs = this.c(s);
+            if (!prTh.considerPresentAsSingleUnitInOpCtx(s, rs)) {
+                return blockBd.wrapBetweenBrackets(rs.blocks).blocks;
+            }
+            return rs.blocks;
+        })
     }
 
     private buildSeparatorBlock(separator: P2Pr.VarList["separator"], sSpacing: P2Pr.VarList["separatorSpacing"]): string | (() => BlockModel | BlockModel[]) {
@@ -64,3 +78,5 @@ export class VarList extends Pr2MItemBase {
         return blockBd.combineMultipleBlocks([block, blockBd.textBlock(" ")]);
     }
 }
+
+type Symbol = P2Pr.Symbol;

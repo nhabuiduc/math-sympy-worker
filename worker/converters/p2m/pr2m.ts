@@ -80,6 +80,7 @@ export class Pr2M {
                         obj.name = foundName;
                     }
                 }
+                
                 if (obj.normalText) {
                     return { blocks: [blockBd.normalText(obj.name)] }
                 }

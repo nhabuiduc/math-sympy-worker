@@ -10,6 +10,7 @@ class TestHelper {
             "Gamma": "𝛤",
             "gamma": "𝛾",
             "lambda": "𝜆",
+            "Lambda": "𝛬",
             "epsilon": "𝜖",
             "omega": "𝜔",
             "alpha": "𝛼",

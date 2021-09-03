@@ -476,6 +476,7 @@ export class P2Pr {
                 ])
             }
 
+            case "PythonRational":
             case "FracElement":
             case "PolyElement": {
                 return this.polyElement.convert(obj);
@@ -483,16 +484,48 @@ export class P2Pr {
             case "ComplexRootOf": {
                 return prTh.genFunc("CRootOf", this.m(obj.args));
             }
-            case "RootSum": {
-
+            case "NoneType": {
+                return prTh.none();
             }
+            case "MatrixSlice": {
+                const [sname, from, to] = this.m(obj.args);
+                return prTh.genFunc(sname, [
+                    prTh.varList((from as P2Pr.VarList).symbols.map(s => prTh.isNone(s) ? prTh.var("") : s), ":"),
+                    prTh.varList((to as P2Pr.VarList).symbols.map(s => prTh.isNone(s) ? prTh.var("") : s), ":")], { bracket: "[" })
+            }
+            case "RandomDomain": {
+                const ss = this.m(obj.args);
+                if (!obj.subType) {
+                    return prTh.var("RandomDomain");
+                }
+                switch (obj.subType) {
+                    case "boolean": {
+                        return prTh.varList([prTh.var("Domain: ", { normalText: true }), ss[0]])
+                    }
+                    case "set": {
+                        return prTh.varList([
+                            prTh.var("Domain: ", { normalText: true }),
+                            ss[0],
+                            prTh.var(" in ", { normalText: true }),
+                            ss[1],
+                        ])
+                    }
+                    default: {
+                        return prTh.varList([
+                            prTh.var("Domain on ", { normalText: true }),
+                            ss[0],
+                        ])
+                    }
+                }
+            }
+
         }
 
 
         if (obj.args) {
             return this.nameParser.parse(obj.func, (cn) => ({ type: "GenericFunc", kind: "Container", func: cn, symbols: this.m(obj.args), noBracketIfArgEmpty: true }))
         }
-        return { type: "Var", kind: "Leaf", name: "?" }
+        return { type: "Var", kind: "Leaf", name: obj.func }
     }
 
     m(args: P.Basic[]): Symbol[] {
@@ -562,6 +595,7 @@ export namespace P2Pr {
         separator?: "," | ";" | "|" | ":";
         separatorSpacing?: "before" | "after" | "around";
         rightBracket?: SupportBracket;
+        wrapOnJoinIfRequire?: boolean;
     }
 
     export interface Mul extends Container {
@@ -574,7 +608,7 @@ export namespace P2Pr {
         name: string;
         bold?: boolean | "blackboard";
         normalText?: boolean;
-        nativeType?: "One" | "NegativeOne" | "Zero" | "Integer" | "Float" | "NaN" | "BooleanTrue" | "BooleanFalse" | "NumberSymbol"
+        nativeType?: "One" | "NegativeOne" | "Zero" | "Integer" | "Float" | "NaN" | "BooleanTrue" | "BooleanFalse" | "NumberSymbol" | "None"
     }
 
     export interface JsonData extends Leaf {
@@ -592,12 +626,13 @@ export namespace P2Pr {
 
     export interface GenericFunc extends Container {
         type: "GenericFunc"
-        func: string;
+        func: string | Symbol;
         powerIndexPos?: "all-after" | "power-after" | "wrap-all";
         argSeparator?: "," | "|" | ";|";
         forceUsingOperatorName?: boolean;
         allowAncesstorPowerAtEnd?: boolean;
         isUndefinedFunction?: boolean;
+        bracket?: "[" | "(";
     }
 
     export interface Derivative extends Container {
@@ -653,10 +688,13 @@ namespace P {
         U<"Rationals"> | U<"Integers"> | U<"Naturals0"> | ProductSet | F<"ImageSet"> | F<"Lambda"> | F<"ConditionSet"> |
         F<"ComplexRegion"> | F<"Contains"> | F<"Product"> | F<"Limit"> | F<"DiracDelta"> | F<"Heaviside"> | KroneckerDelta |
         LeviCivita | F<"Piecewise"> | F<"Factorial"> | F<"Factorial2"> | F<"SubFactorial"> | F<"Exp"> | F<"NDimArray"> |
-          U<"IdentityFunction"> | F<"PolyElement"> | F<"PolyRing"> | F<"FracElement"> | F<"FractionField"> |
-        F<"ComplexRootOf"> | F<"RootSum"> |
+        U<"IdentityFunction"> | F<"PolyElement"> | F<"PolyRing"> | F<"FracElement"> | F<"FractionField"> |
+        F<"ComplexRootOf"> | F<"MatrixSlice"> | U<"NoneType"> | RandomDomain | F<"PythonRational"> |
         UnknownFunc;
 
+    export interface RandomDomain extends F<"RandomDomain"> {
+        subType: "boolean" | "set" | "symbols";
+    }
     export interface KroneckerDelta extends F<"KroneckerDelta"> {
         isArgsAtom: boolean;
     }

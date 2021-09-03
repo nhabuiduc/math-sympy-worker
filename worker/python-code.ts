@@ -16,6 +16,11 @@ class __McHdl:
     def hdl_UndefinedFunction(self, expr):
         return {'func': 'UndefinedFunction', 'name': str(expr), 'args': []}
     
+    def hdl_Add(self, expr):
+        return {'func': 'Add', 'args': self.argsMap(expr.args)}
+
+    def hdl_Mul(self, expr):
+        return {'func': 'Mul', 'args': self.argsMap(expr.args)}
     
     def hdl_MatrixBase(self, expr):
         l = []
@@ -32,6 +37,12 @@ class __McHdl:
         return self.hdlGenericFunc('min',expr.args)
     
     def hdl_Symbol(self, expr):
+        return {'func':'Symbol', 'name':expr.name }
+
+    def hdl_MatrixSymbol(self, expr):
+        return {'func':'Symbol', 'name':expr.name }
+
+    def hdl_RandomSymbol(self, expr):
         return {'func':'Symbol', 'name':expr.name }
     
     def hdl_Poly(self, expr):
@@ -261,9 +272,42 @@ class __McHdl:
 
     def hdl_FracElement(self,d):
         return {'func': 'FracElement', 'args':self.argsMap([d.numer, d.denom]) }
+        
+    def hdl_PythonRational(self,d):
+        return {'func': 'PythonRational', 'args':self.argsMap([d.numerator, d.denominator]) }
 
     def hdl_RootSum(self,d):
         return {'func': 'RootSum', 'args': self.argsMap([d.expr]) if d.fun is  S.IdentityFunction  else self.argsMap([d.expr, d.fun]) }
+
+    def hdl_MatrixSlice(self,d):
+        def myslice(x, dim):
+            x = list(x)
+            if x[2] == 1:
+                del x[2]
+            if x[0] == 0:
+                x[0] = None
+            if x[1] == dim:
+                x[1] = None
+            return x
+        return {'func': 'MatrixSlice', 'args':self.argsMap([d.parent, myslice(d.rowslice, d.parent.rows), myslice(expr.colslice, expr.parent.cols)]) }
+        
+    def hdl_NoneType(self,d):
+        return {'func':'NoneType'}
+
+    def hdl_RandomDomain(self,d):
+        subType=''
+        args=[]
+        if hasattr(d, 'as_boolean'):
+            subType = 'boolean'
+            args=self.argsMap([d.as_boolean()])
+        elif hasattr(d, 'set'):
+            subType = 'set'
+            args=self.argsMap([d.symbols,d.set])
+        elif hasattr(d, 'symbols'):
+            subType = 'symbols'
+            args=self.argsMap([d.symbols])
+
+        return {'func':'RandomDomain', 'subType':subType, 'args': args}
 
     def hdlGenericFunc(self, name, args):
         dic = {}

@@ -80,6 +80,13 @@ export class NameParser {
     }
 
     private nameMap(n: string): string {
+        /**special cases */
+        if (n == "lamda") {
+            n = "lambda";
+        }
+        else if (n == "Lamda") {
+            n = "Lambda";
+        }
         const latexName = n.startsWith("\\") ? n.substr(1) : n;
 
         return symbolNameMap[n] || this.symbolLatexNames[latexName] || n;

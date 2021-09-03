@@ -89,6 +89,7 @@ class BlockBd {
         }
 
         return blockBd.operatorNameBlock(mappedMcFuncName)
+
     }
 
     operatorNameBlock(name: string) {

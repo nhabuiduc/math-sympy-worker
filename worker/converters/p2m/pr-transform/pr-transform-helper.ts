@@ -517,7 +517,7 @@ class PrTransformHelper {
         return rs;
     }
 
-    genFunc(name: string, ss: Symbol[], more?: Partial<P2Pr.GenericFunc>): P2Pr.GenericFunc {
+    genFunc(name: string | Symbol, ss: Symbol[], more?: Partial<P2Pr.GenericFunc>): P2Pr.GenericFunc {
         return { type: "GenericFunc", func: name, kind: "Container", symbols: ss, ...more }
     }
 
@@ -530,6 +530,12 @@ class PrTransformHelper {
     }
     negativeOne() {
         return this.var("-1", { nativeType: "NegativeOne" });
+    }
+    none() {
+        return prTh.var("None", { nativeType: "None" })
+    }
+    isNone(s: Symbol) {
+        return s.type == "Var" && s.nativeType == "None";
     }
     isPositiveInt(s: Symbol): s is P2Pr.Var {
         if (this.isOne(s)) {

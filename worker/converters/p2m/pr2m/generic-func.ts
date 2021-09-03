@@ -13,16 +13,19 @@ export class GenericFunc {
 
     buildGenericFunc(obj: P2Pr.GenericFunc): GenericFuncResult {
 
-        const args = this.buildGenericFuncArgs(obj.symbols, obj.argSeparator || ",");
-        const nameBlock = blockBd.operatorFuncBlock(obj.func, this.constantTextFuncSet, this.symbolLatexNames, obj.forceUsingOperatorName)
+        const args = this.buildGenericFuncArgs(obj.symbols, obj.argSeparator || ",", obj.bracket);
+
+        const nameBlock = (typeof obj.func == "string")
+            ? [blockBd.operatorFuncBlock(obj.func, this.constantTextFuncSet, this.symbolLatexNames, obj.forceUsingOperatorName)]
+            : blockBd.wrapBracketIfNotUnitInOpCtx(obj.func, this.main.convert(obj.func)).blocks
 
         return {
-            name: [nameBlock],
+            name: nameBlock,
             args: args.args,
         }
     }
 
-    private buildGenericFuncArgs(symbols: Symbol[], argSeparator: P2Pr.GenericFunc["argSeparator"]): GenericFuncArgsResult {
+    private buildGenericFuncArgs(symbols: Symbol[], argSeparator: P2Pr.GenericFunc["argSeparator"], bracket: P2Pr.GenericFunc["bracket"] = "("): GenericFuncArgsResult {
         let argSymbols = symbols;
         if (argSymbols.length <= 0) {
             return { args: [] }
@@ -43,7 +46,7 @@ export class GenericFunc {
         }
 
         return {
-            args: blockBd.wrapBetweenBrackets(join).blocks
+            args: blockBd.wrapBetweenBrackets(join, bracket).blocks
         };
     }
 }

@@ -3,7 +3,7 @@ import { prTh } from "../pr-transform/pr-transform-helper";
 import { P2PrItemBase } from "./p2pr-item-base";
 
 export class PolyElement extends P2PrItemBase {
-    convert(obj: P2Pr.PF<"PolyElement"> | P2Pr.PF<"FracElement">): Symbol {
+    convert(obj: P2Pr.PF<"PolyElement"> | P2Pr.PF<"FracElement"> | P2Pr.PF<"PythonRational">): Symbol {
         if (obj.func == "PolyElement") {
             return this.hdlPolyElement(obj)
         }
@@ -12,7 +12,7 @@ export class PolyElement extends P2PrItemBase {
 
     }
 
-    private hdlFracElement(obj: P2Pr.PF<"FracElement">): Symbol {
+    private hdlFracElement(obj: P2Pr.PF<"FracElement"> | P2Pr.PF<"PythonRational">): Symbol {
         const ss = this.m(obj.args);
         if (prTh.isOne(ss[1])) {
             return ss[0];

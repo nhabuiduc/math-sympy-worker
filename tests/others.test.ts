@@ -1062,8 +1062,10 @@ Fxyzt, x, y, z, t = field("x,y,z,t", Fuv)
 
     it("RootSum", async () => {
         expect(await th.run(`RootSum(x**5 + x + 3, sin)`)).equal("[⚙️,[RootSum]]([3+x+x][💪,[5]][,x↦][sin,]([x]))");
-    })
-    it.only("numbers", async () => {
+    });
+
+
+    it("numbers", async () => {
         expect(await th.run(`catalan(n)`)).equal("[C][⛏️,[n]]");
         expect(await th.run(`catalan(n)**2`)).equal("[C][💪,[2],[n]]");
         expect(await th.run(`bernoulli(n)`)).equal("[B][⛏️,[n]]");
@@ -1086,6 +1088,132 @@ Fxyzt, x, y, z, t = field("x,y,z,t", Fuv)
         expect(await th.run(`tribonacci(n, x)`)).equal("[T][⛏️,[n]]([x])");
         expect(await th.run(`tribonacci(n)**2`)).equal("[T][💪,[2],[n]]");
         expect(await th.run(`tribonacci(n, x)**2`)).equal("[T][💪,[2],[n]]([x])");
-    })
+    });
 
+    it("euler", async () => {
+        expect(await th.run(`euler(n)`)).equal("[E][⛏️,[n]]");
+        expect(await th.run(`euler(n, x)`)).equal("[E][⛏️,[n]]([x])");
+        expect(await th.run(`euler(n, x)**2`)).equal("[E][💪,[2],[n]]([x])");
+    });
+
+    it("lamda", async () => {
+        expect(await th.run(`Symbol('lamda')`)).equal("[𝜆]");
+        expect(await th.run(`Symbol('Lamda')`)).equal("[𝛬]");
+    });
+
+    it("symbol_names", async () => {
+        expect(await th.run(`x`)).equal("[x]");
+        //     assert latex(x, symbol_names={x: "x_i"}) == r"x_i"
+        // assert latex(x + y, symbol_names={x: "x_i"}) == r"x_i + y"
+        // assert latex(x**2, symbol_names={x: "x_i"}) == r"x_i^{2}"
+        // assert latex(x + y, symbol_names={x: "x_i", y: "y_j"}) == r"x_i + y_j"
+    });
+
+    it("matAdd", async () => {
+        await th.prepare(`
+from sympy import MatrixSymbol
+from sympy.printing.latex import LatexPrinter
+C = MatrixSymbol('C', 5, 5)
+B = MatrixSymbol('B', 5, 5)
+
+        `)
+        expect(await th.run(`C - 2*B`)).equal("[-2B+C]");
+        expect(await th.run(`C + 2*B`)).equal("[2B+C]");
+        expect(await th.run(`B - 2*C`)).equal("[-2C+B]");
+        expect(await th.run(`B + 2*C`)).equal("[2C+B]");
+    });
+
+    it("matMul", async () => {
+        await th.prepare(`
+from sympy import MatrixSymbol
+from sympy.printing.latex import LatexPrinter
+A = MatrixSymbol('A', 5, 5)
+B = MatrixSymbol('B', 5, 5)
+x = Symbol('x')
+
+        `)
+        expect(await th.run(`2*A`)).equal("[2A]");
+        expect(await th.run(`2*x*A`)).equal("[2xA]");
+        expect(await th.run(`-2*A`)).equal("[-2A]");
+        expect(await th.run(`1.5*A`)).equal("[1.5A]");
+        expect(await th.run(`sqrt(2)*A`)).equal("[sqrt,[2]][A]");
+        expect(await th.run(`-sqrt(2)*A`)).equal("[-][sqrt,[2]][A]");
+        expect(await th.run(`2*sqrt(2)*x*A`)).equal("[2x][sqrt,[2]][A]");
+        expect(await th.run(`-2*A*(A + 2*B)`)).equal("[-2A]([2B+A])");
+    });
+    it("MatrixSlice", async () => {
+        await th.prepare(`
+n = Symbol('n', integer=True)
+x, y, z, w, t, = symbols('x y z w t')
+X = MatrixSymbol('X', n, n)
+Y = MatrixSymbol('Y', 10, 10)
+Z = MatrixSymbol('Z', 10, 10)
+
+        `)
+        expect(await th.run(`MatrixSlice(X, (None, None, None), (None, None, None))`)).equal("[X][[:,:]]");
+        expect(await th.run(`X[x:x + 1, y:y + 1]`)).equal("[X][[x:1+x,y:1+y]]");
+        expect(await th.run(`X[x:x + 1:2, y:y + 1:2]`)).equal("[X][[x:1+x:2,y:1+y:2]]");
+        expect(await th.run(`X[:x, y:]`)).equal("[X][[:x,y:]]");
+        expect(await th.run(`X[:x, y:]`)).equal("[X][[:x,y:]]");
+        expect(await th.run(`X[x:, :y]`)).equal("[X][[x:,:y]]");
+        expect(await th.run(`X[x:y, z:w]`)).equal("[X][[x:y,z:w]]");
+        expect(await th.run(`X[x:y:t, w:t:x]`)).equal("[X][[x:y:t,w:t:x]]");
+        expect(await th.run(`X[x::y, t::w]`)).equal("[X][[x::y,t::w]]");
+        expect(await th.run(`X[:x:y, :t:w]`)).equal("[X][[:x:y,:t:w]]");
+        expect(await th.run(`X[::x, ::y]`)).equal("[X][[::x,::y]]");
+        expect(await th.run(`MatrixSlice(X, (0, None, None), (0, None, None))`)).equal("[X][[:,:]]");
+        expect(await th.run(`MatrixSlice(X, (None, n, None), (None, n, None))`)).equal("[X][[:,:]]");
+        expect(await th.run(`MatrixSlice(X, (0, n, None), (0, n, None))`)).equal("[X][[:,:]]");
+        expect(await th.run(`MatrixSlice(X, (0, n, 2), (0, n, 2))`)).equal("[X][[::2,::2]]");
+        expect(await th.run(`X[1:2:3, 4:5:6]`)).equal("[X][[1:2:3,4:5:6]]");
+        expect(await th.run(`X[1:3:5, 4:6:8]`)).equal("[X][[1:3:5,4:6:8]]");
+        expect(await th.run(`X[1:10:2]`)).equal("[X][[1:10:2,:]]");
+        expect(await th.run(`Y[:5, 1:9:2]`)).equal("[Y][[:5,1:9:2]]");
+        expect(await th.run(`Y[:5, 1:10:2]`)).equal("[Y][[:5,1::2]]");
+        expect(await th.run(`Y[5, :5:2]`)).equal("[Y][[5:6,:5:2]]");
+        expect(await th.run(`X[0:1, 0:1]`)).equal("[X][[:1,:1]]");
+        expect(await th.run(`X[0:1:2, 0:1:2]`)).equal("[X][[:1:2,:1:2]]");
+        expect(await th.run(`(Y + Z)[2:, 2:]`)).equal("([Y+Z])[[2:,2:]]");
+    });
+
+    it("RandomDomain", async () => {
+        await th.prepare(`
+from sympy.stats import Normal, Die, Exponential, pspace, where
+from sympy.stats.rv import RandomDomain
+
+X = Normal('x1', 0, 1)
+D = Die('d1', 6)
+A = Exponential('a', 1)
+B = Exponential('b', 1)
+        `);
+
+        expect(await th.run(`where(X > 0)`)).equal("[📜,[Domain: ]][0<x][⛏️,[1]][∧x][⛏️,[1]][<∞]");
+        expect(await th.run(`where(D > 4)`)).equal("[📜,[Domain: ]][d][⛏️,[1]][=5∨d][⛏️,[1]][=6]");
+        expect(await th.run(` pspace(Tuple(A, B)).domain`)).equal("[📜,[Domain: ]][0≤a∧0≤b∧a<∞∧b<∞]");
+        expect(await th.run(`RandomDomain(FiniteSet(x), FiniteSet(1, 2))`)).equal("[📜,[Domain: ]]{[x]}[📜,[ in ]]{[1,2]}");
+
+    });
+
+    it("PrettyPoly", async () => {
+        await th.prepare(`
+from sympy.polys.domains import QQ
+F = QQ.frac_field(x, y)
+R = QQ[x, y]
+                `);
+
+        expect(await th.run(`F.convert(x/(x + y))`)).equal("[frac,[x],[x+y]]");
+        expect(await th.run(`R.convert(x + y)`)).equal("[x+y]");
+    });
+
+    it.only("integral_transforms", async () => {
+        await th.prepare(`
+x = Symbol("x")
+k = Symbol("k")
+f = Function("f")
+a = Symbol("a")
+b = Symbol("b")    
+                `);
+
+        expect(await th.run(`MellinTransform(f(x), x, k)`)).equal("[frac,[x],[x+y]]");
+    })
 });
