@@ -133,6 +133,37 @@ export class GenericFunc extends P2PrItemBase {
             obj.name = "𝛾";
             return this.firstIndexOfGenericFunc(obj, { powerIndexPos: "power-after" });
         }
+        if (obj.name == "catalan") {
+            obj.name = "C";
+            return this.firstIndexOfGenericFunc(obj);
+        }
+        if (obj.name == "bernoulli") {
+            obj.name = "B";
+            return this.firstIndexOfGenericFunc(obj);
+        }
+        if (obj.name == "fibonacci") {
+            obj.name = "F";
+            return this.firstIndexOfGenericFunc(obj);
+        }
+        if (obj.name == "lucas") {
+            obj.name = "F";
+            return this.firstIndexOfGenericFunc(obj);
+        }
+        if (obj.name == "tribonacci") {
+            obj.name = "T";
+            return this.firstIndexOfGenericFunc(obj);
+        }
+        if (obj.name == "bell") {
+            obj.name = "B";
+            if (obj.args.length == 3) {
+                const ss = this.m(obj.args);
+                return prTh.index(
+                    prTh.genFunc("B", (ss[2] as P2Pr.VarList).symbols),
+                    prTh.varList([ss[0], ss[1]], ","),
+                )
+            }
+            return this.firstIndexOfGenericFunc(obj);
+        }
         if (obj.name == "expint") {
             obj.name = "E";
             return this.firstIndexOfGenericFunc(obj);
@@ -347,29 +378,20 @@ export class GenericFunc extends P2PrItemBase {
     }
 
     private firstIndexOfGenericFunc(obj: Omit<P2Pr.PGenericFunc, "func">, options?: Partial<P2Pr.GenericFunc>): P2Pr.Index {
-        return {
-            type: "Index",
-            kind: "Container",
-            symbols: [
-                { type: "GenericFunc", kind: "Container", func: obj.name, symbols: obj.args.slice(1).map(c => this.c(c)), ...options },
-                this.c(obj.args[0])
-            ]
-        }
+        return prTh.index(
+            prTh.genFunc(obj.name, obj.args.slice(1).map(c => this.c(c)), options),
+            this.c(obj.args[0])
+        )
     }
 
     private secondIndexOfGenericFunc(obj: P2Pr.PGenericFunc, options?: Partial<P2Pr.GenericFunc>): P2Pr.Symbol {
         if (obj.args[1]) {
-            return {
-                type: "Index",
-                kind: "Container",
-                symbols: [
-                    { type: "GenericFunc", kind: "Container", func: obj.name, symbols: [this.c(obj.args[0])], ...options },
-                    this.c(obj.args[1])
-                ]
-            }
+            return prTh.index(
+                prTh.genFunc(obj.name, [this.c(obj.args[0])], options),
+                this.c(obj.args[1])
+            )
         }
-
-        return { type: "GenericFunc", kind: "Container", func: obj.name, symbols: [this.c(obj.args[0])], ...options }
+        return prTh.genFunc(obj.name, [this.c(obj.args[0])], options)
     }
 
     private indexPowerGenericFunc(obj: P2Pr.PGenericFunc, options?: Partial<P2Pr.GenericFunc>): P2Pr.Pow {

@@ -1,5 +1,6 @@
 import { blockBd } from "../block-bd";
 import { P2Pr } from "../p2pr";
+import { prTh } from "../pr-transform/pr-transform-helper";
 import { Pr2M } from "../pr2m";
 import { Pr2MItemBase } from "./pr2m-item-base";
 
@@ -48,13 +49,20 @@ export class Pr2MCommon extends Pr2MItemBase {
         }
     }
 
-    opJoin(args: P2Pr.Symbol[], textOrBlock?: string | (() => BlockModel), wrapEvenShortHand?: boolean): Pr2M.CResult {
+    opJoin(args: P2Pr.Symbol[], textOrBlock?: string | (() => BlockModel), wrapBehavior?: "wrapEvenShortHand" | ((s: Symbol, rs: Pr2M.CResult, idx: number) => boolean)): Pr2M.CResult {
         let items = args.map(a => this.main.convert(a));
 
         let blocks: BlockModel[] = [];
         for (let idx = 0; idx < items.length; idx++) {
             const item = items[idx];
-            let curBlocks = blockBd.wrapBracketIfNotUnitInOpCtx(args[idx], item, { wrapEvenShortHand, excludeSign: idx == 0 }).blocks;
+            let shouldWrap = false;
+            if (!wrapBehavior || wrapBehavior == "wrapEvenShortHand") {
+                shouldWrap = prTh.considerPresentAsSingleUnitInOpCtx(args[idx], item, { wrapEvenShortHand: wrapBehavior == "wrapEvenShortHand", excludeSign: idx == 0 })
+            } else {
+                shouldWrap = wrapBehavior(args[idx], item, idx);
+            }
+            // let curBlocks = blockBd.wrapBracketIfNotUnitInOpCtx(args[idx], item, { wrapEvenShortHand, excludeSign: idx == 0 }).blocks;
+            let curBlocks = shouldWrap ? blockBd.wrapBetweenBrackets(item.blocks).blocks : item.blocks;
 
             if (idx == 0 || !textOrBlock) {
                 blocks = blockBd.combine2Blockss(blocks, curBlocks);

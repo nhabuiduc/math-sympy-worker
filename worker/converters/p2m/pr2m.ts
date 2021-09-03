@@ -45,10 +45,16 @@ export class Pr2M {
         switch (obj.type) {
             case "BinaryOp": {
                 const { op } = obj;
-                if (typeof op == "string") {
-                    return this.prCommon.opJoin(obj.symbols, op, obj.wrapIfMulShorthand);
+                if (op == "↦") {
+                    return this.prCommon.opJoin(obj.symbols, op, (s) => {
+                        return s.type == "BinaryOp" && s.op == "↦";
+                    });
                 }
-                return this.prCommon.opJoin(obj.symbols, () => blockBd.compositeBlock(op.cp), obj.wrapIfMulShorthand);
+
+                if (typeof op == "string") {
+                    return this.prCommon.opJoin(obj.symbols, op, obj.wrapIfMulShorthand ? "wrapEvenShortHand" : undefined);
+                }
+                return this.prCommon.opJoin(obj.symbols, () => blockBd.compositeBlock(op.cp), obj.wrapIfMulShorthand ? "wrapEvenShortHand" : undefined);
             }
             case "UnaryOp": {
                 const rsArg0 = this.innerConvert(obj.symbols[0], level);

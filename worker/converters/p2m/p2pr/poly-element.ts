@@ -3,7 +3,24 @@ import { prTh } from "../pr-transform/pr-transform-helper";
 import { P2PrItemBase } from "./p2pr-item-base";
 
 export class PolyElement extends P2PrItemBase {
-    convert(obj: P2Pr.PF<"PolyElement">): Symbol {
+    convert(obj: P2Pr.PF<"PolyElement"> | P2Pr.PF<"FracElement">): Symbol {
+        if (obj.func == "PolyElement") {
+            return this.hdlPolyElement(obj)
+        }
+
+        return this.hdlFracElement(obj);
+
+    }
+
+    private hdlFracElement(obj: P2Pr.PF<"FracElement">): Symbol {
+        const ss = this.m(obj.args);
+        if (prTh.isOne(ss[1])) {
+            return ss[0];
+        }
+        return prTh.frac(ss[0], ss[1]);
+    }
+
+    private hdlPolyElement(obj: P2Pr.PF<"PolyElement">) {
         const [ring, terms] = obj.args as P2Pr.PPFuncArgs[];
         const [_domain, rawSymbols, rawNgens, rawZeroMonom] = (ring as P2Pr.PF<"PolyRing">).args;
         const symbols = (this.c(rawSymbols) as P2Pr.VarList).symbols;
@@ -37,7 +54,6 @@ export class PolyElement extends P2PrItemBase {
         }).filter(c => c);
 
         return prTh.zeroOrSingleOr(addSs, "add");
-
     }
 
     private expOf(ngens: number, expvs: Symbol[], symbols: Symbol[]): Symbol {

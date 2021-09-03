@@ -254,10 +254,8 @@ export class P2Pr {
 
             case "Poly": {
                 const [d, ...ss] = this.m(obj.args);
-                return prTh.varList([
-                    ...ss,
-                    prTh.varList([prTh.str("Domain="), d]),
-                ], ",", "(")
+                return prTh.genFunc("Poly", [...ss, prTh.varList([prTh.str("domain="), d])], { forceUsingOperatorName: true })
+
 
             }
 
@@ -451,16 +449,15 @@ export class P2Pr {
             }
             case "Lambda": {
                 const [first, second] = this.m(obj.args);
-                return prTh.varList([
+                return prTh.bin([
                     prTh.singleOrBrackets((first as P2Pr.VarList).symbols),
-                    prTh.var("↦"),
-                    second,
-                ], { bracket: "(" })
+                    second], "↦"
+                )
             }
             case "IdentityFunction": {
                 return prTh.varList([
                     prTh.var("x↦x")
-                ], { bracket: "(" })
+                ])
             }
 
             case "PolyRing":
@@ -471,9 +468,23 @@ export class P2Pr {
                     prTh.varList((ss as P2Pr.VarList).symbols, ",", "[")
                 ])
             }
+            case "FractionField": {
+                const [d, ss] = this.m(obj.args);
+                return prTh.varList([
+                    d,
+                    prTh.varList((ss as P2Pr.VarList).symbols, ",", "(")
+                ])
+            }
 
+            case "FracElement":
             case "PolyElement": {
                 return this.polyElement.convert(obj);
+            }
+            case "ComplexRootOf": {
+                return prTh.genFunc("CRootOf", this.m(obj.args));
+            }
+            case "RootSum": {
+
             }
         }
 
@@ -642,7 +653,8 @@ namespace P {
         U<"Rationals"> | U<"Integers"> | U<"Naturals0"> | ProductSet | F<"ImageSet"> | F<"Lambda"> | F<"ConditionSet"> |
         F<"ComplexRegion"> | F<"Contains"> | F<"Product"> | F<"Limit"> | F<"DiracDelta"> | F<"Heaviside"> | KroneckerDelta |
         LeviCivita | F<"Piecewise"> | F<"Factorial"> | F<"Factorial2"> | F<"SubFactorial"> | F<"Exp"> | F<"NDimArray"> |
-        F<"Lambda"> | U<"IdentityFunction"> | F<"PolyElement"> | F<"PolyRing"> |
+          U<"IdentityFunction"> | F<"PolyElement"> | F<"PolyRing"> | F<"FracElement"> | F<"FractionField"> |
+        F<"ComplexRootOf"> | F<"RootSum"> |
         UnknownFunc;
 
     export interface KroneckerDelta extends F<"KroneckerDelta"> {

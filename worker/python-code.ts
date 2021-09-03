@@ -250,11 +250,20 @@ class __McHdl:
     def hdl_PolynomialRing(self, d):
         return {'func': 'PolynomialRing', 'args':self.argsMap([d.domain, d.symbols]) }
 
+    def hdl_FractionField(self, d):
+        return {'func': 'FractionField', 'args':self.argsMap([d.domain, d.symbols]) }
+
     def hdl_PolyRing(self,d):
         return {'func': 'PolyRing', 'args':self.argsMap([d.domain, d.symbols, d.ngens, d.zero_monom]) }
 
     def hdl_PolyElement(self,d):
         return {'func': 'PolyElement', 'args':self.argsMap([d.ring, d.terms()]) }
+
+    def hdl_FracElement(self,d):
+        return {'func': 'FracElement', 'args':self.argsMap([d.numer, d.denom]) }
+
+    def hdl_RootSum(self,d):
+        return {'func': 'RootSum', 'args': self.argsMap([d.expr]) if d.fun is  S.IdentityFunction  else self.argsMap([d.expr, d.fun]) }
 
     def hdlGenericFunc(self, name, args):
         dic = {}

@@ -994,12 +994,13 @@ Mcol2 = ${arrName}([Mcolumn.tolist()])
     });
 
     it("Lambda", async () => {
-        expect(await th.run(`Lambda(x, x + 1)`)).equal("([x↦1+x])");
-        expect(await th.run(`Lambda((x, y), x + 1)`)).equal("(([x,y])[↦1+x])");
-        expect(await th.run(`Lambda(x, x)`)).equal("([x↦x])");
+        expect(await th.run(`Lambda(x, x + 1)`)).equal("[x↦1+x]");
+        expect(await th.run(`Lambda((x, y), x + 1)`)).equal("([x,y])[↦1+x]");
+        expect(await th.run(`Lambda(x, x)`)).equal("[x↦x]");
+        expect(await th.run(`Lambda(x, Lambda(y, z))`)).equal("[x↦]([y↦z])");
     })
 
-    it.only("PolyElement", async () => {
+    it("PolyElement", async () => {
         await th.prepare(`
 Ruv, u, v = ring("u,v", ZZ)
 Rxyz, x, y, z = ring("x,y,z", Ruv)
@@ -1015,6 +1016,76 @@ Rxyz, x, y, z = ring("x,y,z", Ruv)
         expect(await th.run(`-(v**2 + v + 1)*x + 3*u*v + 1`)).equal("([-v][💪,[2]][-v-1])[x+3uv+1]");
         expect(await th.run(`-(v**2 + v + 1)*x - 3*u*v + 1`)).equal("([-v][💪,[2]][-v-1])[x-3uv+1]");
 
+    })
+
+    it("FracElement", async () => {
+        await th.prepare(`
+Fuv, u, v = field("u,v", ZZ)
+Fxyzt, x, y, z, t = field("x,y,z,t", Fuv)
+                `);
+
+        expect(await th.run(`x - x`)).equal("[0]");
+        expect(await th.run(`x - 1`)).equal("[x-1]");
+        expect(await th.run(`x + 1`)).equal("[x+1]");
+        expect(await th.run(`x/3`)).equal("[frac,[x],[3]]");
+        expect(await th.run(`x/z`)).equal("[frac,[x],[z]]");
+        expect(await th.run(`x*y/z`)).equal("[frac,[xy],[z]]");
+        expect(await th.run(`x/(z*t)`)).equal("[frac,[x],[zt]]");
+        expect(await th.run(`x*y/(z*t)`)).equal("[frac,[xy],[zt]]");
+        expect(await th.run(`(x - 1)/y`)).equal("[frac,[x-1],[y]]");
+        expect(await th.run(`(x + 1)/y`)).equal("[frac,[x+1],[y]]");
+        expect(await th.run(`(-x - 1)/y`)).equal("[frac,[-x-1],[y]]");
+        expect(await th.run(`(x + 1)/(y*z)`)).equal("[frac,[x+1],[yz]]");
+        expect(await th.run(`-y/(x + 1)`)).equal("[-][frac,[y],[x+1]]");
+        expect(await th.run(`y*z/(x + 1)`)).equal("[frac,[yz],[x+1]]");
+        expect(await th.run(`((u + 1)*x*y + 1)/((v - 1)*z - 1)`)).equal("[frac,([u+1])[xy+1],([v-1])[z-1]]");
+        expect(await th.run(`((u + 1)*x*y + 1)/((v - 1)*z - t*u*v - 1)`)).equal("[frac,([u+1])[xy+1],([v-1])[z-uvt-1]]");
+    });
+
+    it("Poly", async () => {
+        expect(await th.run(`Poly(x**2 + 2 * x, x)`)).equal("[⚙️,[Poly]]([x][💪,[2]][+2x,x,][📜,[domain=]][Z,mathbb])");
+        expect(await th.run(`Poly(x/y, x)`)).equal("[⚙️,[Poly]]([frac,[x],[y]][,x,][📜,[domain=]][Z,mathbb]([y]))");
+        expect(await th.run(`Poly(2.0*x + y)`)).equal("[⚙️,[Poly]]([1.0y+2.0x,x,y,][📜,[domain=]][R,mathbb])");
+
+    })
+
+    it("Poly_order", async () => {
+        expect(await th.run(`Poly([a, 1, b, 2, c, 3], x)`)).equal("[⚙️,[Poly]]([3+x][💪,[4]][+2x][💪,[2]][+ax][💪,[5]][+bx][💪,[3]][+cx,x,][📜,[domain=]][Z,mathbb][[a,b,c]])");
+        expect(await th.run(`Poly([a, 1, b+c, 2, 3], x)`)).equal("[⚙️,[Poly]]([3+x][💪,[3]][+2x+ax][💪,[4]][+x][💪,[2]]([b+c])[,x,][📜,[domain=]][Z,mathbb][[a,b,c]])");
+        expect(await th.run(`Poly(a*x**3 + x**2*y - x*y - c*y**3 - b*x*y**2 + y - a*x + b,(x, y))`))
+            .equal("[⚙️,[Poly]]([b+y+ax][💪,[3]][+yx][💪,[2]][-ax-cy][💪,[3]][-xy-bxy][💪,[2]][,x,y,][📜,[domain=]][Z,mathbb][[a,b,c]])");
+    })
+
+    it("ComplexRootOf", async () => {
+        expect(await th.run(`rootof(x**5 + x + 3, 0)`)).equal("[⚙️,[CRootOf]]([3+x+x][💪,[5]][,0])");
+    })
+
+    it("RootSum", async () => {
+        expect(await th.run(`RootSum(x**5 + x + 3, sin)`)).equal("[⚙️,[RootSum]]([3+x+x][💪,[5]][,x↦][sin,]([x]))");
+    })
+    it.only("numbers", async () => {
+        expect(await th.run(`catalan(n)`)).equal("[C][⛏️,[n]]");
+        expect(await th.run(`catalan(n)**2`)).equal("[C][💪,[2],[n]]");
+        expect(await th.run(`bernoulli(n)`)).equal("[B][⛏️,[n]]");
+        expect(await th.run(`bernoulli(n, x)`)).equal("[B][⛏️,[n]]([x])");
+        expect(await th.run(`bernoulli(n)**2`)).equal("[B][💪,[2],[n]]");
+        expect(await th.run(`bernoulli(n, x)**2`)).equal("[B][💪,[2],[n]]([x])");
+        expect(await th.run(`bell(n)`)).equal("[B][⛏️,[n]]");
+        expect(await th.run(`bell(n, x)`)).equal("[B][⛏️,[n]]([x])");
+        expect(await th.run(`bell(n, m, (x, y))`)).equal("[B][⛏️,[n,m]]([x,y])");
+        expect(await th.run(`bell(n)**2`)).equal("[B][💪,[2],[n]]");
+        expect(await th.run(`bell(n, x)**2`)).equal("[B][💪,[2],[n]]([x])");
+        expect(await th.run(`bell(n, m, (x, y))**2`)).equal("[B][💪,[2],[n,m]]([x,y])");
+        expect(await th.run(`fibonacci(n)`)).equal("[F][⛏️,[n]]");
+        expect(await th.run(`fibonacci(n, x)`)).equal("[F][⛏️,[n]]([x])");
+        expect(await th.run(`fibonacci(n)**2`)).equal("[F][💪,[2],[n]]");
+        expect(await th.run(`fibonacci(n, x)**2`)).equal("[F][💪,[2],[n]]([x])");
+        expect(await th.run(`lucas(n)`)).equal("[F][⛏️,[n]]");
+        expect(await th.run(`lucas(n)**2`)).equal("[F][💪,[2],[n]]");
+        expect(await th.run(`tribonacci(n)`)).equal("[T][⛏️,[n]]");
+        expect(await th.run(`tribonacci(n, x)`)).equal("[T][⛏️,[n]]([x])");
+        expect(await th.run(`tribonacci(n)**2`)).equal("[T][💪,[2],[n]]");
+        expect(await th.run(`tribonacci(n, x)**2`)).equal("[T][💪,[2],[n]]([x])");
     })
 
 });
