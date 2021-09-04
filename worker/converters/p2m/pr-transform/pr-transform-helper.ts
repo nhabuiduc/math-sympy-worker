@@ -419,9 +419,7 @@ class PrTransformHelper {
     raw(text: string, more?: Partial<P2Pr.Var>): P2Pr.Var {
         return { type: "Var", kind: "Leaf", name: text, ...more };
     }
-    str(text: string): P2Pr.Var {
-        return { type: "Var", kind: "Leaf", name: text, normalText: true };
-    }
+    
     numberSymbol(text: string, more?: Partial<P2Pr.Var>): P2Pr.Var {
         return { type: "Var", kind: "Leaf", name: text, nativeType: "NumberSymbol", ...more };
     }
@@ -459,7 +457,7 @@ class PrTransformHelper {
     int(vl: number | string): P2Pr.Symbol {
         return this.var(vl.toString(), { nativeType: "Integer" })
     }
-    
+
 
     index(base: Symbol, index: Symbol, more?: Partial<P2Pr.Index>): P2Pr.Index {
         return { type: "Index", kind: "Container", symbols: [base, index], ...more };
@@ -536,7 +534,7 @@ class PrTransformHelper {
         return this.var("-1", { nativeType: "NegativeOne" });
     }
     none() {
-        return prTh.var("None", { nativeType: "None" })
+        return prTh.var("None", { nativeType: "None", normalText: true })
     }
     isNone(s: Symbol) {
         return s.type == "Var" && s.nativeType == "None";

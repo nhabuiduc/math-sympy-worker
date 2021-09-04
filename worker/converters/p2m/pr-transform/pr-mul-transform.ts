@@ -1,26 +1,22 @@
 import type { P2Pr } from "../p2pr";
+import { PrBaseTransform } from "./pr-base-transform";
 import { prTh } from "./pr-transform-helper";
 
-export class PrMulTransform implements P2Pr.IPrTransform {
-    transform(symbol: P2Pr.Symbol, ops: P2Pr.TransformOptions): P2Pr.Symbol {
-        symbol = this.flattenMul(symbol);
-        if (ops.orderMul) {
-            symbol = this.orderTransform(symbol);
-        }
-
-        return symbol;
+export class PrMulTransform extends PrBaseTransform {
+    protected initCtx(): {} {
+        return {};
+    }
+    override initTransform() {
+        return [
+            this.makeTransform(this.flattenMul, op => op.mul?.flatten),
+            this.makeTransform(this.orderTransform, op => op.mul?.order),
+        ]
     }
 
-    private orderTransform(symbol: Symbol): P2Pr.Symbol {
-        if (symbol.type == "Mul") {
-            const children = symbol.symbols.map(s => this.orderTransform(s));
-            return { ...symbol, symbols: symbol.unevaluatedDetected ? children : this.orderSymbols(children) };
+    private orderTransform = (symbol: Symbol): P2Pr.Symbol => {
+        if (symbol.type == "Mul" && !symbol.unevaluatedDetected) {
+            return { ...symbol, symbols: this.orderSymbols(symbol.symbols) };
         }
-
-        if (symbol.kind == "Container") {
-            return { ...symbol, symbols: symbol.symbols.map(s => this.orderTransform(s)) }
-        }
-
         return symbol;
     }
 
@@ -52,13 +48,9 @@ export class PrMulTransform implements P2Pr.IPrTransform {
         return symbols;
     }
 
-    private flattenMul(symbol: Symbol): Symbol {
+    private flattenMul = (symbol: Symbol): Symbol => {
         if (symbol.type == "Mul") {
-            return { ...symbol, symbols: this.flattenMulWith(symbol.symbols.map(s => this.flattenMul(s))) }
-        }
-
-        if (symbol.kind == "Container") {
-            return { ...symbol, symbols: symbol.symbols.map(s => this.flattenMul(s)) }
+            return { ...symbol, symbols: this.flattenMulWith(symbol.symbols) }
         }
 
         return symbol;

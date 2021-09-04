@@ -122,7 +122,6 @@ class PrSymbolVisuallyInfo {
             case "Prescript":
             case "PrescriptIdx":
             case "Index": {
-                // return this.check(s.symbols[0], undefined);
                 return { prOp: "unit", prPowerIndex: "parts", prShorthandMul: "unit", prSign: false, }
             }
             case "JsonData": {

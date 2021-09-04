@@ -11,8 +11,49 @@ export class P2M {
     }
 
     convert(data: PyodideNs.DummyPythonRunnerResult, ops?: P2Pr.TransformOptions): BlockModel[] {
+        ops = this.mergeWithDefault(ops);
         const pr = this.p2Pr.convert(data as any, ops);
         const md = this.pr2m.convert(pr);
         return md.blocks;
+    }
+
+    private mergeWithDefault(ops?: P2Pr.TransformOptions): P2Pr.TransformOptions {
+        ops = ops || {};
+        const rs: P2Pr.TransformOptions = {};
+        for (const key in this.defaultOps) {
+            (rs as any)[key] = Object.assign({}, (this.defaultOps as any)[key], (ops as any)[key])
+        }
+
+        return rs;
+    }
+
+    private defaultOps: Required<P2Pr.TransformOptions> = {
+        add: {
+            flatten: true,
+            order: true,
+        },
+        float: {
+            decimalSeprator: "dot",
+        },
+        frac: {
+            combineAdd: true,
+            combineMul: true,
+            combineLogFrac: true,
+            combineNumAndDenoSamePow: true,
+            extractMinus: true,
+        },
+        mul: {
+            flatten: true,
+            order: true,
+        },
+        pow: {
+            halfToRootSquare: true,
+            negativeIntegerToFrac: true,
+            negativeOneToFrac: true,
+            oneOfIntegerToPowOfRootSquare: true,
+        },
+        sqrt: {
+            combineMul: true,
+        }
     }
 }

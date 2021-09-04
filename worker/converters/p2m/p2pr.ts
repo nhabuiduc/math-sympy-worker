@@ -32,7 +32,8 @@ export class P2Pr {
     }
 
     convert(obj: P.Basic, ops?: P2Pr.TransformOptions): Symbol {
-        ops = Object.assign({}, { orderAdd: true, orderMul: true } as P2Pr.TransformOptions, ops)
+        ops = ops || {};
+        // ops = Object.assign({}, { orderAdd: true, orderMul: true } as P2Pr.TransformOptions, ops)
         const rs = this.c(obj);
         return this.transforms.reduce((prev, cur) => cur.transform(prev, ops), rs);
     }
@@ -194,7 +195,7 @@ export class P2Pr {
                 return prTh.brackets(this.m(obj.args), "|");
             }
             case "Str": {
-                return prTh.str(obj.text)
+                return prTh.var(obj.text)
             }
 
             case "IndexedBase": {
@@ -255,7 +256,7 @@ export class P2Pr {
 
             case "Poly": {
                 const [d, ...ss] = this.m(obj.args);
-                return prTh.genFunc("Poly", [...ss, prTh.varList([prTh.str("domain="), d])], { forceUsingOperatorName: true })
+                return prTh.genFunc("Poly", [...ss, prTh.varList([prTh.var("domain=", { normalText: true }), d])], { forceUsingOperatorName: true })
 
 
             }
@@ -614,6 +615,10 @@ export class P2Pr {
             case "Transpose": {
                 return prTh.pow(this.c(obj.args[0]), prTh.var("T"))
             }
+            case "ArrayElement": {
+                const ss = this.m(obj.args);
+                return prTh.index(ss[0], prTh.varList(prTh.extractIfVarList(ss[1]), ","))
+            }
 
         }
 
@@ -663,6 +668,17 @@ export namespace P2Pr {
     export type PrescriptIdx = C<"PrescriptIdx">;
     export type Subs = C<"Subs">;
 
+    export interface BinaryOp extends Container {
+        type: "BinaryOp";
+        op: string | { cp: "\\bmod" | "\\rightarrow" };
+        wrapIfMulShorthand?: boolean;
+    }
+    export interface UnaryOp extends Container {
+        type: "UnaryOp";
+        op: string;
+        pos: "before" | "after";
+    }
+
     export interface Pow extends C<"Pow"> {
         preventTransform?: boolean;
         preventBracketWrap?: boolean;
@@ -676,18 +692,6 @@ export namespace P2Pr {
 
     export interface Index extends C<"Index"> {
         noPowMerge?: boolean;
-    }
-
-    export interface BinaryOp extends Container {
-        type: "BinaryOp";
-        op: string | { cp: "\\bmod" | "\\rightarrow" };
-        wrapIfMulShorthand?: boolean;
-
-    }
-    export interface UnaryOp extends Container {
-        type: "UnaryOp";
-        op: string;
-        pos: "before" | "after";
     }
 
     export interface VarList extends Container {
@@ -704,29 +708,14 @@ export namespace P2Pr {
         unevaluatedDetected: boolean;
     }
 
-    export interface Var extends Leaf {
-        type: "Var";
-        name: string;
-        bold?: P.BoldType;
-        normalText?: boolean;
-        nativeType?: "One" | "NegativeOne" | "Zero" | "Integer" | "Float" | "NaN" | "BooleanTrue" | "BooleanFalse" | "NumberSymbol" | "None";
-        forceConsiderAsUnit?: boolean;
-        latexName?: "\\rightarrow";
-    }
-
-    export interface JsonData extends Leaf {
-        type: "JsonData";
-        data: string;
-    }
-
     export interface Matrix extends Container {
         type: "Matrix"
         row: number;
         col: number;
         bracket?: "(" | "[";
         prType?: "matrix" | "array";
-
     }
+
 
     export interface GenericFunc extends Container {
         type: "GenericFunc"
@@ -744,7 +733,6 @@ export namespace P2Pr {
         partial: boolean;
     }
 
-
     export interface Relational extends Container {
         type: "Relational";
         relOp: "==" | ">" | "<" | "<=" | ">=" | "!=";
@@ -752,6 +740,22 @@ export namespace P2Pr {
 
     export interface IPrTransform {
         transform(symbol: Symbol, ops: P2Pr.TransformOptions): Symbol;
+    }
+
+
+    export interface Var extends Leaf {
+        type: "Var";
+        name: string;
+        bold?: P.BoldType;
+        normalText?: boolean;
+        nativeType?: "One" | "NegativeOne" | "Zero" | "Integer" | "Float" | "NaN" | "BooleanTrue" | "BooleanFalse" | "NumberSymbol" | "None";
+        forceConsiderAsUnit?: boolean;
+        latexName?: "\\rightarrow";
+    }
+
+    export interface JsonData extends Leaf {
+        type: "JsonData";
+        data: string;
     }
 
     export type SupportBracket = P.SupportBracket;
@@ -764,8 +768,34 @@ export namespace P2Pr {
     }
 
     export interface TransformOptions {
-        orderMul?: boolean;
-        orderAdd?: boolean;
+        mul?: {
+            order?: boolean;
+            flatten?: boolean;
+        };
+        add?: {
+            order?: boolean;
+            flatten?: boolean;
+        };
+        float?: {
+            decimalSeprator?: "comma" | "dot"
+        };
+        frac?: {
+            combineMul?: boolean;
+            combineAdd?: boolean;
+            combineNumAndDenoSamePow?: boolean;
+            combineLogFrac?: boolean;
+            extractMinus?: boolean;
+        };
+        pow?: {
+            negativeOneToFrac?: boolean;
+            negativeIntegerToFrac?: boolean;
+            halfToRootSquare?: boolean;
+            oneOfIntegerToPowOfRootSquare?: boolean;
+        };
+        sqrt?: {
+            combineMul?: boolean;
+        }
+
     }
 
     export type PGenericFunc = P.GenericFunc;
@@ -797,7 +827,7 @@ namespace P {
         F<"ComplexRootOf"> | F<"MatrixSlice"> | U<"NoneType"> | RandomDomain | F<"PythonRational"> | UnifiedTransform |
         PolynomialRingBase | F<"Morphism"> | F<"NamedMorphism"> | F<"CompositeMorphism"> | F<"Category"> | F<"Diagram"> | DiagramGrid |
         F<"FreeModule"> | F<"SubModule"> | F<"FreeModuleElement"> | F<"DMP"> | F<"Frac"> | F<"MatrixHomomorphism"> | F<"Tr"> |
-        F<"Adjoint"> | F<"Transpose">|
+        F<"Adjoint"> | F<"Transpose"> | F<"ArrayElement"> |
         UnknownFunc;
 
     export interface UnifiedTransform extends F<"UnifiedTransform"> {

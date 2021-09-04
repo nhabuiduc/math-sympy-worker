@@ -2,19 +2,22 @@ import { _l } from "../../../light-lodash";
 import type { P2Pr } from "../p2pr";
 import fEqual from "fast-deep-equal";
 import { prTh } from "./pr-transform-helper";
+import { PrBaseTransform } from "./pr-base-transform";
+import { PrTransformMap } from "./pr-transform-map";
 
-export class PrSqrtTransform implements P2Pr.IPrTransform {
-    transform(symbol: Symbol): Symbol {
-        return this.transformMulSameSqrt(symbol);
+export class PrSqrtTransform extends PrBaseTransform {
+    protected initTransform(): PrTransformMap<{}>[] {
+        return [
+            this.makeTransform(this.transformMulSameSqrt, op => op.sqrt?.combineMul)
+        ]
+    }
+    protected initCtx(): {} {
+        return {};
     }
 
-    private transformMulSameSqrt(symbol: Symbol): Symbol {
+    private transformMulSameSqrt = (symbol: Symbol): Symbol => {
         if (symbol.type == "Mul") {
-            const children = symbol.symbols.map(s => this.transformMulSameSqrt(s));
-            return { ...symbol, symbols: children.reduce((prev, c) => this.combineMulSameSqrt(prev, c), [] as Symbol[]) }
-        }
-        if (symbol.kind == "Container") {
-            return { ...symbol, symbols: symbol.symbols.map(s => this.transformMulSameSqrt(s)) }
+            return { ...symbol, symbols: symbol.symbols.reduce((prev, c) => this.combineMulSameSqrt(prev, c), [] as Symbol[]) }
         }
 
         return symbol;

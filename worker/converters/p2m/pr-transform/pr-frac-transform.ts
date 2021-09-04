@@ -2,50 +2,36 @@ import { _l } from "../../../light-lodash";
 import type { P2Pr } from "../p2pr";
 import fEqual from "fast-deep-equal";
 import { prTh } from "./pr-transform-helper";
+import { PrBaseTransform } from "./pr-base-transform";
 
-
-export class PrFracTransform implements P2Pr.IPrTransform {
-    transform(symbol: P2Pr.Symbol): P2Pr.Symbol {
-        symbol = this.transformMultipleInverseFrac(symbol);
-        symbol = this.transformMulFrac(symbol);
-        symbol = this.transformFracWithSamePositivePower(symbol);
-        symbol = this.transformAddFracs(symbol);
-        symbol = this.transformLogFrac(symbol);
-        const ctx: TransformCtx = { applyFound: false };
-        symbol = this.transformNumeratorMinus(symbol, ctx);
-        if (ctx.applyFound) {
-            symbol = this.normalizeMul(symbol)
-        }
-        return symbol;
+export class PrFracTransform extends PrBaseTransform<TransformCtx> {
+    protected initCtx(): TransformCtx {
+        return {};
+    }
+    override initTransform() {
+        return [
+            this.makeTransform(this.transformMultipleInverseFrac, op => op.frac?.combineMul),
+            this.makeTransform(this.transformMulFrac, op => op.frac?.combineMul),
+            this.makeTransform(this.transformFracWithSamePositivePower, op => op.frac?.combineNumAndDenoSamePow),
+            this.makeTransform(this.transformAddFracs, op => op.frac?.combineAdd),
+            this.makeTransform(this.transformLogFrac, op => op.frac?.combineLogFrac),
+            this.makeTransform(this.transformNumOrDenMinus, op => op.frac?.extractMinus),
+            this.makeTransform(this.normalizeMul, (_op, ctx) => ctx.minusApplied),
+        ]
     }
 
-    private transformFracWithSamePositivePower(symbol: Symbol): Symbol {
+    private transformFracWithSamePositivePower = (symbol: Symbol): Symbol => {
         if (symbol.type == "Frac") {
-            const children = symbol.symbols.map(c => this.transformFracWithSamePositivePower(c));
-            const [num, den] = children;
-
+            const [num, den] = symbol.symbols;
             const foundNumber = this.findSameExactPositivePower(num, den);
             if (foundNumber != "not-found") {
-                return {
-                    type: "Pow",
-                    kind: "Container",
-                    symbols: [{
-                        type: "Frac",
-                        kind: "Container",
-                        symbols: [
-                            (num as P2Pr.Pow).symbols[0],
-                            (den as P2Pr.Pow).symbols[0]
-                        ]
-                    }, prTh.int(foundNumber)]
-
-                }
+                return prTh.pow(
+                    prTh.frac(
+                        (num as P2Pr.Pow).symbols[0],
+                        (den as P2Pr.Pow).symbols[0]
+                    ),
+                    prTh.int(foundNumber))
             }
-
-            return { ...symbol, symbols: children };
-        }
-
-        if (symbol.kind == "Container") {
-            return { ...symbol, symbols: symbol.symbols.map(s => this.transformFracWithSamePositivePower(s)) }
         }
 
         return symbol;
@@ -65,51 +51,33 @@ export class PrFracTransform implements P2Pr.IPrTransform {
             }
         }
 
-
         return "not-found";
     }
 
-    private transformLogFrac(symbol: Symbol): Symbol {
+    private transformLogFrac = (symbol: Symbol): Symbol => {
         if (symbol.type == "Frac") {
-            const children = symbol.symbols.map(c => this.transformLogFrac(c));
-            const [num, den] = children;
+            const [num, den] = symbol.symbols;
             if (num.type == "GenericFunc" && num.func == "log" && den.type == "GenericFunc" && den.func == "log") {
                 if (den.symbols.length == 1 && prTh.isIntType(den.symbols[0])) {
                     return prTh.index(
-                        {
-                            type: "GenericFunc",
-                            kind: "Container",
-                            func: "log",
-                            symbols: [num.symbols[0]],
-                        },
+                        prTh.genFunc("log", [num.symbols[0]]),
                         den.symbols[0],
                     )
-                    // return {
-                    //     type: "GenericFunc",
-                    //     kind: "Container",
-                    //     func: "log",
-                    //     symbols: [den.symbols[0], num.symbols[0]],
-                    // }
                 }
             }
 
-            return { ...symbol, symbols: children };
-        }
-
-        if (symbol.kind == "Container") {
-            return { ...symbol, symbols: symbol.symbols.map(s => this.transformLogFrac(s)) }
+            return symbol;
         }
 
         return symbol;
     }
 
     /** remove multiple One or Negative One, and bring NegativeOne on top */
-    private normalizeMul(symbol: Symbol): Symbol {
+    private normalizeMul = (symbol: Symbol): Symbol => {
         if (symbol.type == "Mul") {
-            const children = symbol.symbols.map(c => this.normalizeMul(c));
             let rsSymbols: Symbol[] = [];
             let currentSign = 1;
-            for (const s of children) {
+            for (const s of symbol.symbols) {
                 if (prTh.isNegativeOne(s)) {
                     currentSign = -currentSign;
                 } else if (prTh.isOne(s)) {
@@ -125,30 +93,23 @@ export class PrFracTransform implements P2Pr.IPrTransform {
 
             return { ...symbol, symbols: rsSymbols };
         }
-        if (symbol.kind == "Container") {
-            return { ...symbol, symbols: symbol.symbols.map(s => this.normalizeMul(s)) }
-        }
 
         return symbol;
     }
 
-    private transformNumeratorMinus(symbol: Symbol, ctx: TransformCtx): Symbol {
+    private transformNumOrDenMinus = (symbol: Symbol, ctx: TransformCtx): Symbol => {
         if (symbol.type == "Frac") {
-            const children = symbol.symbols.map(c => this.transformNumeratorMinus(c, ctx));
-            const [num, den] = children;
+            const [num, den] = symbol.symbols;
             if (this.isFracPartNegative(num) && !this.isFracPartNegative(den)) {
-                ctx.applyFound = true;
+                ctx.minusApplied = true;
                 return prTh.mulOf(prTh.negativeOne(), prTh.frac(this.removeNegativePart(num), den));
 
             } else if (!this.isFracPartNegative(num) && this.isFracPartNegative(den)) {
-                ctx.applyFound = true;
+                ctx.minusApplied = true;
                 return prTh.mulOf(prTh.negativeOne(), prTh.frac(num, this.removeNegativePart(den)));
             }
 
-            return { ...symbol, symbols: children }
-        }
-        if (symbol.kind == "Container") {
-            return { ...symbol, symbols: symbol.symbols.map(s => this.transformNumeratorMinus(s, ctx)) }
+            return symbol;
         }
 
         return symbol;
@@ -196,16 +157,11 @@ export class PrFracTransform implements P2Pr.IPrTransform {
         return s;
     }
 
-    private transformAddFracs(symbol: Symbol): Symbol {
+    private transformAddFracs = (symbol: Symbol): Symbol => {
         if (symbol.type == "Add") {
-            const children = symbol.symbols.map(s => this.transformAddFracs(s));
             return {
-                ...symbol, symbols: children.reduce((prev, c) => this.combine2FracSameDenominator(prev, c), [] as Symbol[]),
+                ...symbol, symbols: symbol.symbols.reduce((prev, c) => this.combine2FracSameDenominator(prev, c), [] as Symbol[]),
             }
-        }
-
-        if (symbol.kind == "Container") {
-            return { ...symbol, symbols: symbol.symbols.map(s => this.transformAddFracs(s)) }
         }
 
         return symbol;
@@ -250,17 +206,14 @@ export class PrFracTransform implements P2Pr.IPrTransform {
         return fEqual(s1, s2);
     }
 
-    private transformMultipleInverseFrac(symbol: Symbol): Symbol {
+    private transformMultipleInverseFrac = (symbol: Symbol): Symbol => {
         if (symbol.type == "Mul" && !symbol.unevaluatedDetected) {
-            const children = this.combineInverseFrac(symbol.symbols.map(s => this.transformMultipleInverseFrac(s)));
+            const children = this.combineInverseFrac(symbol.symbols);
             if (children.length <= 1) {
                 return children[0];
             }
 
             return { ...symbol, symbols: children };
-        }
-        if (symbol.kind == "Container") {
-            return { ...symbol, symbols: symbol.symbols.map(s => this.transformMultipleInverseFrac(s)) }
         }
 
         return symbol;
@@ -309,9 +262,9 @@ export class PrFracTransform implements P2Pr.IPrTransform {
         return symbol.type == "Frac" && prTh.isOne(symbol.symbols[0])
     }
 
-    private transformMulFrac(symbol: Symbol): Symbol {
+    private transformMulFrac = (symbol: Symbol): Symbol => {
         if (symbol.type == "Mul") {
-            const children = symbol.symbols.map(s => this.transformMulFrac(s));
+            const { symbols: children } = symbol;
             if (children.length == 1) {
                 return children[0];
             }
@@ -322,10 +275,6 @@ export class PrFracTransform implements P2Pr.IPrTransform {
             }
 
             return { ...symbol, symbols: orderedChildren };
-        }
-
-        if (symbol.kind == "Container") {
-            return { ...symbol, symbols: symbol.symbols.map(s => this.transformMulFrac(s)) }
         }
 
         return symbol;
@@ -380,5 +329,5 @@ type Symbol = P2Pr.Symbol;
 type FracSignReversableSymbol = P2Pr.Var | P2Pr.Mul;
 
 interface TransformCtx {
-    applyFound: boolean;
+    minusApplied?: boolean;
 }

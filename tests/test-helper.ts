@@ -1,4 +1,5 @@
 import { CasEngineProcess } from "@sympy-worker/cas-engine-process";
+import { P2Pr } from "@sympy-worker/converters/p2m/p2pr";
 import { PyodideNs } from "@sympy-worker/pyodide-models";
 declare const pyodide: PyodideNs.PythonRunner;
 
@@ -26,7 +27,7 @@ class TestHelper {
         await this.casEngineProcess.processRaw(statement, false);
     }
 
-    async run(statement: string, log?: boolean) {
+    async run(statement: string, ops?: P2Pr.TransformOptions) {
         const code = `
 expr=${statement}
 rootDic = ___mcSympyExprDump(expr)
@@ -34,16 +35,17 @@ json.dumps(rootDic)
 `;
 
         const [, blocks] = await this.casEngineProcess.processRaw(code, true, {
-            orderAdd: false, /** the order algorithm will change frequently, we don't want to test fail all */
-            orderMul: false, /** the order algorithm will change frequently, we don't want to test fail all */
+            mul: { order: false }, /** the order algorithm will change frequently, we don't want to test fail all */
+            add: { order: false }, /** the order algorithm will change frequently, we don't want to test fail all */
+            ...ops,
         });
         let blocksText = "";
         if (blocks) {
             blocksText = this.blocksToText(blocks);
         }
-        if (log) {
-            console.log(blocks);
-        }
+        // if (log) {
+        //     console.log(blocks);
+        // }
         return blocksText
     }
 
@@ -127,7 +129,7 @@ json.dumps(rootDic)
             return "";
         }
 
-        return `,${Object.keys(bs).map(k => this.reduceStyleName(bs[k])).join("|")}`
+        return `,${Object.values(bs).map(vl => this.reduceStyleName(vl)).join("|")}`
     }
 
     private reduceStyleName(sn: string): string {
@@ -147,7 +149,7 @@ json.dumps(rootDic)
 
 }
 
-const commonFuncReducedMap = {
+const commonFuncReducedMap: { [k: string]: string } = {
     "power-index": "💪",
     "small-hat": "🎩",
     "operatorname": "⚙️",

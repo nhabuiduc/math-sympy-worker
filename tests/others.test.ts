@@ -68,6 +68,7 @@ k, m, n = symbols('k m n', integer=True)
         expect(await th.run("Pow(Integer(1)/100, -1, evaluate=False)")).equal(`[frac,[1],[frac,[1],[100]]]`);
     });
 
+    
     it("Builtins", async () => {
         expect(await th.run("True")).equal(`[📜,[True]]`);
         expect(await th.run("False")).equal(`[📜,[False]]`);
@@ -1187,9 +1188,9 @@ A = Exponential('a', 1)
 B = Exponential('b', 1)
         `);
 
-        expect(await th.run(`where(X > 0)`)).equal("[📜,[Domain: ]][0<x][⛏️,[1]][∧x][⛏️,[1]][<∞]");
-        expect(await th.run(`where(D > 4)`)).equal("[📜,[Domain: ]][d][⛏️,[1]][=5∨d][⛏️,[1]][=6]");
-        expect(await th.run(` pspace(Tuple(A, B)).domain`)).equal("[📜,[Domain: ]][0≤a∧0≤b∧a<∞∧b<∞]");
+        expect(await th.run(`where(X > 0)`)).equal("[📜,[Domain: ]]([0<x][⛏️,[1]])[∧]([x][⛏️,[1]][<∞])");
+        expect(await th.run(`where(D > 4)`)).equal("[📜,[Domain: ]]([d][⛏️,[1]][=5])[∨]([d][⛏️,[1]][=6])");
+        expect(await th.run(` pspace(Tuple(A, B)).domain`)).equal("[📜,[Domain: ]]([0≤a])[∧]([0≤b])[∧]([a<∞])[∧]([b<∞])");
         expect(await th.run(`RandomDomain(FiniteSet(x), FiniteSet(1, 2))`)).equal("[📜,[Domain: ]]{[x]}[📜,[ in ]]{[1,2]}");
 
     });
@@ -1297,7 +1298,7 @@ h = homomorphism(QQ.old_poly_ring(x).free_module(2),QQ.old_poly_ring(x).free_mod
         expect(await th.run(`h`)).equal("[[🏓]matrix,[0],[0],[0],[0]][:][Q,mathbb][[x]][💪,[2]][rightarrow,][Q,mathbb][[x]][💪,[2]]");
     });
 
-    it.only("QuotientRing", async () => {
+    it("QuotientRing", async () => {
         await th.prepare(`
 from sympy.polys.domains import QQ
 R = QQ.old_poly_ring(x)/[x**2 + 1]    
@@ -1307,7 +1308,7 @@ R = QQ.old_poly_ring(x)/[x**2 + 1]
         expect(await th.run(`R.one`)).equal("[1+]<[1+x][💪,[2]]>");
 
     })
-    it.only("Tr", async () => {
+    it("Tr", async () => {
         await th.prepare(`
 A, B = symbols('A B', commutative=False)
 t = Tr(A*B)
@@ -1315,7 +1316,9 @@ t = Tr(A*B)
 
         expect(await th.run(`t`)).equal("[⚙️,[tr]]([AB])");
     })
-    it.only("Adjoint", async () => {
+
+    /**TODO: Matrix should not flip power-1 */
+    it("Adjoint", async () => {
         await th.prepare(`
 from sympy.matrices import MatrixSymbol, Adjoint, Inverse, Transpose
 X = MatrixSymbol('X', 2, 2)
@@ -1334,5 +1337,24 @@ Y = MatrixSymbol('Y', 2, 2)
         expect(await th.run(`Adjoint(Transpose(X))`)).equal('([X][💪,[T]])[💪,[†]]');
         expect(await th.run(`Transpose(Adjoint(X))`)).equal('([X][💪,[†]])[💪,[T]]');
         expect(await th.run(`Transpose(Adjoint(X) + Y)`)).equal('([X][💪,[†]][+Y])[💪,[T]]');
+    });
+
+    it("array_expressions", async () => {
+        expect(await th.run(`ArraySymbol("A", 2, 3, 4)`)).equal('[A]');
+        expect(await th.run(`ArrayElement("A", (2, 1/(1-x), 0))`)).equal('[A][⛏️,[2,][frac,[1],[1-x]][,0]]');
+    })
+
+    it.only("decimal_separator", async () => {
+        await th.prepare(`
+x, y, z, t = symbols('x y z t')
+k, m, n = symbols('k m n', integer=True)
+f, g, h = symbols('f g h', cls=Function)
+        `);
+        expect(await th.run(`[1, 2.3, 4.5]`)).equal('[x]');
+    });
+
+    it.only("str", async () => {
+        await th.prepare(` from sympy.core.symbol import Str`);
+        expect(await th.run(`str(Str('x'))`)).equal('[x]');
     })
 });

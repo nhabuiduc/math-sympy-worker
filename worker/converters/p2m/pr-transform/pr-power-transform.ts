@@ -1,12 +1,21 @@
 import type { P2Pr } from "../p2pr";
+import { PrBaseTransform } from "./pr-base-transform";
 import { prTh } from "./pr-transform-helper";
 
-export class PrPowerTransform implements P2Pr.IPrTransform {
-    transform(symbol: P2Pr.Symbol): P2Pr.Symbol {
-        symbol = this.transformSpecialPower(symbol);
-        symbol = this.transformPositiveNumberPower(symbol);
-        symbol = this.transformMergeIndex(symbol);
-        return symbol
+export class PrPowerTransform extends PrBaseTransform {
+
+    protected initCtx(): {} {
+        return {};
+    }
+    override initTransform() {
+        return [
+            this.makeTransform(this.transformPowNegativeOne, op => op.pow?.negativeOneToFrac),
+            this.makeTransform(this.transformPowNegativeInt, op => op.pow?.negativeIntegerToFrac),
+            this.makeTransform(this.transformPowHalf, op => op.pow?.halfToRootSquare),
+            this.makeTransform(this.transformPowOneOfInt, op => op.pow?.oneOfIntegerToPowOfRootSquare),
+            this.makeTransform(this.transformPowOfOne, () => true),
+            this.makeTransform(this.transformMergeIndex, () => true),
+        ]
     }
 
     private isAllow(s: P2Pr.Symbol): s is P2Pr.Pow {
@@ -21,83 +30,61 @@ export class PrPowerTransform implements P2Pr.IPrTransform {
     }
 
 
-    private transformPositiveNumberPower(symbol: P2Pr.Symbol): P2Pr.Symbol {
-        if (this.isAllow(symbol)) {
-            const ss = symbol.symbols.map(s => this.transformPositiveNumberPower(s))
-            if (prTh.isIntType(ss[0]) && prTh.isRationalFrac(ss[1])) {
-                return this.powerRationalToSqrt(ss[0], ss[1], symbol);
-            }
-
-            if (prTh.isOne(ss[1])) {
-                return this.mergedWithRemaningIdx(ss[0], symbol);
-            }
+    private transformPowOfOne = (s: P2Pr.Symbol): P2Pr.Symbol => {
+        if (this.isAllow(s) && prTh.isOne(s.symbols[1])) {
+            return this.mergedWithRemaningIdx(s.symbols[0], s);
         }
 
-
-        if (symbol.kind == "Container") {
-            return { ...symbol, symbols: symbol.symbols.map(s => this.transformPositiveNumberPower(s)) }
-        }
-
-        return symbol;
+        return s;
     }
 
-    private transformMergeIndex(symbol: Symbol): Symbol {
-        if (this.isAllow(symbol)) {
-            const ss = symbol.symbols.map(s => this.transformMergeIndex(s))
-
+    private transformMergeIndex = (s: Symbol): Symbol => {
+        if (this.isAllow(s)) {
             let allowMergeIdx = true;
-            if (ss[0].type == "Index" && ss[0].noPowMerge) {
+            if (s.symbols[0].type == "Index" && s.symbols[0].noPowMerge) {
                 allowMergeIdx = false;
             }
-            if (ss[0].type == "Index" && ss[0].symbols[0].type == "GenericFunc" && ss[0].symbols[0].powerIndexPos == "wrap-all") {
+            if (s.symbols[0].type == "Index" && s.symbols[0].symbols[0].type == "GenericFunc" && s.symbols[0].symbols[0].powerIndexPos == "wrap-all") {
                 allowMergeIdx = false;
             }
-            if (ss[0].type == "Index" && !ss[2] && allowMergeIdx) {
-                ss.push(ss[0].symbols[1]);
-                ss[0] = ss[0].symbols[0];
+            if (s.symbols[0].type == "Index" && !s.symbols[2] && allowMergeIdx) {
+                return prTh.pow(s.symbols[0].symbols[0], s.symbols[1], s.symbols[0].symbols[1])
             }
-
-            return { ...symbol, symbols: ss }
         }
 
-        if (symbol.kind == "Container") {
-            return { ...symbol, symbols: symbol.symbols.map(s => this.transformMergeIndex(s)) }
-        }
-
-        return symbol;
+        return s;
     }
 
-    private transformSpecialPower(symbol: Symbol): Symbol {
-        if (this.isAllow(symbol)) {
-            const ss = symbol.symbols.map(s => this.transformSpecialPower(s))
-
-            const root = ss[1];
-            if (prTh.isNegativeOne(root)) {
-                return prTh.frac(prTh.one(), this.mergedWithRemaningIdx(ss[0], symbol));
-            }
-            if (prTh.isNegativeInt(root) || prTh.isMulNegativeOf(root)) {
-                return prTh.frac(
-                    prTh.one(),
-                    prTh.pow(ss[0], prTh.removeNegativeSign(root), ss[2])
-                )
-            }
-
-            if (prTh.matchRationalFrac(root, 1, 2)) {
-                return this.powerRationalToSqrt(this.mergedWithRemaningIdx(ss[0], symbol), root, { ...symbol, symbols: ss });
-
-            }
-            if (prTh.matchRationalFrac(root, 1)) {
-                return this.powerRationalToSqrt(this.mergedWithRemaningIdx(ss[0], symbol), root, { ...symbol, symbols: ss });
-            }
-
-            return { ...symbol, symbols: ss }
+    private transformPowNegativeOne = (s: Symbol): Symbol => {
+        if (this.isAllow(s) && prTh.isNegativeOne(s.symbols[1])) {
+            return prTh.frac(prTh.one(), this.mergedWithRemaningIdx(s.symbols[0], s));
         }
 
-        if (symbol.kind == "Container") {
-            return { ...symbol, symbols: symbol.symbols.map(s => this.transformSpecialPower(s)) }
+        return s;
+    }
+    private transformPowNegativeInt = (s: Symbol): Symbol => {
+        if (this.isAllow(s) && (prTh.isNegativeInt(s.symbols[1]) || prTh.isMulNegativeOf(s.symbols[1]))) {
+            return prTh.frac(
+                prTh.one(),
+                prTh.pow(s.symbols[0], prTh.removeNegativeSign(s.symbols[1]), s.symbols[2])
+            )
         }
 
-        return symbol;
+        return s;
+    }
+    private transformPowHalf = (s: Symbol): Symbol => {
+        if (this.isAllow(s) && prTh.matchRationalFrac(s.symbols[1], 1, 2)) {
+            return this.powerRationalToSqrt(this.mergedWithRemaningIdx(s.symbols[0], s), s.symbols[1], s);
+        }
+
+        return s;
+    }
+    private transformPowOneOfInt = (s: Symbol): Symbol => {
+        if (this.isAllow(s) && prTh.matchRationalFrac(s.symbols[1], 1)) {
+            return this.powerRationalToSqrt(this.mergedWithRemaningIdx(s.symbols[0], s), s.symbols[1], s);
+        }
+
+        return s;
     }
 
     private powerRationalToSqrt(base: Symbol, rational: P2Pr.Frac, defaultSymbol: Symbol): Symbol {

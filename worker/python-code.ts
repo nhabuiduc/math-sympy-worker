@@ -70,6 +70,9 @@ class __McHdl:
     def hdl_Float(self, expr):
         return {'func':'Float', 'value':sstr(expr,full_prec=False) }
 
+    def hdl_float(self, expr):
+        return {'func':'Float', 'value':sstr(expr,full_prec=False) }
+
     def hdl_CoordSys3D(self, expr):
         return {'func':'CoordSys3D', 'variableNames':expr._variable_names, 'vectorNames':expr._vector_names, 'args':  self.argsMap(expr.args) }
 
@@ -383,6 +386,10 @@ class __McHdl:
 
     def hdl_MatPow(self,h):
         return {'func':'Pow', 'args': self.argsMap(h.args) } 
+
+    def hdl_ArraySymbol(self,h):
+        from sympy import Symbol
+        return self.hdlAll(h.name)
 
             
     def hdl_MatrixSlice(self,d):

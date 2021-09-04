@@ -1,25 +1,23 @@
 import { _l } from "../../../light-lodash";
 import type { P2Pr } from "../p2pr";
 import { prTh } from "./pr-transform-helper";
+import { PrBaseTransform } from "./pr-base-transform";
 
-export class PrAddTransform implements P2Pr.IPrTransform {
-    transform(symbol: Symbol, ops: P2Pr.TransformOptions): Symbol {
-        symbol = this.flattenAdd(symbol);
-        if (ops.orderAdd) {
-            return this.orderTransform(symbol);
-        }
-
-        return symbol;
+export class PrAddTransform extends PrBaseTransform {
+    override initTransform() {
+        return [
+            this.makeTransform(this.flattenAdd, op => op.add?.flatten),
+            this.makeTransform(this.orderTransform, op => op.add?.order),
+        ]
     }
 
-    private orderTransform(symbol: Symbol): P2Pr.Symbol {
-        if (symbol.type == "Add") {
-            const children = symbol.symbols.map(s => this.orderTransform(s));
-            return { ...symbol, symbols: this.orderSymbols(children) };
-        }
+    override initCtx() {
+        return {};
+    }
 
-        if (symbol.kind == "Container") {
-            return { ...symbol, symbols: symbol.symbols.map(s => this.orderTransform(s)) }
+    private orderTransform = (symbol: Symbol): P2Pr.Symbol => {
+        if (symbol.type == "Add") {
+            return { ...symbol, symbols: this.orderSymbols(symbol.symbols) };
         }
 
         return symbol;
@@ -47,13 +45,9 @@ export class PrAddTransform implements P2Pr.IPrTransform {
         return symbols;
     }
 
-    private flattenAdd(symbol: Symbol): Symbol {
+    private flattenAdd = (symbol: Symbol): Symbol => {
         if (symbol.type == "Add") {
-            return { ...symbol, symbols: this.flattenAddWith(symbol.symbols.map(s => this.flattenAdd(s))) }
-        }
-
-        if (symbol.kind == "Container") {
-            return { ...symbol, symbols: symbol.symbols.map(s => this.flattenAdd(s)) }
+            return { ...symbol, symbols: this.flattenAddWith(symbol.symbols) }
         }
 
         return symbol;
