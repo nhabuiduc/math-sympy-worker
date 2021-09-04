@@ -36,11 +36,11 @@ export class Pr2M {
         this.genericFunc = new GenericFunc(this, constantTextFuncSet, symbolLatexNames)
     }
 
-    convert(obj: P2Pr.Symbol, level = 0): CResult {
-        return this.innerConvert(obj, level);
+    convert(obj: P2Pr.Symbol): CResult {
+        return this.innerConvert(obj);
     }
 
-    private innerConvert(obj: P2Pr.Symbol, level: number): CResult {
+    private innerConvert(obj: P2Pr.Symbol): CResult {
 
         switch (obj.type) {
             case "BinaryOp": {
@@ -57,7 +57,7 @@ export class Pr2M {
                 return this.prCommon.opJoin(obj.symbols, () => blockBd.compositeBlock(op.cp), obj.wrapIfMulShorthand ? "wrapEvenShortHand" : undefined);
             }
             case "UnaryOp": {
-                const rsArg0 = this.innerConvert(obj.symbols[0], level);
+                const rsArg0 = this.innerConvert(obj.symbols[0]);
                 const expBlocks = prTh.considerPresentAsSingleUnitInOpCtx(obj.symbols[0], rsArg0, { wrapEvenShortHand: true }) ? rsArg0.blocks : blockBd.wrapBetweenBrackets(rsArg0.blocks).blocks
                 if (obj.pos == "before") {
                     return { blocks: blockBd.joinBlocks([[blockBd.textBlock(obj.op)], expBlocks,]) }
@@ -104,14 +104,14 @@ export class Pr2M {
                 if (obj.symbols[0].type == "GenericFunc") {
                     const genericFunc = obj.symbols[0] as P2Pr.GenericFunc;
                     const { name, args } = this.genericFunc.buildGenericFunc(genericFunc);
-                    const indexBlock = blockBd.indexBlock(this.innerConvert(obj.symbols[1], level).blocks);
+                    const indexBlock = blockBd.indexBlock(this.innerConvert(obj.symbols[1]).blocks);
                     const rsBlocks = obj.symbols[0].powerIndexPos == "all-after" ? [...name, ...args, indexBlock] : [...name, indexBlock, ...args];
                     return { blocks: rsBlocks }
                 }
                 return {
                     blocks: [
-                        ...this.innerConvert(obj.symbols[0], level).blocks,
-                        blockBd.indexBlock(this.innerConvert(obj.symbols[1], level).blocks)
+                        ...this.innerConvert(obj.symbols[0]).blocks,
+                        blockBd.indexBlock(this.innerConvert(obj.symbols[1]).blocks)
                     ]
                 }
             }
@@ -127,10 +127,10 @@ export class Pr2M {
 
             case "Sqrt": {
                 if (obj.symbols.length <= 1) {
-                    return { blocks: [blockBd.compositeBlock("\\sqrt", ["value"], [this.innerConvert(obj.symbols[0], 0).blocks])] }
+                    return { blocks: [blockBd.compositeBlock("\\sqrt", ["value"], [this.innerConvert(obj.symbols[0]).blocks])] }
                 }
 
-                return { blocks: [blockBd.compositeBlock("\\sqrt", ["value", "sub1"], [this.innerConvert(obj.symbols[0], 0).blocks, this.innerConvert(obj.symbols[1], 0).blocks])] }
+                return { blocks: [blockBd.compositeBlock("\\sqrt", ["value", "sub1"], [this.innerConvert(obj.symbols[0]).blocks, this.innerConvert(obj.symbols[1]).blocks])] }
             }
             case "GenericFunc": {
 
@@ -148,7 +148,7 @@ export class Pr2M {
                 let cellIdx = 0;
                 for (let rIdx = 0; rIdx < obj.row; rIdx++) {
                     for (let cIdx = 0; cIdx < obj.col; cIdx++) {
-                        const editorModel = blockBd.editorFrom(this.innerConvert(obj.symbols[cellIdx], 0).blocks);
+                        const editorModel = blockBd.editorFrom(this.innerConvert(obj.symbols[cellIdx]).blocks);
                         const cellKey = tabularKeyInfoHelper.getKeyFromRowCol(rIdx, cIdx);
                         (matrixBlock.elements[cellKey] as EditorModel) = editorModel;
                         cellIdx++;
@@ -163,7 +163,7 @@ export class Pr2M {
             }
 
             case "Derivative": {
-                return this.derivative.convert(obj, level);
+                return this.derivative.convert(obj);
             }
             case "Integral": {
                 return { blocks: this.integral.convert(obj) };
@@ -172,7 +172,7 @@ export class Pr2M {
             case "Binomial": {
                 return {
                     blocks: [
-                        blockBd.binomBlock(this.innerConvert(obj.symbols[0], 0).blocks, this.innerConvert(obj.symbols[1], 0).blocks)
+                        blockBd.binomBlock(this.innerConvert(obj.symbols[0]).blocks, this.innerConvert(obj.symbols[1]).blocks)
                     ],
                     prBracket: "("
                 }
@@ -180,9 +180,9 @@ export class Pr2M {
             case "Relational": {
                 return {
                     blocks: [
-                        ...this.innerConvert(obj.symbols[0], level).blocks,
+                        ...this.innerConvert(obj.symbols[0]).blocks,
                         blockBd.textBlock(this.relationalOpMap(obj.relOp)),
-                        ...this.innerConvert(obj.symbols[1], level).blocks,
+                        ...this.innerConvert(obj.symbols[1]).blocks,
                     ]
                 }
             }
@@ -221,8 +221,8 @@ export class Pr2M {
         return { blocks: [] };
     }
 
-    convertMaps(ss: Symbol[], level = 0): BlockModel[][] {
-        return ss.map(s => this.innerConvert(s, level).blocks);
+    convertMaps(ss: Symbol[]): BlockModel[][] {
+        return ss.map(s => this.innerConvert(s).blocks);
     }
 
     private relationalOpMap(opIn: P2Pr.Relational["relOp"]): string {
@@ -243,8 +243,8 @@ export class Pr2M {
             throw new Error("Unsupported frac with different than 2 arguments");
         }
 
-        const enumerator = this.innerConvert(args[0], 0).blocks;
-        const denominator = this.innerConvert(args[1], 0).blocks;
+        const enumerator = this.innerConvert(args[0]).blocks;
+        const denominator = this.innerConvert(args[1]).blocks;
 
         const fracBlock = blockBd.compositeBlock("\\frac", ["value", "sub1"], [enumerator, denominator]);
         return { blocks: [fracBlock], }

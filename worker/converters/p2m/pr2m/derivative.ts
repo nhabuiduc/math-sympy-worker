@@ -29,7 +29,7 @@ export class Derivative extends Pr2MItemBase {
         return prTh.varList(ss1.concat(ss2));
     }
 
-    convert(derivative: P2Pr.Derivative, level: number): Pr2M.CResult {
+    convert(derivative: P2Pr.Derivative): Pr2M.CResult {
         let crs = this.main.convert(derivative.symbols[0]);
         const exprBlocks = this.shouldWrapBrackets(derivative.symbols[0], crs) ? blockBd.wrapBetweenBrackets(crs.blocks).blocks : crs.blocks;
         let denomVarList: P2Pr.VarList = { type: "VarList", kind: "Container", symbols: [] };
@@ -60,12 +60,7 @@ export class Derivative extends Pr2MItemBase {
             blockBd.fracBlock(this.main.convert(numVarList).blocks, this.main.convert(denomVarList).blocks),
             ...exprBlocks
         ];
-        if (level == 0) {
-            return { blocks: rs };
-        }
-
-        return blockBd.wrapBetweenBrackets(rs)
-
+        return { blocks: rs };
     }
 }
 
