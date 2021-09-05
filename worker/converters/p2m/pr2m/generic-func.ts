@@ -1,23 +1,23 @@
 import { blockBd } from "../block-bd";
 import { P2Pr } from "../p2pr";
-import { Pr2M } from "../pr2m";
+import { Pr2MItemBase } from "./pr2m-item-base";
 
-export class GenericFunc {
-    constructor(
-        private main: { convert(obj: P2Pr.Symbol): Pr2M.CResult },
-        private constantTextFuncSet: Set<string>,
-        private symbolLatexNames: { [key: string]: string }
-    ) {
-
-    }
+export class GenericFunc extends Pr2MItemBase {
 
     buildGenericFunc(obj: P2Pr.GenericFunc): GenericFuncResult {
-
+        if (this.main.ctx.ops.reim?.gothic) {
+            if (obj.func == "im") {
+                obj.func = "ℑ";
+            }
+            if (obj.func == "re") {
+                obj.func = "ℜ";
+            }
+        }
         const args = this.buildGenericFuncArgs(obj.symbols, obj.argSeparator || ",", obj.bracket);
 
         const nameBlock = (typeof obj.func == "string")
-            ? [blockBd.operatorFuncBlock(obj.func, this.constantTextFuncSet, this.symbolLatexNames, obj.forceUsingOperatorName)]
-            : blockBd.wrapBracketIfNotUnitInOpCtx(obj.func, this.main.convert(obj.func)).blocks
+            ? [blockBd.operatorFuncBlock(obj.func, this.main.ctx.constantTextFuncSet, this.main.ctx.symbolLatexNames, obj.forceUsingOperatorName)]
+            : blockBd.wrapBracketIfNotUnitInOpCtx(obj.func, this.main.c(obj.func)).blocks
 
         return {
             name: nameBlock,

@@ -12,8 +12,9 @@ export class P2M {
 
     convert(data: PyodideNs.DummyPythonRunnerResult, ops?: P2Pr.TransformOptions): BlockModel[] {
         ops = this.mergeWithDefault(ops);
+        // console.log(ops);
         const pr = this.p2Pr.convert(data as any, ops);
-        const md = this.pr2m.convert(pr);
+        const md = this.pr2m.convert(pr, ops);
         return md.blocks;
     }
 
@@ -33,7 +34,7 @@ export class P2M {
             order: true,
         },
         float: {
-            decimalSeprator: "dot",
+            decimalSeprator: "period",
         },
         frac: {
             combineAdd: true,
@@ -54,6 +55,12 @@ export class P2M {
         },
         sqrt: {
             combineMul: true,
+        },
+        reim: {
+            gothic: true
+        },
+        imaginaryUnit: {
+            textStyle: false,
         }
     }
 }

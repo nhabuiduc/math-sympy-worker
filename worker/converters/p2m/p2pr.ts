@@ -14,8 +14,16 @@ import { _l } from "@sympy-worker/light-lodash";
 import { Set as SetP2Pr } from "./p2pr/set";
 import { NDimArray } from "./p2pr/dim-array";
 import { PolyElement } from "./p2pr/poly-element";
+import { Quantity } from "./p2pr/quantity";
 
 export class P2Pr {
+    constructor(private symbolLatexNames: { [key: string]: string },) { }
+    convert(obj: P.Basic, ops?: P2Pr.TransformOptions): Symbol {
+        return new Main(this.symbolLatexNames, ops).convert(obj);
+    }
+}
+
+class Main {
 
     private transforms: P2Pr.IPrTransform[] = [new PrPowerTransform(), new PrFracTransform(), new PrMulTransform(), new PrSqrtTransform(), new PrAddTransform()];
     private symbol: SymbolP2Pr;
@@ -24,18 +32,18 @@ export class P2Pr {
     private set: SetP2Pr;
     private nDimArray = new NDimArray(this);
     private polyElement = new PolyElement(this);
-    constructor(symbolLatexNames: { [key: string]: string }) {
+    private quantity = new Quantity(this);
+
+    constructor(private symbolLatexNames: { [key: string]: string }, private ops: P2Pr.TransformOptions) {
         this.nameParser = new NameParser(symbolLatexNames);
         this.symbol = new SymbolP2Pr(this.nameParser);
         this.genericFunc = new GenericFunc(this);
         this.set = new SetP2Pr(this);
     }
 
-    convert(obj: P.Basic, ops?: P2Pr.TransformOptions): Symbol {
-        ops = ops || {};
-        // ops = Object.assign({}, { orderAdd: true, orderMul: true } as P2Pr.TransformOptions, ops)
+    convert(obj: P.Basic): Symbol {
         const rs = this.c(obj);
-        return this.transforms.reduce((prev, cur) => cur.transform(prev, ops), rs);
+        return this.transforms.reduce((prev, cur) => cur.transform(prev, this.ops), rs);
     }
 
     c(obj: P.Basic): Symbol {
@@ -160,7 +168,7 @@ export class P2Pr {
             case "Zero":
             case "HBar":
             case "TribonacciConstant": {
-                return funcToConstant.map(obj.func);
+                return funcToConstant.map(obj.func, this.ops);
             }
 
             case "NumberSymbol": {
@@ -238,7 +246,7 @@ export class P2Pr {
 
 
             case "Tuple": {
-                return prTh.varList(this.m(obj.args), ",", "(")
+                return prTh.varList(this.m(obj.args), this.getListSeparator(), "(")
             }
 
             case "VectorAdd": {
@@ -257,8 +265,6 @@ export class P2Pr {
             case "Poly": {
                 const [d, ...ss] = this.m(obj.args);
                 return prTh.genFunc("Poly", [...ss, prTh.varList([prTh.var("domain=", { normalText: true }), d])], { forceUsingOperatorName: true })
-
-
             }
 
 
@@ -270,13 +276,8 @@ export class P2Pr {
                 return { type: "Relational", kind: "Container", relOp: obj.relOp, symbols: this.m(obj.args) }
             }
             case "List": {
-                return {
-                    type: "VarList",
-                    kind: "Container",
-                    separator: obj.separator,
-                    symbols: this.m(obj.args),
-                    bracket: "[",
-                }
+                return prTh.varList(this.m(obj.args), this.getListSeparator(), "[");
+
             }
 
             case "DisplayedDomain": {
@@ -337,7 +338,7 @@ export class P2Pr {
                 return prTh.varList(this.m(obj.args), ",", "{")
             }
             case "FiniteSet": {
-                return prTh.varList(this.m(obj.args), ",", "{")
+                return prTh.varList(this.m(obj.args), this.getListSeparator(), "{")
             }
             case "Interval": {
                 if (prTh.basicEquals(obj.args[0], obj.args[1])) {
@@ -492,8 +493,8 @@ export class P2Pr {
             case "MatrixSlice": {
                 const [sname, from, to] = this.m(obj.args);
                 return prTh.genFunc(sname, [
-                    prTh.varList((from as P2Pr.VarList).symbols.map(s => prTh.isNone(s) ? prTh.var("") : s), ":"),
-                    prTh.varList((to as P2Pr.VarList).symbols.map(s => prTh.isNone(s) ? prTh.var("") : s), ":")], { bracket: "[" })
+                    prTh.varList((from as P2Pr.VarList).symbols.map(s => prTh.isNone(s) ? prTh.empty() : s), ":"),
+                    prTh.varList((to as P2Pr.VarList).symbols.map(s => prTh.isNone(s) ? prTh.empty() : s), ":")], { bracket: "[" })
             }
             case "RandomDomain": {
                 const ss = this.m(obj.args);
@@ -577,7 +578,7 @@ export class P2Pr {
                 return ss[0]
             }
             case "DiagramGrid": {
-                const ss = this.m(obj.args).map(c => prTh.isNone(c) ? prTh.var("") : c);
+                const ss = this.m(obj.args).map(c => prTh.isNone(c) ? prTh.empty() : c);
                 return prTh.matrix({ ss, row: obj.row, col: obj.col }, undefined, { prType: "array" })
             }
             case "FreeModule": {
@@ -619,6 +620,39 @@ export class P2Pr {
                 const ss = this.m(obj.args);
                 return prTh.index(ss[0], prTh.varList(prTh.extractIfVarList(ss[1]), ","))
             }
+            case "Quantity": {
+                return this.quantity.convert(obj, this.symbolLatexNames);
+            }
+            case "Manifold": {
+                const name = (obj.args[0] as P.Symbol).name;
+                return this.nameParser.parse(name, (n) => prTh.var(n, { normalText: true }));
+            }
+            case "Patch": {
+                const name = (obj.args[0] as P.Symbol).name;
+                const s0 = this.nameParser.parse(name, (n) => prTh.var(n, { normalText: true }));
+                return prTh.index(s0, this.c(obj.args[1]));
+            }
+            case "CoordSystem": {
+                const name0 = (obj.args[0] as P.Symbol).name;
+                const name1 = (obj.args[1] as P.Symbol).name;
+                const s0 = this.nameParser.parse(name0, (n) => prTh.var(n, { normalText: true }));
+                const s1 = this.nameParser.parse(name1, (n) => prTh.var(n, { normalText: true }));
+                return prTh.pow(s0, s1, this.c(obj.args[2]), { preventBracketWrap: true });
+            }
+            case "BaseScalarField": {
+                const name0 = (obj.args[0] as P.Symbol).name;
+                return prTh.var(name0, { bold: true })
+            }
+            case "BaseVectorField": {
+                return prTh.index(prTh.var("∂"), this.c(obj.args[0]))
+            }
+            case "Differential": {
+                const ss = this.m(obj.args);
+                if (obj.coordSys) {
+                    return prTh.varList([prTh.var("d", { normalText: "operator" }), ss[0]])
+                }
+                return prTh.varList([prTh.var("d", { normalText: "operator" }), prTh.brackets([ss[0]])])
+            }
 
         }
 
@@ -635,6 +669,10 @@ export class P2Pr {
 
     private detectUnevaluatedMul(symbols: Symbol[]): boolean {
         return (symbols[0].type == "Var" && symbols[0].nativeType == "One") || symbols.some((c, idx) => idx > 0 && prTh.isConstant(c));
+    }
+
+    private getListSeparator() {
+        return this.ops.float?.decimalSeprator == "comma" ? ";" : ",";
     }
 }
 
@@ -653,8 +691,8 @@ export namespace P2Pr {
     export type Symbol = Mul | C<"Add"> | Var | Pow | Matrix | C<"Frac"> | C<"Sqrt"> | GenericFunc |
         Derivative | Relational | C<"Binomial"> |
         VarList | C<"Integral"> | Index | JsonData
-        | C<"Order"> | C<"Prescript"> | C<"PrescriptIdx"> | Subs | C<"Sum"> |
-        C<"Product"> | C<"Limit"> |
+        | C<"Order"> | C<"PrescriptIdx"> | Subs | C<"Sum"> |
+        C<"Product"> | C<"Limit"> | Quantity |
         C<"Piecewise"> | BinaryOp | UnaryOp | OverSymbol;
 
 
@@ -667,6 +705,11 @@ export namespace P2Pr {
     export type Prescript = C<"Prescript">;
     export type PrescriptIdx = C<"PrescriptIdx">;
     export type Subs = C<"Subs">;
+
+    export interface Quantity extends Leaf {
+        type: "Quantity";
+        pr: Symbol;
+    }
 
     export interface BinaryOp extends Container {
         type: "BinaryOp";
@@ -747,10 +790,11 @@ export namespace P2Pr {
         type: "Var";
         name: string;
         bold?: P.BoldType;
-        normalText?: boolean;
-        nativeType?: "One" | "NegativeOne" | "Zero" | "Integer" | "Float" | "NaN" | "BooleanTrue" | "BooleanFalse" | "NumberSymbol" | "None";
+        normalText?: boolean | "operator";
+        nativeType?: "One" | "NegativeOne" | "Zero" | "Integer" | "Float" | "NaN" | "BooleanTrue" | "BooleanFalse" | "NumberSymbol" | "None" | "Empty";
         forceConsiderAsUnit?: boolean;
         latexName?: "\\rightarrow";
+
     }
 
     export interface JsonData extends Leaf {
@@ -777,7 +821,7 @@ export namespace P2Pr {
             flatten?: boolean;
         };
         float?: {
-            decimalSeprator?: "comma" | "dot"
+            decimalSeprator?: "comma" | "period"
         };
         frac?: {
             combineMul?: boolean;
@@ -794,12 +838,19 @@ export namespace P2Pr {
         };
         sqrt?: {
             combineMul?: boolean;
+        };
+        reim?: {
+            gothic?: boolean;
+        };
+        imaginaryUnit?: {
+            textStyle?: boolean;
         }
 
     }
 
     export type PGenericFunc = P.GenericFunc;
     export type PBasic = P.Basic;
+    export type PQuantity = P.Quantity;
     export type PF<T extends string> = P.F<T>;
     export type PU<T extends string> = P.U<T>;
     export type PPFuncArgs = P.FuncArgs;
@@ -827,9 +878,18 @@ namespace P {
         F<"ComplexRootOf"> | F<"MatrixSlice"> | U<"NoneType"> | RandomDomain | F<"PythonRational"> | UnifiedTransform |
         PolynomialRingBase | F<"Morphism"> | F<"NamedMorphism"> | F<"CompositeMorphism"> | F<"Category"> | F<"Diagram"> | DiagramGrid |
         F<"FreeModule"> | F<"SubModule"> | F<"FreeModuleElement"> | F<"DMP"> | F<"Frac"> | F<"MatrixHomomorphism"> | F<"Tr"> |
-        F<"Adjoint"> | F<"Transpose"> | F<"ArrayElement"> |
+        F<"Adjoint"> | F<"Transpose"> | F<"ArrayElement"> | Quantity | F<"Manifold"> | F<"Patch"> | F<"CoordSystem"> |
+        F<"BaseScalarField"> | F<"BaseVectorField"> | Differential |
         UnknownFunc;
 
+
+    export interface Differential extends F<"Differential"> {
+        coordSys: boolean;
+    }
+
+    export interface Quantity extends F<"Quantity"> {
+        latex: string;
+    }
     export interface UnifiedTransform extends F<"UnifiedTransform"> {
         inversed: boolean;
         name: string;

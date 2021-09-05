@@ -119,7 +119,6 @@ class PrSymbolVisuallyInfo {
             }
             case "Sqrt":
             case "Frac":
-            case "Prescript":
             case "PrescriptIdx":
             case "Index": {
                 return { prOp: "unit", prPowerIndex: "parts", prShorthandMul: "unit", prSign: false, }
@@ -159,6 +158,9 @@ class PrSymbolVisuallyInfo {
             case "Order": {
                 return { prOp: "unit", prPowerIndex: "parts", prShorthandMul: "parts", prSign: false, }
             }
+            case "Quantity": {
+                return { prOp: "unit", prPowerIndex: this.check(s.pr, undefined).prPowerIndex, prShorthandMul: "unit", prSign: false, }
+            }
 
         }
 
@@ -189,6 +191,4 @@ export const prSymbolVisuallyInfo = new PrSymbolVisuallyInfo();
 type Symbol = P2Pr.Symbol;
 
 function assertUnreachable(_x: never): void {
-    /**should not throw exception, as reducer will come here :() or other cases */
-    // throw new Error("Didn't expect to get here");
 }

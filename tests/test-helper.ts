@@ -21,6 +21,10 @@ class TestHelper {
             "phi": "𝜙",
             "pi": "𝜋",
             "delta": "𝛿",
+            "mu": "𝜇",
+            "rho": "𝜌",
+            "Omega": "𝛺",
+            "partial": "∂",
         }
     });
     async prepare(statement: string): Promise<void> {
@@ -109,7 +113,11 @@ json.dumps(rootDic)
                 if ((b as MatrixLikeBlockModel).bracket) {
                     prefix = `${(b as MatrixLikeBlockModel).bracket}${prefix}${this.rightBracketOf((b as MatrixLikeBlockModel).bracket)}`
                 }
+
                 return `[${prefix}${this.reduceFuncName(b.text.substr(1))},${elements.join(",")}${this.styleToText(b.style)}]`
+            }
+            if(b.style?.mathType == "\\text"){
+                return `[📜,[${b.text}]]`;
             }
             return `[${b.text}${this.styleToText(b.style)}]`;
         }).join("");

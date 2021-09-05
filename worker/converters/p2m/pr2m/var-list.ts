@@ -29,7 +29,7 @@ export class VarList extends Pr2MItemBase {
 
     private mapBlocksAndWrapIfRequire(ss: Symbol[], wrapOnJoinIfRequire: boolean): BlockModel[][] {
         if (!wrapOnJoinIfRequire) {
-            return this.main.convertMaps(ss);
+            return this.main.m(ss);
         }
         return ss.map(s => {
             const rs = this.c(s);

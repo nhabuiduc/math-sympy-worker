@@ -19,6 +19,22 @@ import { GenericFunc } from "./pr2m/generic-func";
 
 
 export class Pr2M {
+    constructor(
+        private constantTextFuncSet: Set<string>,
+        private symbolLatexNames: { [key: string]: string },
+    ) {
+
+    }
+
+    convert(obj: P2Pr.Symbol, ops: P2Pr.TransformOptions): CResult {
+        return new Main(this.constantTextFuncSet, this.symbolLatexNames, ops).convert(obj);
+    }
+
+
+}
+
+
+class Main {
     private derivative = new Derivative(this);
     private integral = new Integral(this);
     private mul = new Mul(this);
@@ -31,12 +47,24 @@ export class Pr2M {
 
     public prCommon: Pr2MCommon = new Pr2MCommon(this);
     public genericFunc: GenericFunc;
+    public ctx: ConvertContext;
 
-    constructor(constantTextFuncSet: Set<string>, private symbolLatexNames: { [key: string]: string }) {
-        this.genericFunc = new GenericFunc(this, constantTextFuncSet, symbolLatexNames)
+    constructor(
+        constantTextFuncSet: Set<string>,
+        private symbolLatexNames: { [key: string]: string },
+        ops: P2Pr.TransformOptions,
+    ) {
+        this.ctx = {
+            constantTextFuncSet, symbolLatexNames, ops,
+        }
+        this.genericFunc = new GenericFunc(this)
     }
 
     convert(obj: P2Pr.Symbol): CResult {
+        return this.innerConvert(obj);
+    }
+
+    c(obj: P2Pr.Symbol) {
         return this.innerConvert(obj);
     }
 
@@ -69,6 +97,10 @@ export class Pr2M {
             }
 
             case "Var": {
+                if (obj.nativeType == "Empty") {
+                    return { blocks: [] };
+                }
+
                 if (obj.nativeType == "NumberSymbol") {
                     if (obj.name == "∞̃") {
                         /**this look better */
@@ -84,11 +116,22 @@ export class Pr2M {
                     return { blocks: [blockBd.compositeBlock("\\rightarrow")] }
                 }
 
-                if (obj.normalText) {
-                    return { blocks: [blockBd.normalText(obj.name)] }
+                let textToDisplay = obj.name;
+                if (obj.nativeType == "Float" && this.ctx.ops.float?.decimalSeprator == "comma") {
+                    textToDisplay = obj.name.replace(".", ",");
                 }
 
-                return { blocks: [blockBd.textBlock(obj.name, blockBd.style(obj))] }
+                if (obj.normalText == "operator") {
+                    return { blocks: [blockBd.operatorNameBlock(textToDisplay)] }
+                }
+
+                if (obj.normalText) {
+                    return { blocks: [blockBd.normalText(textToDisplay)] }
+                }
+
+
+
+                return { blocks: [blockBd.textBlock(textToDisplay, blockBd.style(obj))] }
             }
             case "VarList": {
                 return this.varList.convert(obj);
@@ -216,12 +259,18 @@ export class Pr2M {
 
                 return { blocks: [blockBd.matrixFromTexts(pairs, undefined, "\\cases")] }
             }
+            case "Quantity": {
+                return this.c(obj.pr);
+            }
+            default: {
+                assertUnreachable(obj);
+            }
         }
 
         return { blocks: [] };
     }
 
-    convertMaps(ss: Symbol[]): BlockModel[][] {
+    m(ss: Symbol[]): BlockModel[][] {
         return ss.map(s => this.innerConvert(s).blocks);
     }
 
@@ -252,9 +301,10 @@ export class Pr2M {
 }
 
 
-
 type Symbol = P2Pr.Symbol;
 type CResult = Pr2M.CResult;
+type ConvertContext = Pr2M.ConvertContext;
+
 export namespace Pr2M {
     export interface CResult {
         blocks: BlockModel[];
@@ -266,4 +316,13 @@ export namespace Pr2M {
             powMergedInFunc?: boolean;
         }
     }
+
+    export interface ConvertContext {
+        ops: P2Pr.TransformOptions;
+        constantTextFuncSet: Set<string>,
+        symbolLatexNames: { [key: string]: string },
+    }
+}
+
+function assertUnreachable(_x: never): void {
 }

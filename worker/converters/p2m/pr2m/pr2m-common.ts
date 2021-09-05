@@ -36,21 +36,21 @@ export class Pr2MCommon extends Pr2MItemBase {
     // }
 
     equals(s1: Symbol, s2: Symbol): Pr2M.CResult {
-        return { blocks: blockBd.joinBlocks([this.main.convert(s1).blocks, this.main.convert(s2).blocks], "=") }
+        return { blocks: blockBd.joinBlocks([this.main.c(s1).blocks, this.main.c(s2).blocks], "=") }
     }
 
     leqleq(s1: Symbol, s2: Symbol, s3: Symbol): Pr2M.CResult {
         return {
             blocks: blockBd.joinBlocks([
-                this.main.convert(s1).blocks,
-                this.main.convert(s2).blocks,
-                this.main.convert(s3).blocks,
+                this.main.c(s1).blocks,
+                this.main.c(s2).blocks,
+                this.main.c(s3).blocks,
             ], "≤")
         }
     }
 
     opJoin(args: P2Pr.Symbol[], textOrBlock?: string | (() => BlockModel), wrapBehavior?: "wrapEvenShortHand" | ((s: Symbol, rs: Pr2M.CResult, idx: number) => boolean)): Pr2M.CResult {
-        let items = args.map(a => this.main.convert(a));
+        let items = args.map(a => this.main.c(a));
         let blocks: BlockModel[] = [];
         for (let idx = 0; idx < items.length; idx++) {
             const item = items[idx];
@@ -60,7 +60,7 @@ export class Pr2MCommon extends Pr2MItemBase {
             } else {
                 shouldWrap = wrapBehavior(args[idx], item, idx);
             }
-            
+
             // let curBlocks = blockBd.wrapBracketIfNotUnitInOpCtx(args[idx], item, { wrapEvenShortHand, excludeSign: idx == 0 }).blocks;
             let curBlocks = shouldWrap ? blockBd.wrapBetweenBrackets(item.blocks).blocks : item.blocks;
 

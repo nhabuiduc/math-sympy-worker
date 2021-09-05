@@ -7,6 +7,7 @@ export class PrTransformMap<TContext extends object> {
 
     map(main: Symbol, ops: P2Pr.TransformOptions, ctx: TContext): Symbol {
         if (!this.enabled(ops, ctx)) {
+
             return main;
         }
 
@@ -31,7 +32,6 @@ export class PrTransformMap<TContext extends object> {
             case "Order":
             case "Sqrt":
             case "Frac":
-            case "Prescript":
             case "PrescriptIdx":
             case "Index":
             case "Pow":
@@ -49,15 +49,14 @@ export class PrTransformMap<TContext extends object> {
                         children[idx] = rs;
                     }
                 }
-                if (children == main.symbols) {
-                    newMain = main;
-                } else {
+                if (children != main.symbols) {
                     newMain = { ...main, symbols: children };
                 }
 
                 break;
             }
 
+            case "Quantity":
             case "Var":
             case "JsonData": {
                 newMain = main;
@@ -67,9 +66,7 @@ export class PrTransformMap<TContext extends object> {
                 assertUnreachable(main);
             }
         }
-        if(!this.transform){
-            console.log(this);
-        }
+
         return this.transform(newMain, ctx);
     }
 }

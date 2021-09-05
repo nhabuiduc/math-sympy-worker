@@ -16,9 +16,9 @@ export class Pow extends Pr2MItemBase {
             return this.handlePowToGenericFunc(args);
         }
 
-        let arg0Cr = this.main.convert(args[0]);
+        let arg0Cr = this.main.c(args[0]);
         let { blocks: base } = arg0Cr;
-        const power = this.main.convert(args[1]).blocks;
+        const power = this.main.c(args[1]).blocks;
 
         const prPow: Pr2M.CResult["prPow"] = {};
         let preventWrapBracket = obj.preventBracketWrap;
@@ -32,7 +32,7 @@ export class Pow extends Pr2MItemBase {
         }
 
         if (args[2]) {
-            const index = this.main.convert(args[2]).blocks;
+            const index = this.main.c(args[2]).blocks;
             const cBlock = blockBd.compositeBlock("\\power-index", ["powerValue", "indexValue"], [power, index]);
             return { blocks: base.concat([cBlock]), };
 
@@ -46,17 +46,17 @@ export class Pow extends Pr2MItemBase {
 
         let powerBlock: CompositeBlockModel;
 
-        const power = this.main.convert(powArgs[1]).blocks;
+        const power = this.main.c(powArgs[1]).blocks;
 
         if (powArgs[2] && genericFunc.powerIndexPos == "power-after" && (genericFunc.symbols.length > 0 || genericFunc.symbols.length > 0)) {
-            const index = this.main.convert(powArgs[2]).blocks;
+            const index = this.main.c(powArgs[2]).blocks;
             powerBlock = blockBd.compositeBlock("\\power-index", ["powerValue"], [power]);
             const indexBlock = blockBd.compositeBlock("\\power-index", ["indexValue"], [index]);
             return { blocks: [...name, indexBlock, ...args, powerBlock], prPow: { powMergedInFunc: true } }
         }
 
         if (powArgs[2]) {
-            const index = this.main.convert(powArgs[2]).blocks;
+            const index = this.main.c(powArgs[2]).blocks;
             powerBlock = blockBd.compositeBlock("\\power-index", ["powerValue", "indexValue"], [power, index]);
 
         } else {

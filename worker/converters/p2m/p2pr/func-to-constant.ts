@@ -3,14 +3,17 @@ import { P2Pr } from "../p2pr";
 import { prTh } from "../pr-transform/pr-transform-helper";
 
 class FuncToConstant {
-    map(name: string): P2Pr.Var {
+    map(name: string, ops: P2Pr.TransformOptions): P2Pr.Var {
         const resolved = this.funcMap[name] || name;
+
         if (stringHelper.length(resolved) > 1) {
-            // return { type: "ConstantSymbol", kind: "Leaf", name: resolved, showType: "text" }
             return prTh.numberSymbol(resolved, { normalText: true })
         }
 
-        // return { type: "ConstantSymbol", kind: "Leaf", name: resolved, showType: "symbol" }
+        if (ops.imaginaryUnit?.textStyle && name == "ImaginaryUnit") {
+            return prTh.numberSymbol(resolved, { normalText: true })
+        }
+
         return prTh.numberSymbol(resolved)
     }
 

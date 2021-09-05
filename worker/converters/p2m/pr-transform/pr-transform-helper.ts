@@ -148,8 +148,8 @@ class PrTransformHelper {
     mulOf(...ss: Symbol[]): P2Pr.Mul {
         return this.mul(ss);
     }
-    mul(ss: Symbol[]): P2Pr.Mul {
-        return { type: "Mul", kind: "Container", symbols: ss, unevaluatedDetected: false }
+    mul(ss: Symbol[], more?: Partial<P2Pr.Mul>): P2Pr.Mul {
+        return { type: "Mul", kind: "Container", symbols: ss, unevaluatedDetected: false, ...more }
         // return ss.reduce((prev, cur) => prev ? this.mulOf2(prev, cur) : cur, undefined as P2Pr.Mul) as P2Pr.Mul;
     }
 
@@ -414,14 +414,31 @@ class PrTransformHelper {
 
 
     var(text: string, more?: Partial<P2Pr.Var>): P2Pr.Var {
+        if(!text) {
+            throw new Error("empty use ")
+        }
         return { type: "Var", kind: "Leaf", name: text, ...more };
     }
+    empty(more?: Partial<P2Pr.Var>): P2Pr.Var {
+        return { type: "Var", kind: "Leaf", name: "?", nativeType:"Empty", ...more };
+    }
+
+    quantity(pr: Symbol): P2Pr.Quantity {
+        return { type: "Quantity", kind: "Leaf", pr };
+    }
+
     raw(text: string, more?: Partial<P2Pr.Var>): P2Pr.Var {
         return { type: "Var", kind: "Leaf", name: text, ...more };
     }
-    
+
     numberSymbol(text: string, more?: Partial<P2Pr.Var>): P2Pr.Var {
         return { type: "Var", kind: "Leaf", name: text, nativeType: "NumberSymbol", ...more };
+    }
+
+    tryExtactVarName(s: Symbol): string | undefined {
+        if (s.type == "Var") {
+            return s.name;
+        }
     }
 
     over(op: P2Pr.OverSymbol["op"], s: Symbol | string, more?: Partial<P2Pr.OverSymbol>): P2Pr.OverSymbol {

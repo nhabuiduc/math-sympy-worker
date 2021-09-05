@@ -3,6 +3,13 @@ import { prTh } from "../pr-transform/pr-transform-helper";
 
 class Float {
     parse(text: string): P2Pr.Var | P2Pr.Mul {
+        if (text == "+inf") {
+            return prTh.var("∞");
+        }
+        if (text == "-inf") {
+            return prTh.mul([prTh.negativeOne(), prTh.var("∞")]);
+        }
+
         /**should not starts with e */
         if (text.indexOf("e") <= 0) {
             return prTh.float(text);
@@ -12,16 +19,7 @@ class Float {
         if (exp[0] == "+") {
             exp = exp.substr(1);
         }
-        return {
-            type: "Mul",
-            kind: "Container",
-            unevaluatedDetected: true,
-            symbols: [prTh.float(mant), {
-                type: "Pow",
-                kind: "Container",
-                symbols: [prTh.int(10), prTh.float(exp)]
-            }]
-        }
+        return prTh.mul([prTh.float(mant), prTh.pow(prTh.int(10), prTh.float(exp))], { unevaluatedDetected: true })
     }
 }
 

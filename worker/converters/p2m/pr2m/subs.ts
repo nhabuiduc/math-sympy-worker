@@ -6,7 +6,7 @@ import { Pr2MItemBase } from "./pr2m-item-base";
 
 export class Subs extends Pr2MItemBase {
     convert(obj: P2Pr.Subs): Pr2M.CResult {
-        const expr = this.main.convert(obj.symbols[0]);
+        const expr = this.main.c(obj.symbols[0]);
         const set1 = obj.symbols[1] as P2Pr.VarList;
         const set2 = obj.symbols[2] as P2Pr.VarList;
         const eqExprs: BlockModel[][] = [];

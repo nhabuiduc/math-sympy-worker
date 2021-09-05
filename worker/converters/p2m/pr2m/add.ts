@@ -8,7 +8,7 @@ export class Add extends Pr2MItemBase {
 
     convert(obj: P2Pr.Add): Pr2M.CResult {
         const { symbols: args } = obj;
-        let items = args.map(a => this.main.convert(a));
+        let items = args.map(a => this.main.c(a));
 
         let blocks: BlockModel[] = [];
         for (let idx = 0; idx < items.length; idx++) {

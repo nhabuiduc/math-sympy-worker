@@ -5,8 +5,6 @@ import { Pr2M } from "../pr2m";
 import { Pr2MItemBase } from "./pr2m-item-base";
 
 export class Derivative extends Pr2MItemBase {
-
-
     private shouldWrapBrackets(s: Symbol, cr: Pr2M.CResult) {
         if (s.type == "Mul" && s.symbols.length == 2 && prTh.isNegativeOne(s.symbols[0]) && s.symbols[1].type == "Derivative") {
             return false;
@@ -30,7 +28,7 @@ export class Derivative extends Pr2MItemBase {
     }
 
     convert(derivative: P2Pr.Derivative): Pr2M.CResult {
-        let crs = this.main.convert(derivative.symbols[0]);
+        let crs = this.main.c(derivative.symbols[0]);
         const exprBlocks = this.shouldWrapBrackets(derivative.symbols[0], crs) ? blockBd.wrapBetweenBrackets(crs.blocks).blocks : crs.blocks;
         let denomVarList: P2Pr.VarList = { type: "VarList", kind: "Container", symbols: [] };
         const dLetter = derivative.partial ? "∂" : "d";
@@ -57,7 +55,7 @@ export class Derivative extends Pr2MItemBase {
         }
 
         const rs = [
-            blockBd.fracBlock(this.main.convert(numVarList).blocks, this.main.convert(denomVarList).blocks),
+            blockBd.fracBlock(this.main.c(numVarList).blocks, this.main.c(denomVarList).blocks),
             ...exprBlocks
         ];
         return { blocks: rs };

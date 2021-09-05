@@ -58,7 +58,8 @@ class BlockBd {
     }
 
     normalText(text: string): BlockModel {
-        return this.compositeBlock("\\text", ["textValue"], [[this.textBlock(text)]]);
+        // return this.compositeBlock("\\text", ["textValue"], [[this.textBlock(text)]]);
+        return this.textBlock(text, { mathType: "\\text" });
     }
 
     style(obj: { bold?: P2Pr.BoldType }): BlockStyle {

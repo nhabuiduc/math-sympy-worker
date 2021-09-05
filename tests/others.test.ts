@@ -68,7 +68,7 @@ k, m, n = symbols('k m n', integer=True)
         expect(await th.run("Pow(Integer(1)/100, -1, evaluate=False)")).equal(`[frac,[1],[frac,[1],[100]]]`);
     });
 
-    
+
     it("Builtins", async () => {
         expect(await th.run("True")).equal(`[📜,[True]]`);
         expect(await th.run("False")).equal(`[📜,[False]]`);
@@ -1344,16 +1344,85 @@ Y = MatrixSymbol('Y', 2, 2)
         expect(await th.run(`ArrayElement("A", (2, 1/(1-x), 0))`)).equal('[A][⛏️,[2,][frac,[1],[1-x]][,0]]');
     })
 
-    it.only("decimal_separator", async () => {
+    it.only("imaginary_unit", async () => {
+        await th.prepare(`from sympy import I`)
+        expect(await th.run(`1 + I`)).equal('[1+i]');
+        expect(await th.run(`1 + I`, { imaginaryUnit: { textStyle: true } })).equal('[1+][📜,[i]]');
+    });
+
+    it("re_im", async () => {
+        expect(await th.run(`im(x)`)).equal('[ℑ]([x])');
+        expect(await th.run(`re(x)`)).equal('[ℜ]([x])');
+        expect(await th.run(`im(x)`, { reim: { gothic: false } })).equal('[⚙️,[im]]([x])');
+        expect(await th.run(`re(x)`, { reim: { gothic: false } })).equal('[⚙️,[re]]([x])');
+    })
+    it("diffgeom", async () => {
+        await th.prepare(`
+from sympy.diffgeom import Manifold, Patch, CoordSystem, BaseScalarField, Differential
+from sympy.diffgeom.rn import R2
+x,y = symbols('x y', real=True)
+m = Manifold('M', 2)
+p = Patch('P', m)
+rect = CoordSystem('rect', p, [x, y])
+b = BaseScalarField(rect, 0)
+
+g = Function('g')
+s_field = g(R2.x, R2.y)
+        `);
+
+        expect(await th.run(`m`)).equal('[📜,[M]]');
+        expect(await th.run(`p`)).equal('[📜,[P]][⛏️,[📜,[M]]]');
+        expect(await th.run(`rect`)).equal('[📜,[rect]][💪,[📜,[P]],[📜,[M]]]');
+        expect(await th.run(`b`)).equal('[x,bf]');
+        expect(await th.run(`Differential(s_field)`)).equal('[⚙️,[d]]([g]([x,bf][,][y,bf]))');
+    });
+
+    it("printing", async () => {
+        await th.prepare(`from sympy.physics.units import meter, gibibyte, microgram, second, planck_mass,planck_density, percent, degree, ohm, planck_power`)
+        expect(await th.run(`5*meter`)).equal('[5][📜,[m]]');
+        expect(await th.run(`3*gibibyte`)).equal('[3][📜,[gibibyte]]');
+        expect(await th.run(`4*microgram/second`)).equal('[frac,[4𝜇][📜,[g]],[📜,[s]]]');
+        expect(await th.run(`4*planck_mass`)).equal('[4m][⛏️,[P]]');
+        expect(await th.run(`4*planck_density`)).equal('[4𝜌][⛏️,[P]]');
+        expect(await th.run(`4*percent`)).equal('[4%]');
+        expect(await th.run(`4*percent**2`)).equal('[4%][💪,[2]]');
+        expect(await th.run(`4*degree`)).equal('[4][💪,[∘]]');
+        expect(await th.run(`4*degree**2`)).equal('[4]([💪,[∘]])[💪,[2]]');
+        expect(await th.run(`4*ohm`)).equal('[4𝛺]');
+        expect(await th.run(`4*planck_power`)).equal('[4P][⛏️,[P]]');
+    });
+
+    it("17092", async () => {
+        await th.prepare(`x_star = Symbol('x^*')`);
+        expect(await th.run(`Derivative(x_star, x_star,2)`)).equal('[frac,[d][💪,[2]],[d]([x][💪,[*]])[💪,[2]]][x][💪,[*]]');
+    })
+
+    it("decimal_separator", async () => {
         await th.prepare(`
 x, y, z, t = symbols('x y z t')
 k, m, n = symbols('k m n', integer=True)
 f, g, h = symbols('f g h', cls=Function)
         `);
-        expect(await th.run(`[1, 2.3, 4.5]`)).equal('[x]');
+
+        expect(await th.run(`[1, 2.3, 4.5]`, { float: { decimalSeprator: "comma" } })).equal('[[1;2,3;4,5]]');
+        expect(await th.run(`FiniteSet(1, 2.3, 4.5)`, { float: { decimalSeprator: "comma" } })).equal('{[1;2,3;4,5]}');
+        expect(await th.run(`(1, 2.3, 4.6)`, { float: { decimalSeprator: "comma" } })).equal('([1;2,3;4,6])');
+
+        expect(await th.run(`[1, 2.3, 4.5]`, { float: { decimalSeprator: "period" } })).equal('[[1,2.3,4.5]]');
+        expect(await th.run(`FiniteSet(1, 2.3, 4.5)`, { float: { decimalSeprator: "period" } })).equal('{[1,2.3,4.5]}');
+        expect(await th.run(`(1, 2.3, 4.6)`, { float: { decimalSeprator: "period" } })).equal('([1,2.3,4.6])');
+
+        expect(await th.run(`[1, 2.3, 4.5]`)).equal('[[1,2.3,4.5]]');
+        expect(await th.run(`FiniteSet(1, 2.3, 4.5)`)).equal('{[1,2.3,4.5]}');
+        expect(await th.run(`(1, 2.3, 4.6)`)).equal('([1,2.3,4.6])');
+
+        expect(await th.run(`Mul(3.4,5.3)`, { float: { decimalSeprator: "comma" } })).equal('[18,02]');
+        expect(await th.run(`3.4*5.3`, { float: { decimalSeprator: "comma" } })).equal('[18,02]');
+        expect(await th.run(`x*5.3 + 2**y**3.4 + 4.5 + z`, { float: { decimalSeprator: "comma" } })).equal('[4,5+z+2][💪,[y][💪,[3,4]]][+5,3x]');
+        expect(await th.run(`5.8*10**(-7)`, { float: { decimalSeprator: "comma" } })).equal('[5,8×10][💪,[-7]]');
     });
 
-    it.only("str", async () => {
+    it("str", async () => {
         await th.prepare(` from sympy.core.symbol import Str`);
         expect(await th.run(`str(Str('x'))`)).equal('[x]');
     })

@@ -11,7 +11,7 @@ class __McHdl:
         return {'func': 'Tuple', 'args':  self.argsMap(expr) }
 
     def hdl_list(self, expr):
-        return {'func': 'List', 'args': self.argsMap(expr), 'separator':','}
+        return {'func': 'List', 'args': self.argsMap(expr)}
 
     def hdl_UndefinedFunction(self, expr):
         return {'func': 'UndefinedFunction', 'name': str(expr), 'args': []}
@@ -68,10 +68,14 @@ class __McHdl:
         return {'func':'Rational', 'p':expr.p, 'q': expr.q}
 
     def hdl_Float(self, expr):
-        return {'func':'Float', 'value':sstr(expr,full_prec=False) }
+        import mpmath.libmp as mlib
+        from mpmath.libmp import prec_to_dps
+        dps = prec_to_dps(expr._prec)
+        str_real = mlib.to_str(expr._mpf_, dps, strip_zeros=True, min_fixed=None, max_fixed=None)
+        return {'func':'Float', 'value':str_real }
 
     def hdl_float(self, expr):
-        return {'func':'Float', 'value':sstr(expr,full_prec=False) }
+        return self.hdl_Float(Float(expr))
 
     def hdl_CoordSys3D(self, expr):
         return {'func':'CoordSys3D', 'variableNames':expr._variable_names, 'vectorNames':expr._vector_names, 'args':  self.argsMap(expr.args) }
@@ -421,6 +425,44 @@ class __McHdl:
             args=self.argsMap([d.symbols])
 
         return {'func':'RandomDomain', 'subType':subType, 'args': args}
+
+    def hdl_Quantity(self,d):
+        from sympy import Symbol
+        if d._latex_repr:
+            return {'func':'Quantity', 'args': self.argsMap(d.args), 'latex': d._latex_repr }
+
+        return {'func':'Quantity', 'args': self.argsMap(d.args) }
+
+    def hdl_Manifold(self,d):
+        from sympy import Symbol
+        return {'func':'Manifold', 'args': [self.hdlAll(Symbol(d.name.name))] }
+
+    def hdl_Patch(self,d):
+        from sympy import Symbol
+        return {'func':'Patch', 'args': self.argsMap([Symbol(d.name.name),d.manifold]) }
+
+    def hdl_CoordSystem(self,d):
+        from sympy import Symbol
+        return {'func':'CoordSystem', 'args': self.argsMap([Symbol(d.name.name),Symbol(d.patch.name.name),d.manifold]) }
+
+    def hdl_BaseScalarField(self,d):
+        from sympy import Symbol
+        string = d._coord_sys.symbols[d._index].name
+        return {'func':'BaseScalarField', 'args': self.argsMap([Symbol(string)]) }
+
+    def hdl_BaseVectorField(self,field):
+        from sympy import Symbol
+        string = field._coord_sys.symbols[field._index].name
+        return {'func':'BaseVectorField', 'args': self.argsMap([Symbol(string)]) }
+
+    def hdl_Differential(self,diff):
+        from sympy import Symbol
+        field = diff._form_field
+        if hasattr(field, '_coord_sys'):
+            string = field._coord_sys.symbols[field._index].name
+            return {'func':'Differential', 'args': self.argsMap([Symbol(string)]), 'coordSys':True }
+
+        return {'func':'Differential', 'args': self.argsMap([field]) }
 
     def hdlGenericFunc(self, name, args):
         dic = {}

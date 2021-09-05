@@ -5,8 +5,9 @@ import { Pr2MCommon } from "./pr2m-common";
 
 export abstract class Pr2MItemBase {
     constructor(protected main: {
-        convert(obj: P2Pr.Symbol): Pr2M.CResult;
-        convertMaps(ss: Symbol[], level?: number): BlockModel[][];
+        c(obj: P2Pr.Symbol): Pr2M.CResult;
+        m(ss: Symbol[]): BlockModel[][];
+        ctx: Pr2M.ConvertContext;
         prCommon: Pr2MCommon;
         genericFunc: GenericFunc;
     }) {
@@ -14,7 +15,10 @@ export abstract class Pr2MItemBase {
     }
 
     protected c(s: Symbol): Pr2M.CResult {
-        return this.main.convert(s);
+        return this.main.c(s);
+    }
+    protected m(s: Symbol[]): BlockModel[][] {
+        return this.main.m(s);
     }
 }
 

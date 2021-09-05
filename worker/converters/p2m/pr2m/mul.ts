@@ -10,7 +10,7 @@ export class Mul extends Pr2MItemBase {
 
     convert(obj: P2Pr.Mul): Pr2M.CResult {
         const { symbols } = obj;
-        const items = symbols.map(a => this.main.convert(a));
+        const items = symbols.map(a => this.main.c(a));
         let isNegative = false;
 
         let prevAdjacentArg: Symbol;

@@ -12,7 +12,7 @@ export class Integral extends Pr2MItemBase {
         if (limits.length <= 3 && limits.every(c => (c as P2Pr.VarList).symbols.length == 1)) {
             intBlocks = [this.intBlockByCount(limits.length)];
             symbolBlocks = blockBd.joinBlocks(limits.map(c => {
-                const rs = this.main.convert((c as P2Pr.VarList).symbols[0]);
+                const rs = this.main.c((c as P2Pr.VarList).symbols[0]);
                 return [blockBd.textBlock("d")].concat(rs.blocks);
             }), "\u2009");
         } else {
@@ -23,21 +23,21 @@ export class Integral extends Pr2MItemBase {
                 let intBlock: CompositeBlockModel;
                 if (lim.symbols.length >= 3) {
                     intBlock = blockBd.compositeBlock("\\int", ["to", "from"],
-                        [this.main.convert(lim.symbols[1]).blocks, this.main.convert(lim.symbols[2]).blocks]);
+                        [this.main.c(lim.symbols[1]).blocks, this.main.c(lim.symbols[2]).blocks]);
                 } else if (lim.symbols.length >= 2) {
                     intBlock = blockBd.compositeBlock("\\int", ["from"],
-                        [this.main.convert(lim.symbols[1]).blocks]);
+                        [this.main.c(lim.symbols[1]).blocks]);
                 } else {
                     intBlock = blockBd.compositeBlock("\\int");
                 }
 
                 intBlocks.push(intBlock);
-                sBlockss.unshift(blockBd.combine2Blockss([blockBd.textBlock("d")], this.main.convert(lim.symbols[0]).blocks));
+                sBlockss.unshift(blockBd.combine2Blockss([blockBd.textBlock("d")], this.main.c(lim.symbols[0]).blocks));
             }
             symbolBlocks = blockBd.joinBlocks(sBlockss, "\u2009");
         }
 
-        const expCr = this.main.convert(integral.symbols[0]);
+        const expCr = this.main.c(integral.symbols[0]);
         const expBlocks = this.shouldWrapBrackets(integral.symbols[0], expCr) ? blockBd.wrapBetweenBrackets(expCr.blocks).blocks : expCr.blocks;
         // console.log(integral);
         return blockBd.combineMultipleBlocks(
