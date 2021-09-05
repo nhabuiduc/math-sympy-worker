@@ -61,6 +61,9 @@ class PrSymbolVisuallyInfo {
                 return this.allParts;
             }
             case "VarList": {
+                if (s.visualInfo == "asShorthandMul") {
+                    return { prOp: "unit", prPowerIndex: "parts", prShorthandMul: "unit", prSign: false }
+                }
                 if (s.visualInfo) {
                     return s.visualInfo;
                 }

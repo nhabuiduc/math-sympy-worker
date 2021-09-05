@@ -1344,7 +1344,168 @@ Y = MatrixSymbol('Y', 2, 2)
         expect(await th.run(`ArrayElement("A", (2, 1/(1-x), 0))`)).equal('[A][⛏️,[2,][frac,[1],[1-x]][,0]]');
     })
 
-    it.only("tensor", async () => {
+    it.only("13651", async () => {
+
+    })
+    it("MatrixElement", async () => {
+        await th.prepare(`
+# test cases for issue #11821
+A = MatrixSymbol("A", 1, 3)
+B = MatrixSymbol("B", 1, 3)
+C = MatrixSymbol("C", 1, 3)
+F = C[0, 0].subs(C, A - B)
+i, j, k = symbols("i j k")
+M = MatrixSymbol("M", k, k)
+N = MatrixSymbol("N", k, k)
+                                `);
+        expect(await th.run(`A[0, 0]`)).equal('[A][⛏️,[0,0]]');
+        expect(await th.run(`3 * A[0, 0]`)).equal('[3A][⛏️,[0,0]]');
+        expect(await th.run(`F`)).equal('([-B+A])[⛏️,[0,0]]');
+        expect(await th.run(`(M*N)[i, j]`)).equal('[sum,[i][⛏️,[1]][=0],[-1+k]][M][⛏️,[i,i][⛏️,[1]]][N][⛏️,[i][⛏️,[1]][,j]]');
+
+    });
+    it("MatrixSymbol", async () => {
+        await th.prepare(`
+A = MatrixSymbol("A", 3, 3)
+B = MatrixSymbol("B", 3, 3)
+C = MatrixSymbol("C", 3, 3)
+    
+                                `);
+        expect(await th.run(`-A`)).equal('[-A]');
+        expect(await th.run(`A - A*B - B`)).equal('[-B-AB+A]');
+        expect(await th.run(`-A*B - A*B*C - B`)).equal('[-B-AB-ABC]');
+
+    });
+    it("KroneckerProduct", async () => {
+        await th.prepare(`
+A = MatrixSymbol('A', 3, 3)
+B = MatrixSymbol('B', 2, 2)
+                                `);
+        expect(await th.run(`KroneckerProduct(A, B)`)).equal('A⊗B]');
+
+    });
+
+    it("Series", async () => {
+        await th.prepare(`
+tf1 = TransferFunction(x*y**2 - z, y**3 - t**3, y)
+tf2 = TransferFunction(x - y, x + y, y)
+tf3 = TransferFunction(t*x**2 - t**w*x + w, t - y, y)
+                                `);
+
+        expect(await th.run(`Series(tf1, tf2)`)).equal('[frac,([frac,[p],[p+x]])[ ]([frac,[p-s],[p+s]]),[frac,[1],[1]][+]([frac,[p],[p+x]])[ ]([frac,[p-s],[p+s]])]');
+        expect(await th.run(`Series(tf1, tf2, tf3)`)).equal('[frac,([frac,[p],[p+x]])[ ]([frac,[p-s],[p+s]]),[frac,[1],[1]][+]([frac,[p],[p+x]])[ ]([frac,[p-s],[p+s]])]');
+        expect(await th.run(`Series(-tf2, tf1)`)).equal('([frac,[-z+xy][💪,[2]],[y][💪,[3]][-t][💪,[3]]])[ ]([frac,[x-y],[x+y]])');
+
+        // TODO new version
+        /**
+         * 
+         * M_1 = Matrix([[5/s], [5/(2*s)]])
+    T_1 = TransferFunctionMatrix.from_Matrix(M_1, s)
+    M_2 = Matrix([[5, 6*s**3]])
+    T_2 = TransferFunctionMatrix.from_Matrix(M_2, s)
+    # Brackets
+    assert latex(T_1*(T_2 + T_2)) == \
+        r'\left[\begin{matrix}\frac{5}{s}\\\frac{5}{2 s}\end{matrix}\right]_\tau\cdot\left(\left[\begin{matrix}\frac{5}{1} &' \
+        r' \frac{6 s^{3}}{1}\end{matrix}\right]_\tau + \left[\begin{matrix}\frac{5}{1} & \frac{6 s^{3}}{1}\end{matrix}\right]_\tau\right)' \
+            == latex(MIMOSeries(MIMOParallel(T_2, T_2), T_1))
+    # No Brackets
+    M_3 = Matrix([[5, 6], [6, 5/s]])
+    T_3 = TransferFunctionMatrix.from_Matrix(M_3, s)
+    assert latex(T_1*T_2 + T_3) == r'\left[\begin{matrix}\frac{5}{s}\\\frac{5}{2 s}\end{matrix}\right]_\tau\cdot\left[\begin{matrix}' \
+        r'\frac{5}{1} & \frac{6 s^{3}}{1}\end{matrix}\right]_\tau + \left[\begin{matrix}\frac{5}{1} & \frac{6}{1}\\\frac{6}{1} & ' \
+            r'\frac{5}{s}\end{matrix}\right]_\tau' == latex(MIMOParallel(MIMOSeries(T_2, T_1), T_3))
+
+         */
+    })
+
+    it.skip("TransferFunctionMatrix", async () => {
+        await th.prepare(`
+        tf1 = TransferFunction(p, p + x, p)
+        tf2 = TransferFunction(-s + p, p + s, p)
+        tf3 = TransferFunction(p, y**2 + 2*y + 3, p)
+                                `);
+
+        expect(await th.run(`TransferFunctionMatrix([[tf1], [tf2]])`)).equal('([frac,[-z+xy][💪,[2]],[y][💪,[3]][-t][💪,[3]]])[ ]([frac,[x-y],[x+y]])');
+    });
+
+
+    it("Feedback", async () => {
+        await th.prepare(`
+tf1 = TransferFunction(p, p + x, p)
+tf2 = TransferFunction(-s + p, p + s, p)
+                        `);
+
+        expect(await th.run(`Feedback(tf1, tf2)`)).equal('[frac,[frac,[p],[p+x]],[frac,[1],[1]][+]([frac,[p],[p+x]])[ ]([frac,[p-s],[p+s]])]');
+        expect(await th.run(`Feedback(tf1*tf2, TransferFunction(1, 1, p))`)).equal('[frac,([frac,[p],[p+x]])[ ]([frac,[p-s],[p+s]]),[frac,[1],[1]][+]([frac,[p],[p+x]])[ ]([frac,[p-s],[p+s]])]');
+        expect(await th.run(`Feedback(tf1, tf2, 1)`)).equal('[frac,([frac,[p],[p+x]])[ ]([frac,[p-s],[p+s]]),[frac,[1],[1]][+]([frac,[p],[p+x]])[ ]([frac,[p-s],[p+s]])]');
+
+        //TODO: new version
+        /**
+         * # Positive Feedback
+    assert latex(Feedback(tf1, tf2, 1)) == \
+        r'\frac{\frac{p}{p + x}}{\frac{1}{1} - \left(\frac{p}{p + x}\right) \left(\frac{p - s}{p + s}\right)}'
+    assert latex(Feedback(tf1*tf2, sign=1)) == \
+        r'\frac{\left(\frac{p}{p + x}\right) \left(\frac{p - s}{p + s}\right)}{\frac{1}{1} - \left(\frac{p}{p + x}\right) \left(\frac{p - s}{p + s}\right)}'
+
+         */
+    })
+
+    /** not existed in current version */
+    it.skip("MIMOFeedback", async () => {
+        await th.prepare(`
+tf1 = TransferFunction(1, s, s)
+tf2 = TransferFunction(s, s**2 - 1, s)
+tf3 = TransferFunction(s, s - 1, s)
+tf4 = TransferFunction(s**2, s**2 - 1, s)
+
+tfm_1 = TransferFunctionMatrix([[tf1, tf2], [tf3, tf4]])
+tfm_2 = TransferFunctionMatrix([[tf4, tf3], [tf2, tf1]])    
+                `);
+
+        expect(await th.run(`MIMOFeedback(tfm_1, tfm_2)`)).equal('[x+yi+zj+tk]');
+
+    });
+
+    it("Quaternion", async () => {
+        await th.prepare(`
+q1 = Quaternion(x, y, z, t)
+q2 = Quaternion(x, y, z, x*t)
+q3 = Quaternion(x, y, z, x + t)
+        `);
+
+        expect(await th.run(`q1`)).equal('[x+yi+zj+tk]');
+        expect(await th.run(`q2`)).equal('[x+yi+zj+txk]');
+        expect(await th.run(`q3`)).equal('[x+yi+zj+]([t+x])[k]');
+
+    });
+    it("TensorProduct", async () => {
+        await th.prepare(`
+from sympy.tensor.functions import TensorProduct
+A = MatrixSymbol("A", 3, 3)
+B = MatrixSymbol("B", 3, 3)
+        `);
+
+        expect(await th.run(`TensorProduct(A, B)`)).equal('[A⊗B]');
+
+    });
+    it("WedgeProduct", async () => {
+        await th.prepare(`
+from sympy.diffgeom.rn import R2
+from sympy.diffgeom import WedgeProduct
+wp = WedgeProduct(R2.dx, R2.dy)
+        `);
+
+        expect(await th.run(`wp`)).equal('[⚙️,[d]][x∧][⚙️,[d]][y]');
+
+    });
+
+    it("9216", async () => {
+        expect(await th.run(`Pow(1, -1, evaluate=False)`)).equal('[1][💪,[-1]]');
+        expect(await th.run(`Pow(1, Pow(1, -1, evaluate=False), evaluate=False)`)).equal('[1][💪,[1][💪,[-1]]]');
+        expect(await th.run(`Pow(3, -2, evaluate=False)`)).equal('[frac,[1],[3][💪,[2]]]');
+        expect(await th.run(`Pow(1, -2, evaluate=False)`)).equal('[1][💪,[-2]]');
+    })
+    it("tensor", async () => {
         await th.prepare(`
 from sympy.tensor.tensor import TensorIndexType, tensor_indices, TensorHead, tensor_heads
 L = TensorIndexType("L")
@@ -1370,15 +1531,23 @@ K = TensorHead("K", [L, L, L, L])
         expect(await th.run(`(1+x)*A(i)`)).equal('([1+x])[A][💪,[i]]');
         expect(await th.run(`H(i, -i)`)).equal('[H][💪,[L][⛏️,[0]]][⛏️,[L][⛏️,[0]]]');
         expect(await th.run(`H(i, -j)*A(j)*B(k)`)).equal('[H][💪,[i]][⛏️,[L][⛏️,[0]]][A][💪,[L][⛏️,[0]]][B][💪,[k]]');
-        expect(await th.run(`A(i) + 3*B(i)`)).equal('[K][💪,[i=3,j]][⛏️,[k=2,l]]');
-        
+        expect(await th.run(`A(i) + 3*B(i)`)).equal('[3B][💪,[i]][+A][💪,[i]]');
+
         await th.prepare(` from sympy.tensor.tensor import TensorElement`);
-        
+
         expect(await th.run(`TensorElement(K(i, j, k, l), {i: 3, k: 2})`)).equal('[K][💪,[i=3,j,k=2,l]]');
         expect(await th.run(`TensorElement(K(i, j, k, l), {i: 3})`)).equal('[K][💪,[i=3,j,k,l]]');
         expect(await th.run(`TensorElement(K(i, -j, k, l), {i: 3, k: 2})`)).equal('[K][💪,[i][=][3]][⛏️,[j]][💪,[k=2,l]]');
         expect(await th.run(`TensorElement(K(i, -j, k, -l), {i: 3, k: 2})`)).equal('[K][💪,[i][=][3]][⛏️,[j]][💪,[k][=][2]][⛏️,[l]]');
-        expect(await th.run(`TensorElement(K(i, j, -k, -l), {i: 3, -k: 2})`)).equal('[K][💪,[i][=][3]][⛏️,[j]][💪,[k][=][2]][⛏️,[l]]');
+        expect(await th.run(`TensorElement(K(i, j, -k, -l), {i: 3, -k: 2})`)).equal('[K][💪,[i=3,j]][⛏️,[k=2,l]]');
+        expect(await th.run(`TensorElement(K(i, j, -k, -l), {i: 3})`)).equal('[K][💪,[i=3,j]][⛏️,[k,l]]');
+
+        await th.prepare(`from sympy.tensor.toperators import PartialDerivative`);
+        expect(await th.run(`PartialDerivative(A(i), A(i))`)).equal('[frac,[∂],[∂A][💪,[L][⛏️,[0]]]][A][💪,[L][⛏️,[0]]]');
+        expect(await th.run(`PartialDerivative(A(-i), A(-j))`)).equal('[frac,[∂],[∂A][⛏️,[j]]][A][⛏️,[i]]');
+        expect(await th.run(`PartialDerivative(K(i, j, -k, -l), A(m), A(-n))`)).equal('[frac,[∂][💪,[2]],[∂A][💪,[m]][∂A][⛏️,[n]]][K][💪,[ij]][⛏️,[kl]]');
+        expect(await th.run(`PartialDerivative(B(-i) + A(-i), A(-j), A(-n))`)).equal('[frac,[∂][💪,[2]],[∂A][⛏️,[j]][∂A][⛏️,[n]]]([A][⛏️,[i]][+B][⛏️,[i]])');
+        expect(await th.run(`PartialDerivative(3*A(-i), A(-j), A(-n))`)).equal('[frac,[∂][💪,[2]],[∂A][⛏️,[j]][∂A][⛏️,[n]]][3A][⛏️,[i]]');
     });
 
     it("issue_15353", async () => {

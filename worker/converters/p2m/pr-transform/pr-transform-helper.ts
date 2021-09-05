@@ -395,6 +395,10 @@ class PrTransformHelper {
         return false;
     }
 
+    isOnePowerNegativeOne(s: Symbol) {
+        return s.type == "Pow" && this.isOne(s.symbols[0]) && this.isNegativeOne(s.symbols[1])
+    }
+
     isNegativeOne(s: Symbol) {
         return (s.type == "Var" && s.nativeType == "NegativeOne") || this.isIntType(s, "-1");
     }

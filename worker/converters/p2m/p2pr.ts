@@ -459,9 +459,10 @@ class Main {
                 )
             }
             case "IdentityFunction": {
-                return prTh.varList([
-                    prTh.var("x↦x")
-                ])
+                return prTh.bin([
+                    prTh.var("x"),
+                    prTh.var("x")], "↦"
+                )
             }
 
             case "PolyRing":
@@ -650,9 +651,9 @@ class Main {
             case "Differential": {
                 const ss = this.m(obj.args);
                 if (obj.coordSys) {
-                    return prTh.varList([prTh.var("d", { normalText: "operator" }), ss[0]])
+                    return prTh.varList([prTh.var("d", { normalText: "operator" }), ss[0]], { visualInfo: "asShorthandMul" })
                 }
-                return prTh.varList([prTh.var("d", { normalText: "operator" }), prTh.brackets([ss[0]])])
+                return prTh.varList([prTh.var("d", { normalText: "operator" }), prTh.brackets([ss[0]])], { visualInfo: "asShorthandMul" })
             }
             case "PermutationMatrix": {
                 return prTh.index(prTh.var("P"), this.c(obj.args[0]));
@@ -674,6 +675,42 @@ class Main {
             case "TensorElement":
             case "Tensor": {
                 return this.tensor.tensor(obj);
+            }
+            case "PartialDerivative": {
+                const [expr, variablesSymbol] = this.m(obj.args);
+                const variables = (variablesSymbol as P2Pr.VarList).symbols;
+                const pairedVariables = variables.map(v => prTh.varList([v, prTh.one()]));
+                return {
+                    type: "Derivative",
+                    kind: "Container",
+                    partial: true,
+                    symbols: [expr].concat(pairedVariables.reverse())
+                }
+            }
+            case "WedgeProduct": {
+                return prTh.bin(this.m(obj.args), "∧");
+            }
+            case "TensorProduct": {
+                return prTh.bin(this.m(obj.args), "⊗");
+            }
+            case "Quaternion": {
+                const ss = this.m(obj.args);
+                return prTh.add([
+                    ss[0],
+                    prTh.mul([ss[1], prTh.var("i")]),
+                    prTh.mul([ss[2], prTh.var("j")]),
+                    prTh.mul([ss[3], prTh.var("k")]),
+                ])
+            }
+            case "Series": {
+                return prTh.varList(this.m(obj.args), { wrapItemOnCheck: "prPowerIndex", separator: " ", visualInfo: "asShorthandMul" });
+            }
+            case "KroneckerProduct": {
+                return prTh.bin(this.m(obj.args), "⊗");
+            }
+            case "MatrixElement": {
+                const ss = this.m(obj.args);
+                return prTh.index(ss[0], prTh.varList(ss.slice(1), ","));
             }
 
         }
@@ -735,7 +772,7 @@ export namespace P2Pr {
 
     export interface BinaryOp extends Container {
         type: "BinaryOp";
-        op: "↦" | "×" | "∧" | "⇒" | "∨" | "⧵" | "▵" | "∩" | "∪" | "⋅" | "mod" | "rightarrow";
+        op: "↦" | "×" | "∧" | "⇒" | "∨" | "⧵" | "▵" | "∩" | "∪" | "⋅" | "mod" | "rightarrow" | "⊗" | " ";
         wrapIfMulShorthand?: boolean;
     }
     export interface UnaryOp extends Container {
@@ -765,8 +802,9 @@ export namespace P2Pr {
         separator?: "," | ";" | "|" | ":" | "∘" | " ";
         separatorSpacing?: "before" | "after" | "around";
         rightBracket?: SupportBracket;
-        wrapItemOnJoinIfRequire?: boolean;
-        visualInfo?: PrSymbolVisuallyInfo.CheckResult;
+        wrapItemOnCheck?: "prOp" | "prPowerIndex" | "prShorthandMul";
+        visualInfo?: PrSymbolVisuallyInfo.CheckResult | "asShorthandMul";
+
     }
 
     export interface Mul extends Container {
@@ -908,7 +946,8 @@ namespace P {
         F<"FreeModule"> | F<"SubModule"> | F<"FreeModuleElement"> | F<"DMP"> | F<"Frac"> | F<"MatrixHomomorphism"> | F<"Tr"> |
         F<"Adjoint"> | F<"Transpose"> | F<"ArrayElement"> | Quantity | F<"Manifold"> | F<"Patch"> | F<"CoordSystem"> |
         F<"BaseScalarField"> | F<"BaseVectorField"> | Differential | F<"PermutationMatrix"> | F<"AppliedPermutation"> |
-        UNamed<"MatrixSymbol"> | F<"Trace"> | TensorIndex | F<"Tensor"> | F<"TensorElement"> |
+        UNamed<"MatrixSymbol"> | F<"Trace"> | TensorIndex | F<"Tensor"> | F<"TensorElement"> | F<"PartialDerivative"> |
+        F<"WedgeProduct"> | F<"TensorProduct"> | F<"Quaternion"> | F<"Series"> | F<"KroneckerProduct"> | F<"MatrixElement"> |
         UnknownFunc;
 
 

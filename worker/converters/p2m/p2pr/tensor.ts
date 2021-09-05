@@ -25,7 +25,7 @@ export class Tensor extends P2PrItemBase {
 
         (indices[0] as P2Pr.Container).symbols[0] = name;
         return prTh.varList(indices, {
-            visualInfo: { prOp: "unit", prPowerIndex: "parts", prShorthandMul: "unit", prSign: false },
+            visualInfo: "asShorthandMul",
         });
 
     }

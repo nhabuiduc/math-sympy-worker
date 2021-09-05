@@ -57,6 +57,11 @@ export class PrPowerTransform extends PrBaseTransform {
 
     private transformPowNegativeOne = (s: Symbol): Symbol => {
         if (this.isAllow(s) && prTh.isNegativeOne(s.symbols[1])) {
+            /**ignore one  */
+            if (prTh.isOne(s.symbols[0])) {
+                return s;
+            }
+
             return prTh.frac(prTh.one(), this.mergedWithRemaningIdx(s.symbols[0], s));
         }
 
@@ -64,6 +69,15 @@ export class PrPowerTransform extends PrBaseTransform {
     }
     private transformPowNegativeInt = (s: Symbol): Symbol => {
         if (this.isAllow(s) && (prTh.isNegativeInt(s.symbols[1]) || prTh.isMulNegativeOf(s.symbols[1]))) {
+            /**handle by  transformPowNegativeOne already */
+            if (prTh.isNegativeOne(s.symbols[1])) {
+                return s;
+            }
+
+            if (prTh.isOne(s.symbols[0])) {
+                return s;
+            }
+
             return prTh.frac(
                 prTh.one(),
                 prTh.pow(s.symbols[0], prTh.removeNegativeSign(s.symbols[1]), s.symbols[2])
@@ -74,6 +88,7 @@ export class PrPowerTransform extends PrBaseTransform {
     }
     private transformPowHalf = (s: Symbol): Symbol => {
         if (this.isAllow(s) && prTh.matchRationalFrac(s.symbols[1], 1, 2)) {
+            
             return this.powerRationalToSqrt(this.mergedWithRemaningIdx(s.symbols[0], s), s.symbols[1], s);
         }
 
@@ -81,6 +96,12 @@ export class PrPowerTransform extends PrBaseTransform {
     }
     private transformPowOneOfInt = (s: Symbol): Symbol => {
         if (this.isAllow(s) && prTh.matchRationalFrac(s.symbols[1], 1)) {
+            
+            const [denominator] = prTh.extractRationalFrac(s.symbols[1]);
+            /**handle by  transformPowHalf already */
+            if (denominator == 2) {
+                return s;
+            }
             return this.powerRationalToSqrt(this.mergedWithRemaningIdx(s.symbols[0], s), s.symbols[1], s);
         }
 

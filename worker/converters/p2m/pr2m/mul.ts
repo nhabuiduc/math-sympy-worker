@@ -17,6 +17,8 @@ export class Mul extends Pr2MItemBase {
         let allInShortcutForm = true;
         const blockss: BlockModel[][] = [];
         let lastBracketChecked: boolean | "wrap-if-shortcut-after" = false;
+
+        
         for (let idx = 0; idx < items.length; idx++) {
             const item = items[idx];
             const curArg = symbols[idx];

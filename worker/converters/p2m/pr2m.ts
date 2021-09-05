@@ -17,6 +17,7 @@ import { BinaryOp } from "./pr2m/binary-op";
 import { Pr2MCommon } from "./pr2m/pr2m-common";
 import { symbolIndexSerialize } from "@sympy-worker/symbol-index-serializer";
 import { GenericFunc } from "./pr2m/generic-func";
+import { prSymbolVisuallyInfo } from "./pr-transform/pr-symbol-visually-info";
 
 
 export class Pr2M {
@@ -144,9 +145,14 @@ class Main {
                     const rsBlocks = obj.symbols[0].powerIndexPos == "all-after" ? [...name, ...args, indexBlock] : [...name, indexBlock, ...args];
                     return { blocks: rsBlocks }
                 }
+                let base = this.innerConvert(obj.symbols[0]);
+                const checked = prSymbolVisuallyInfo.check(obj.symbols[0],base);
+                if(checked.prPowerIndex !="unit"){
+                    base = blockBd.wrapBetweenBrackets(base.blocks);
+                }
                 return {
                     blocks: [
-                        ...this.innerConvert(obj.symbols[0]).blocks,
+                        ...base.blocks,
                         blockBd.indexBlock(this.innerConvert(obj.symbols[1]).blocks)
                     ]
                 }

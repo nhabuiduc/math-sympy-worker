@@ -27,6 +27,8 @@ class TestHelper {
             "partial": "∂",
             "sigma": "𝜎",
             "nabla": "∇",
+            "wedge": "∧",
+            "otimes": "⊗",
         }
     });
     async prepare(statement: string): Promise<void> {
@@ -118,7 +120,7 @@ json.dumps(rootDic)
 
                 return `[${prefix}${this.reduceFuncName(b.text.substr(1))},${elements.join(",")}${this.styleToText(b.style)}]`
             }
-            if(b.style?.mathType == "\\text"){
+            if (b.style?.mathType == "\\text") {
                 return `[📜,[${b.text}]]`;
             }
             return `[${b.text}${this.styleToText(b.style)}]`;

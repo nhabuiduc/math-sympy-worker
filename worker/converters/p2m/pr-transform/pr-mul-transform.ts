@@ -10,9 +10,18 @@ export class PrMulTransform extends PrBaseTransform {
         return [
             this.makeTransform(this.flattenMul, op => op.mul?.flatten),
             this.makeTransform(this.orderTransform, op => op.mul?.order),
+            this.makeTransform(this.specialCasesTransform, () => true),
         ]
     }
 
+    private specialCasesTransform = (s: Symbol): P2Pr.Symbol => {
+        /**special case: */
+        if (s.type == "Mul" && s.symbols.length == 2 && prTh.isOne(s.symbols[0]) && prTh.isOnePowerNegativeOne(s.symbols[1])) {
+            return s.symbols[1];
+        }
+        return s;
+    }
+    
     private orderTransform = (symbol: Symbol): P2Pr.Symbol => {
         if (symbol.type == "Mul" && !symbol.unevaluatedDetected) {
             return { ...symbol, symbols: this.orderSymbols(symbol.symbols) };

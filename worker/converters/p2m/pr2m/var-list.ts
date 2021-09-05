@@ -1,13 +1,13 @@
 import { blockBd } from "../block-bd";
 import { P2Pr } from "../p2pr";
-import { prTh } from "../pr-transform/pr-transform-helper";
+import { prSymbolVisuallyInfo } from "../pr-transform/pr-symbol-visually-info";
 import { Pr2M } from "../pr2m";
 import { Pr2MItemBase } from "./pr2m-item-base";
 
 export class VarList extends Pr2MItemBase {
     convert(obj: P2Pr.VarList): Pr2M.CResult {
         if (!obj.bracket && !obj.separator) {
-            return { blocks: blockBd.flattenBlocks(this.mapBlocksAndWrapIfRequire(obj.symbols, obj.wrapItemOnJoinIfRequire)) }
+            return { blocks: blockBd.flattenBlocks(this.mapBlocksAndWrapIfRequire(obj.symbols, obj.wrapItemOnCheck)) }
         }
 
         let blocks: BlockModel[];
@@ -15,9 +15,9 @@ export class VarList extends Pr2MItemBase {
         if (obj.separator) {
 
             const separator = this.buildSeparatorBlock(obj.separator, obj.separatorSpacing);
-            blocks = blockBd.joinBlocks(this.mapBlocksAndWrapIfRequire(obj.symbols, obj.wrapItemOnJoinIfRequire), separator)
+            blocks = blockBd.joinBlocks(this.mapBlocksAndWrapIfRequire(obj.symbols, obj.wrapItemOnCheck), separator)
         } else {
-            blocks = blockBd.flattenBlocks(this.mapBlocksAndWrapIfRequire(obj.symbols, obj.wrapItemOnJoinIfRequire))
+            blocks = blockBd.flattenBlocks(this.mapBlocksAndWrapIfRequire(obj.symbols, obj.wrapItemOnCheck))
         }
 
 
@@ -27,13 +27,15 @@ export class VarList extends Pr2MItemBase {
         return { blocks }
     }
 
-    private mapBlocksAndWrapIfRequire(ss: Symbol[], wrapOnJoinIfRequire: boolean): BlockModel[][] {
-        if (!wrapOnJoinIfRequire) {
+    private mapBlocksAndWrapIfRequire(ss: Symbol[], wrapItemOnCheck: P2Pr.VarList["wrapItemOnCheck"]): BlockModel[][] {
+        if (!wrapItemOnCheck) {
             return this.main.m(ss);
         }
+
         return ss.map(s => {
             const rs = this.c(s);
-            if (!prTh.considerPresentAsSingleUnitInOpCtx(s, rs)) {
+            const checked = prSymbolVisuallyInfo.check(s, rs);
+            if (checked[wrapItemOnCheck] != "unit") {
                 return blockBd.wrapBetweenBrackets(rs.blocks).blocks;
             }
             return rs.blocks;
