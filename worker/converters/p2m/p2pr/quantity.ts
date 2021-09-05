@@ -66,7 +66,3 @@ export class Quantity extends P2PrItemBase {
         return symbolLatexNames[name];
     }
 }
-
-
-
-type Symbol = P2Pr.Symbol;

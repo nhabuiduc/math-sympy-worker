@@ -30,14 +30,14 @@ export class Set extends P2PrItemBase {
                 const vars = prTh.extractIfVarList(ss[0]);
                 if (obj.args[2].func == "UniversalSet") {
                     return prTh.varList([
-                        prTh.varList(vars),
+                        prTh.singleOrBrackets(vars),
                         ss[1],
                     ], { bracket: "{", separator: "|", separatorSpacing: "around" })
                 }
                 return prTh.varList([
-                    prTh.varList(vars),
+                    prTh.singleOrBrackets(vars),
                     prTh.varList([
-                        prTh.varList(vars),
+                        prTh.singleOrBrackets(vars),
                         prTh.var("∈"),
                         ss[2],
                         prTh.var("∧"),
@@ -51,7 +51,7 @@ export class Set extends P2PrItemBase {
                 return prTh.varList([
                     ss[0],
                     prTh.varList([
-                        prTh.varList(prTh.extractIfVarList(ss[1]),","),
+                        prTh.varList(prTh.extractIfVarList(ss[1]), ","),
                         prTh.var("∈"),
                         ss[2],
                     ])

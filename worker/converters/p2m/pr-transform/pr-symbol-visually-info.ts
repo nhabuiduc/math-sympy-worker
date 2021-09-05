@@ -61,6 +61,10 @@ class PrSymbolVisuallyInfo {
                 return this.allParts;
             }
             case "VarList": {
+                if (s.visualInfo) {
+                    return s.visualInfo;
+                }
+
                 if (s.bracket) {
                     return this.allUnit;
                 }
@@ -172,17 +176,7 @@ class PrSymbolVisuallyInfo {
     private allParts: CheckResult = { prOp: "parts", prPowerIndex: "parts", prShorthandMul: "parts", prSign: false }
 }
 
-interface CheckResult {
-    prOp: "unit" | "parts";
-    prPowerIndex: "unit" | "parts";
-    prShorthandMul: "unit" | "parts" | "right-parts-left-unit";
-    prSign: boolean;
-    mulMoreInfo?: {
-        isAllShorthand: boolean;
-        singleItem: boolean | "when-exclude-negative-one";
-    }
-    prExcludeSign?: "unit";
-}
+
 
 
 
@@ -191,4 +185,20 @@ export const prSymbolVisuallyInfo = new PrSymbolVisuallyInfo();
 type Symbol = P2Pr.Symbol;
 
 function assertUnreachable(_x: never): void {
+}
+
+type CheckResult = PrSymbolVisuallyInfo.CheckResult;
+
+export namespace PrSymbolVisuallyInfo {
+    export interface CheckResult {
+        prOp: "unit" | "parts";
+        prPowerIndex: "unit" | "parts";
+        prShorthandMul: "unit" | "parts" | "right-parts-left-unit";
+        prSign: boolean;
+        mulMoreInfo?: {
+            isAllShorthand: boolean;
+            singleItem: boolean | "when-exclude-negative-one";
+        }
+        prExcludeSign?: "unit";
+    }
 }

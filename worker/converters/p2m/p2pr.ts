@@ -15,6 +15,8 @@ import { Set as SetP2Pr } from "./p2pr/set";
 import { NDimArray } from "./p2pr/dim-array";
 import { PolyElement } from "./p2pr/poly-element";
 import { Quantity } from "./p2pr/quantity";
+import { Tensor } from "./p2pr/tensor";
+import { PrSymbolVisuallyInfo } from "./pr-transform/pr-symbol-visually-info";
 
 export class P2Pr {
     constructor(private symbolLatexNames: { [key: string]: string },) { }
@@ -33,6 +35,7 @@ class Main {
     private nDimArray = new NDimArray(this);
     private polyElement = new PolyElement(this);
     private quantity = new Quantity(this);
+    private tensor = new Tensor(this);
 
     constructor(private symbolLatexNames: { [key: string]: string }, private ops: P2Pr.TransformOptions) {
         this.nameParser = new NameParser(symbolLatexNames);
@@ -61,7 +64,7 @@ class Main {
             }
 
             case "Mod": {
-                return prTh.bin(this.m(obj.args), { cp: "\\bmod" });
+                return prTh.bin(this.m(obj.args), "mod");
             }
 
             case "BaseDyadic": {
@@ -243,8 +246,6 @@ class Main {
                 }
             }
 
-
-
             case "Tuple": {
                 return prTh.varList(this.m(obj.args), this.getListSeparator(), "(")
             }
@@ -273,7 +274,7 @@ class Main {
             }
 
             case "Relational": {
-                return { type: "Relational", kind: "Container", relOp: obj.relOp, symbols: this.m(obj.args) }
+                return prTh.rel(obj.relOp, this.m(obj.args));
             }
             case "List": {
                 return prTh.varList(this.m(obj.args), this.getListSeparator(), "[");
@@ -310,11 +311,11 @@ class Main {
             }
             case "Cycle": {
                 if (obj.perm.length == 0) {
-                    return { type: "VarList", kind: "Container", bracket: "(", separator: ";", symbols: [] }
+                    return { type: "VarList", kind: "Container", bracket: "(", separator: " ", symbols: [] }
                 }
 
                 const listss: P2Pr.VarList[] = obj.perm.map(c => {
-                    const list: P2Pr.VarList = { type: "VarList", kind: "Container", bracket: "(", separator: ";", symbols: c.map(i => prTh.int(i)) };
+                    const list: P2Pr.VarList = { type: "VarList", kind: "Container", bracket: "(", separator: " ", symbols: c.map(i => prTh.int(i)) };
                     return list;
                 });
 
@@ -555,16 +556,16 @@ class Main {
             }
             case "Morphism": {
                 const ss = this.m(obj.args);
-                return prTh.bin(ss, { cp: "\\rightarrow" });
+                return prTh.bin(ss, "rightarrow");
             }
             case "NamedMorphism": {
                 const ss = this.m(obj.args);
-                return prTh.varList([ss[0], prTh.var(":"), prTh.bin(ss.slice(1), { cp: "\\rightarrow" })])
+                return prTh.varList([ss[0], prTh.var(":"), prTh.bin(ss.slice(1), "rightarrow")])
             }
             case "CompositeMorphism": {
                 const ss = this.m(obj.args);
                 const names = prTh.extractIfVarList(ss[0]).reverse();
-                return prTh.varList([prTh.varList(names, "∘"), prTh.var(":"), prTh.bin(ss.slice(1), { cp: "\\rightarrow" })])
+                return prTh.varList([prTh.varList(names, "∘"), prTh.var(":"), prTh.bin(ss.slice(1), "rightarrow")])
             }
             case "Category": {
                 const s = obj.args[0] as P.Symbol;
@@ -653,6 +654,27 @@ class Main {
                 }
                 return prTh.varList([prTh.var("d", { normalText: "operator" }), prTh.brackets([ss[0]])])
             }
+            case "PermutationMatrix": {
+                return prTh.index(prTh.var("P"), this.c(obj.args[0]));
+            }
+            case "AppliedPermutation": {
+                return prTh.varList([prTh.index(prTh.var("𝜎"), this.c(obj.args[0])), prTh.brackets(this.c(obj.args[1]))]);
+            }
+            case "MatrixSymbol": {
+                const isBold = this.ops.matrixSymbol?.style == "bold";
+                console.log('isboolld:::', isBold);
+                return this.nameParser.parse(obj.name, n => prTh.var(n, { bold: isBold }), isBold)
+            }
+            case "Trace": {
+                return prTh.genFunc("tr", this.m(obj.args));
+            }
+            case "TensorIndex": {
+                return this.tensor.tensorIndex(obj);
+            }
+            case "TensorElement":
+            case "Tensor": {
+                return this.tensor.tensor(obj);
+            }
 
         }
 
@@ -713,12 +735,12 @@ export namespace P2Pr {
 
     export interface BinaryOp extends Container {
         type: "BinaryOp";
-        op: string | { cp: "\\bmod" | "\\rightarrow" };
+        op: "↦" | "×" | "∧" | "⇒" | "∨" | "⧵" | "▵" | "∩" | "∪" | "⋅" | "mod" | "rightarrow";
         wrapIfMulShorthand?: boolean;
     }
     export interface UnaryOp extends Container {
         type: "UnaryOp";
-        op: string;
+        op: "!" | "!!" | "¬" | "∇" | "▵";
         pos: "before" | "after";
     }
 
@@ -740,10 +762,11 @@ export namespace P2Pr {
     export interface VarList extends Container {
         type: "VarList";
         bracket?: SupportBracket;
-        separator?: "," | ";" | "|" | ":" | "∘";
+        separator?: "," | ";" | "|" | ":" | "∘" | " ";
         separatorSpacing?: "before" | "after" | "around";
         rightBracket?: SupportBracket;
-        wrapOnJoinIfRequire?: boolean;
+        wrapItemOnJoinIfRequire?: boolean;
+        visualInfo?: PrSymbolVisuallyInfo.CheckResult;
     }
 
     export interface Mul extends Container {
@@ -844,9 +867,13 @@ export namespace P2Pr {
         };
         imaginaryUnit?: {
             textStyle?: boolean;
+        };
+        matrixSymbol?: {
+            style?: "bold" | "plain";
         }
-
     }
+
+
 
     export type PGenericFunc = P.GenericFunc;
     export type PBasic = P.Basic;
@@ -855,6 +882,7 @@ export namespace P2Pr {
     export type PU<T extends string> = P.U<T>;
     export type PPFuncArgs = P.FuncArgs;
     export type BoldType = P.BoldType;
+    export type PTensorIndex = P.TensorIndex;
 }
 
 namespace P {
@@ -879,9 +907,14 @@ namespace P {
         PolynomialRingBase | F<"Morphism"> | F<"NamedMorphism"> | F<"CompositeMorphism"> | F<"Category"> | F<"Diagram"> | DiagramGrid |
         F<"FreeModule"> | F<"SubModule"> | F<"FreeModuleElement"> | F<"DMP"> | F<"Frac"> | F<"MatrixHomomorphism"> | F<"Tr"> |
         F<"Adjoint"> | F<"Transpose"> | F<"ArrayElement"> | Quantity | F<"Manifold"> | F<"Patch"> | F<"CoordSystem"> |
-        F<"BaseScalarField"> | F<"BaseVectorField"> | Differential |
+        F<"BaseScalarField"> | F<"BaseVectorField"> | Differential | F<"PermutationMatrix"> | F<"AppliedPermutation"> |
+        UNamed<"MatrixSymbol"> | F<"Trace"> | TensorIndex | F<"Tensor"> | F<"TensorElement"> |
         UnknownFunc;
 
+
+    export interface TensorIndex extends F<"TensorIndex"> {
+        isUp: boolean;
+    }
 
     export interface Differential extends F<"Differential"> {
         coordSys: boolean;
@@ -1027,5 +1060,9 @@ namespace P {
     }
     export interface U<T extends string> {
         func: T;
+    }
+    export interface UNamed<T extends string> {
+        func: T;
+        name: string;
     }
 }

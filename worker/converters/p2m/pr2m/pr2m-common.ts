@@ -49,7 +49,7 @@ export class Pr2MCommon extends Pr2MItemBase {
         }
     }
 
-    opJoin(args: P2Pr.Symbol[], textOrBlock?: string | (() => BlockModel), wrapBehavior?: "wrapEvenShortHand" | ((s: Symbol, rs: Pr2M.CResult, idx: number) => boolean)): Pr2M.CResult {
+    opJoin(args: P2Pr.Symbol[], textOrBlock?: string | (() => BlockModel), wrapBehavior?: Pr2MCommon.JoinWrapBehavior): Pr2M.CResult {
         let items = args.map(a => this.main.c(a));
         let blocks: BlockModel[] = [];
         for (let idx = 0; idx < items.length; idx++) {
@@ -81,6 +81,8 @@ export namespace Pr2MCommon {
     export interface JoinOptions {
         wrapBracket: "if-op" | "if-op-exclude-mul-shortcut";
     }
+
+    export type JoinWrapBehavior = "wrapEvenShortHand" | ((s: Symbol, rs: Pr2M.CResult, idx: number) => boolean)
 }
 
 

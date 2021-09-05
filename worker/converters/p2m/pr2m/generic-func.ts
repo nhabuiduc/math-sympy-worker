@@ -34,15 +34,15 @@ export class GenericFunc extends Pr2MItemBase {
         let join: BlockModel[];
         if (argSeparator == ";|") {
             if (symbols.length <= 2) {
-                join = blockBd.joinBlocks(argSymbols.map(s => this.main.convert(s).blocks), ";");
+                join = blockBd.joinBlocks(argSymbols.map(s => this.main.c(s).blocks), ";");
             } else {
-                const first = this.main.convert(argSymbols[0]).blocks;
-                const secondJoin = blockBd.joinBlocks(argSymbols.slice(1).map(s => this.main.convert(s).blocks), () => blockBd.compositeBlock("\\middle|"));
+                const first = this.main.c(argSymbols[0]).blocks;
+                const secondJoin = blockBd.joinBlocks(argSymbols.slice(1).map(s => this.main.c(s).blocks), () => blockBd.compositeBlock("\\middle|"));
                 join = blockBd.joinBlocks([first, secondJoin], ";");
             }
         } else {
             const separator = argSeparator == "," ? "," : () => blockBd.compositeBlock("\\middle|")
-            join = blockBd.joinBlocks(argSymbols.map(s => this.main.convert(s).blocks), separator);
+            join = blockBd.joinBlocks(argSymbols.map(s => this.main.c(s).blocks), separator);
         }
 
         return {

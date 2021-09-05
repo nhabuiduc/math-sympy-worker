@@ -40,7 +40,7 @@ class __McHdl:
         return {'func':'Symbol', 'name':expr.name }
 
     def hdl_MatrixSymbol(self, expr):
-        return {'func':'Symbol', 'name':expr.name }
+        return {'func':'MatrixSymbol', 'name':expr.name }
 
     def hdl_RandomSymbol(self, expr):
         return {'func':'Symbol', 'name':expr.name }
@@ -463,6 +463,32 @@ class __McHdl:
             return {'func':'Differential', 'args': self.argsMap([Symbol(string)]), 'coordSys':True }
 
         return {'func':'Differential', 'args': self.argsMap([field]) }
+
+    def hdl_TensorIndex(self,d):    
+        return {'func':'TensorIndex', 'isUp': True if d.is_up else False, 'args': self.argsMap([d.args[0]]) }
+
+    def hdl_TensorElement(self,expr):
+        name = expr.expr.args[0].args[0]
+        indices = expr.expr.get_indices()
+        index_map = expr.index_map
+        newIdxMap = []
+        for idx in indices:
+            newIdxMap.append(index_map[idx] if (idx in index_map) else  None )
+
+        return {'func':'TensorElement', 'args': self.argsMap([name, indices,newIdxMap]) }
+
+    def hdl_Tensor(self,expr):
+        name = expr.args[0].args[0]
+        indices = expr.get_indices()
+        return {'func':'Tensor', 'args': self.argsMap([name, indices]) }
+
+    def hdl_TensMul(self,expr):
+        return {'func':'Mul', 'args': self.argsMap(expr.args) }
+
+    def hdl_TensAdd(self,expr):
+        return {'func':'Add', 'args': self.argsMap(expr.args) }
+    
+
 
     def hdlGenericFunc(self, name, args):
         dic = {}

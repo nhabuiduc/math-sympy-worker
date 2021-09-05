@@ -1344,7 +1344,106 @@ Y = MatrixSymbol('Y', 2, 2)
         expect(await th.run(`ArrayElement("A", (2, 1/(1-x), 0))`)).equal('[A][⛏️,[2,][frac,[1],[1-x]][,0]]');
     })
 
-    it.only("imaginary_unit", async () => {
+    it.only("tensor", async () => {
+        await th.prepare(`
+from sympy.tensor.tensor import TensorIndexType, tensor_indices, TensorHead, tensor_heads
+L = TensorIndexType("L")
+i, j, k, l = tensor_indices("i j k l", L)
+i0 = tensor_indices("i_0", L)
+A, B, C, D = tensor_heads("A B C D", [L])
+H = TensorHead("H", [L, L])
+K = TensorHead("K", [L, L, L, L])
+        `);
+
+        expect(await th.run(`i`)).equal('[💪,[i]]');
+        expect(await th.run(`-i`)).equal('[⛏️,[i]]');
+        expect(await th.run(`A(i)`)).equal('[A][💪,[i]]');
+        expect(await th.run(`A(i0)`)).equal('[A][💪,[i][⛏️,[0]]]');
+        expect(await th.run(`A(-i)`)).equal('[A][⛏️,[i]]');
+        expect(await th.run(`-3*A(i)`)).equal('[-3A][💪,[i]]');
+        expect(await th.run(`K(i, j, -k, -i0)`)).equal('[K][💪,[ij]][⛏️,[ki][⛏️,[0]]]');
+        expect(await th.run(`K(i, -j, -k, i0)`)).equal('[K][💪,[i]][⛏️,[jk]][💪,[i][⛏️,[0]]]');
+        expect(await th.run(`K(i, -j, k, -i0)`)).equal('[K][💪,[i]][⛏️,[j]][💪,[k]][⛏️,[i][⛏️,[0]]]');
+        expect(await th.run(`H(i, -j)`)).equal('[H][💪,[i]][⛏️,[j]]');
+        expect(await th.run(`H(i, j)`)).equal('[H][💪,[ij]]');
+        expect(await th.run(`H(-i, -j)`)).equal('[H][⛏️,[ij]]');
+        expect(await th.run(`(1+x)*A(i)`)).equal('([1+x])[A][💪,[i]]');
+        expect(await th.run(`H(i, -i)`)).equal('[H][💪,[L][⛏️,[0]]][⛏️,[L][⛏️,[0]]]');
+        expect(await th.run(`H(i, -j)*A(j)*B(k)`)).equal('[H][💪,[i]][⛏️,[L][⛏️,[0]]][A][💪,[L][⛏️,[0]]][B][💪,[k]]');
+        expect(await th.run(`A(i) + 3*B(i)`)).equal('[K][💪,[i=3,j]][⛏️,[k=2,l]]');
+        
+        await th.prepare(` from sympy.tensor.tensor import TensorElement`);
+        
+        expect(await th.run(`TensorElement(K(i, j, k, l), {i: 3, k: 2})`)).equal('[K][💪,[i=3,j,k=2,l]]');
+        expect(await th.run(`TensorElement(K(i, j, k, l), {i: 3})`)).equal('[K][💪,[i=3,j,k,l]]');
+        expect(await th.run(`TensorElement(K(i, -j, k, l), {i: 3, k: 2})`)).equal('[K][💪,[i][=][3]][⛏️,[j]][💪,[k=2,l]]');
+        expect(await th.run(`TensorElement(K(i, -j, k, -l), {i: 3, k: 2})`)).equal('[K][💪,[i][=][3]][⛏️,[j]][💪,[k][=][2]][⛏️,[l]]');
+        expect(await th.run(`TensorElement(K(i, j, -k, -l), {i: 3, -k: 2})`)).equal('[K][💪,[i][=][3]][⛏️,[j]][💪,[k][=][2]][⛏️,[l]]');
+    });
+
+    it("issue_15353", async () => {
+        await th.prepare(` 
+from sympy import ConditionSet, Tuple, S, sin, cos
+a, x = symbols('a x')
+sol = ConditionSet(Tuple(x, a), Eq(sin(a*x), 0) & Eq(cos(a*x), 0), S.Complexes**2)
+
+                `);
+
+        expect(await th.run(`sol`)).equal('{([x,a])[ ][middle|,][ ]([x,a])[∈][C,mathbb][💪,[2]][∧][sin,]([ax])[=0∧][cos,]([ax])[=0]}');
+    });
+
+    it("trace", async () => {
+        await th.prepare(` 
+from sympy import trace
+A1 = MatrixSymbol("A", 2, 2)
+
+                `);
+
+        expect(await th.run(`trace(A1)`)).equal('[⚙️,[tr]]([A])');
+        expect(await th.run(`trace(A1**2)`)).equal('[⚙️,[tr]]([A][💪,[2]])');
+    });
+
+    it("MatrixSymbol_bold", async () => {
+        await th.prepare(` 
+from sympy import trace
+A1 = MatrixSymbol("A", 2, 2)
+
+A2 = MatrixSymbol("A", 3, 3)
+B2 = MatrixSymbol("B", 3, 3)
+C2 = MatrixSymbol("C", 3, 3)
+
+A_k = MatrixSymbol("A_k", 3, 3)
+Anbla = MatrixSymbol(r"\\nabla_k", 3, 3)
+        `);
+
+        expect(await th.run(`A1`)).equal('[A]');
+        expect(await th.run(`A1`, { matrixSymbol: { style: "bold" } })).equal('[A,bf]');
+        expect(await th.run(`A1`, { matrixSymbol: { style: "plain" } })).equal('[A]');
+
+        expect(await th.run(`-A2`, { matrixSymbol: { style: "bold" } })).equal('[-][A,bf]');
+        expect(await th.run(`A2 - A2*B2 - B2`, { matrixSymbol: { style: "bold" } })).equal('[-][B,bf][-][AB,bf][+][A,bf]');
+        expect(await th.run(`-A2*B2 - A2*B2*C2 - B2`, { matrixSymbol: { style: "bold" } })).equal('[-][B,bf][-][AB,bf][-][ABC,bf]');
+        expect(await th.run(`A_k`, { matrixSymbol: { style: "bold" } })).equal('[A,bf][⛏️,[k,bf]]');
+        expect(await th.run(`Anbla`, { matrixSymbol: { style: "bold" } })).equal('[∇,bf][⛏️,[k,bf]]');
+
+
+    });
+
+    it("AppliedPermutation", async () => {
+        expect(await th.run(`AppliedPermutation(Permutation(0, 1, 2), Symbol('x'))`)).equal('[𝜎][⛏️,([0 1 2])]([x])');
+
+    });
+
+    it("PermutationMatrix", async () => {
+        await th.prepare(`
+p1 = Permutation(0, 1, 2)
+p2 = Permutation(0, 3)(1, 2)
+        `)
+
+        expect(await th.run(`PermutationMatrix(p1)`)).equal('[P][⛏️,([0;1;2])]');
+        expect(await th.run(`PermutationMatrix(p2)`)).equal('[P][⛏️,([0;3])([1;2])]');
+    })
+    it("imaginary_unit", async () => {
         await th.prepare(`from sympy import I`)
         expect(await th.run(`1 + I`)).equal('[1+i]');
         expect(await th.run(`1 + I`, { imaginaryUnit: { textStyle: true } })).equal('[1+][📜,[i]]');
@@ -1377,7 +1476,7 @@ s_field = g(R2.x, R2.y)
         expect(await th.run(`Differential(s_field)`)).equal('[⚙️,[d]]([g]([x,bf][,][y,bf]))');
     });
 
-    it("printing", async () => {
+    it("quantity", async () => {
         await th.prepare(`from sympy.physics.units import meter, gibibyte, microgram, second, planck_mass,planck_density, percent, degree, ohm, planck_power`)
         expect(await th.run(`5*meter`)).equal('[5][📜,[m]]');
         expect(await th.run(`3*gibibyte`)).equal('[3][📜,[gibibyte]]');

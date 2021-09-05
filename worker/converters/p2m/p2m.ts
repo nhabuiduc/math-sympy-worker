@@ -61,6 +61,9 @@ export class P2M {
         },
         imaginaryUnit: {
             textStyle: false,
+        },
+        matrixSymbol: {
+            style: "plain",
         }
     }
 }

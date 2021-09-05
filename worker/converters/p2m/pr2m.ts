@@ -12,6 +12,7 @@ import { Order } from "./pr2m/order";
 import { VarList } from "./pr2m/var-list";
 import { Subs } from "./pr2m/subs";
 import { Sum } from "./pr2m/sum";
+import { BinaryOp } from "./pr2m/binary-op";
 
 import { Pr2MCommon } from "./pr2m/pr2m-common";
 import { symbolIndexSerialize } from "@sympy-worker/symbol-index-serializer";
@@ -44,6 +45,7 @@ class Main {
     private varList = new VarList(this);
     private subs = new Subs(this);
     private sum = new Sum(this);
+    private binaryOp = new BinaryOp(this);
 
     public prCommon: Pr2MCommon = new Pr2MCommon(this);
     public genericFunc: GenericFunc;
@@ -72,17 +74,8 @@ class Main {
 
         switch (obj.type) {
             case "BinaryOp": {
-                const { op } = obj;
-                if (op == "↦") {
-                    return this.prCommon.opJoin(obj.symbols, op, (s) => {
-                        return s.type == "BinaryOp" && s.op == "↦";
-                    });
-                }
-
-                if (typeof op == "string") {
-                    return this.prCommon.opJoin(obj.symbols, op, obj.wrapIfMulShorthand ? "wrapEvenShortHand" : undefined);
-                }
-                return this.prCommon.opJoin(obj.symbols, () => blockBd.compositeBlock(op.cp), obj.wrapIfMulShorthand ? "wrapEvenShortHand" : undefined);
+                return this.binaryOp.convert(obj);
+                
             }
             case "UnaryOp": {
                 const rsArg0 = this.innerConvert(obj.symbols[0]);

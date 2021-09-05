@@ -7,7 +7,7 @@ import { Pr2MItemBase } from "./pr2m-item-base";
 export class VarList extends Pr2MItemBase {
     convert(obj: P2Pr.VarList): Pr2M.CResult {
         if (!obj.bracket && !obj.separator) {
-            return { blocks: blockBd.flattenBlocks(this.mapBlocksAndWrapIfRequire(obj.symbols, obj.wrapOnJoinIfRequire)) }
+            return { blocks: blockBd.flattenBlocks(this.mapBlocksAndWrapIfRequire(obj.symbols, obj.wrapItemOnJoinIfRequire)) }
         }
 
         let blocks: BlockModel[];
@@ -15,9 +15,9 @@ export class VarList extends Pr2MItemBase {
         if (obj.separator) {
 
             const separator = this.buildSeparatorBlock(obj.separator, obj.separatorSpacing);
-            blocks = blockBd.joinBlocks(this.mapBlocksAndWrapIfRequire(obj.symbols, obj.wrapOnJoinIfRequire), separator)
+            blocks = blockBd.joinBlocks(this.mapBlocksAndWrapIfRequire(obj.symbols, obj.wrapItemOnJoinIfRequire), separator)
         } else {
-            blocks = blockBd.flattenBlocks(this.mapBlocksAndWrapIfRequire(obj.symbols, obj.wrapOnJoinIfRequire))
+            blocks = blockBd.flattenBlocks(this.mapBlocksAndWrapIfRequire(obj.symbols, obj.wrapItemOnJoinIfRequire))
         }
 
 

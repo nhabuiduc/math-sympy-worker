@@ -25,6 +25,8 @@ class TestHelper {
             "rho": "𝜌",
             "Omega": "𝛺",
             "partial": "∂",
+            "sigma": "𝜎",
+            "nabla": "∇",
         }
     });
     async prepare(statement: string): Promise<void> {

@@ -414,13 +414,13 @@ class PrTransformHelper {
 
 
     var(text: string, more?: Partial<P2Pr.Var>): P2Pr.Var {
-        if(!text) {
+        if (!text) {
             throw new Error("empty use ")
         }
         return { type: "Var", kind: "Leaf", name: text, ...more };
     }
     empty(more?: Partial<P2Pr.Var>): P2Pr.Var {
-        return { type: "Var", kind: "Leaf", name: "?", nativeType:"Empty", ...more };
+        return { type: "Var", kind: "Leaf", name: "?", nativeType: "Empty", ...more };
     }
 
     quantity(pr: Symbol): P2Pr.Quantity {
@@ -465,6 +465,9 @@ class PrTransformHelper {
         return { type: "VarList", kind: "Container", symbols: ss, ...separatorOrOp };
     }
 
+    rel(op: P2Pr.Relational["relOp"], ss: Symbol[]): P2Pr.Relational {
+        return { type: "Relational", kind: "Container", relOp: op, symbols: ss }
+    }
     removeVarListBracket(s: Symbol): Symbol {
         if (s.type == "VarList") {
             return { ...s, bracket: undefined }
@@ -602,7 +605,7 @@ class PrTransformHelper {
         return { type: "BinaryOp", kind: "Container", op, symbols: ss, ...more };
     }
 
-    unary(s: Symbol, op: string, pos: P2Pr.UnaryOp["pos"]): P2Pr.UnaryOp {
+    unary(s: Symbol, op: P2Pr.UnaryOp["op"], pos: P2Pr.UnaryOp["pos"]): P2Pr.UnaryOp {
         return { type: "UnaryOp", kind: "Container", op, symbols: [s], pos };
     }
 
