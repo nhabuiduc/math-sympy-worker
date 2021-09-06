@@ -1339,19 +1339,42 @@ Y = MatrixSymbol('Y', 2, 2)
         expect(await th.run(`Transpose(Adjoint(X) + Y)`)).equal('([X][💪,[†]][+Y])[💪,[T]]');
     });
 
-    it("array_expressions", async () => {
-        expect(await th.run(`ArraySymbol("A", 2, 3, 4)`)).equal('[A]');
-        expect(await th.run(`ArrayElement("A", (2, 1/(1-x), 0))`)).equal('[A][⛏️,[2,][frac,[1],[1-x]][,0]]');
+    
+
+    it.only("Hadamard", async () => {
+        await th.prepare(`
+from sympy.matrices import MatrixSymbol, HadamardProduct, HadamardPower
+from sympy.matrices.expressions import MatAdd, MatMul, MatPow
+X = MatrixSymbol('X', 2, 2)
+Y = MatrixSymbol('Y', 2, 2)
+        `);
+        expect(await th.run(`HadamardProduct(X, Y*Y)`)).equal('([d↦][sin,]([d]))[⛏️,[∘]]([X][💪,[T]][X])');
+        expect(await th.run(`  X.applyfunc(Lambda(x, 1/x))`)).equal('([x↦][frac,[1],[x]])[⛏️,[∘]]([X])');
+    });
+    it("ElementwiseApplyFunction", async () => {
+        await th.prepare(`
+from sympy.matrices import MatrixSymbol
+X = MatrixSymbol('X', 2, 2)
+        `);
+        expect(await th.run(` (X.T*X).applyfunc(sin)`)).equal('([d↦][sin,]([d]))[⛏️,[∘]]([X][💪,[T]][X])');
+        expect(await th.run(`  X.applyfunc(Lambda(x, 1/x))`)).equal('([x↦][frac,[1],[x]])[⛏️,[∘]]([X])');
+    });
+    it("ZeroMatrix", async () => {
+        await th.prepare(`from sympy import ZeroMatrix `);
+        expect(await th.run(`ZeroMatrix(1,1)`, { matrixSymbol: { style: "plain" } })).equal('[0,mathbb]');
+        expect(await th.run(`ZeroMatrix(1,1)`, { matrixSymbol: { style: "bold" } })).equal('[0,bf]');
+    });
+    it("OneMatrix", async () => {
+        await th.prepare(`from sympy import OneMatrix `);
+        expect(await th.run(`OneMatrix(3,4)`, { matrixSymbol: { style: "plain" } })).equal('[1,mathbb]');
+        expect(await th.run(`OneMatrix(3,4)`, { matrixSymbol: { style: "bold" } })).equal('[1,bf]');
+    });
+    it("Identity", async () => {
+        await th.prepare(`from sympy import Identity `);
+        expect(await th.run(`Identity(1)`, { matrixSymbol: { style: "plain" } })).equal('[I,mathbb]');
+        expect(await th.run(`Identity(1)`, { matrixSymbol: { style: "bold" } })).equal('[I,bf]');
     });
 
-    it.only("Identity", async () => {
-        await th.prepare(`syms = symbols('a:f')`);
-
-        expect(await th.run(`And(*syms)`)).equal('[a∧b∧c∧d∧e∧f]');
-        expect(await th.run(`Or(*syms)`)).equal('[a∨b∨c∨d∨e∨f]');
-        expect(await th.run(`Equivalent(*syms)`)).equal('[a⇔b⇔c⇔d⇔e⇔f]');
-        expect(await th.run(`Xor(*syms)`)).equal('[a⊻b⊻c⊻d⊻e⊻f]');
-    })
     it("boolean_args_order", async () => {
         await th.prepare(`syms = symbols('a:f')`);
 
@@ -1379,13 +1402,13 @@ Y = MatrixSymbol('Y', 2, 2)
     })
     it("other_symbols", async () => {
         const ss = `\\hslash\\wp\\ell\\mho\\gimel\\beth\\aleph\\eth\\daleth\\hbar`;
-        const rs = `ℏ℘ℓ℧ℷℶℵðℸℏ`.split("").filter(c=>c);
-        const split=ss.split("\\").filter(c=>c);
+        const rs = `ℏ℘ℓ℧ℷℶℵðℸℏ`.split("").filter(c => c);
+        const split = ss.split("\\").filter(c => c);
         for (let idx = 0; idx < split.length; idx++) {
             console.log(split[idx]);
             expect(await th.run(`symbols("${split[idx]}")`)).equal(`[${rs[idx]}]`);
         }
-        
+
     });
 
     it("modifiers", async () => {
@@ -1878,4 +1901,8 @@ f, g, h = symbols('f g h', cls=Function)
         await th.prepare(` from sympy.core.symbol import Str`);
         expect(await th.run(`str(Str('x'))`)).equal('[x]');
     })
+    it("array_expressions", async () => {
+        expect(await th.run(`ArraySymbol("A", 2, 3, 4)`)).equal('[A]');
+        expect(await th.run(`ArrayElement("A", (2, 1/(1-x), 0))`)).equal('[A][⛏️,[2,][frac,[1],[1-x]][,0]]');
+    });
 });

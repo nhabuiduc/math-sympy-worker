@@ -30,6 +30,7 @@ class TestHelper {
             "nabla": "∇",
             "wedge": "∧",
             "otimes": "⊗",
+            "circ": "∘",
         }
     });
     async prepare(statement: string): Promise<void> {

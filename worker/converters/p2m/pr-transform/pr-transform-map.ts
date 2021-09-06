@@ -19,8 +19,8 @@ export class PrTransformMap<TContext extends object> {
     private innerMap(main: Symbol, ctx: TContext): Symbol {
         let newMain = main;
         switch (main.type) {
-            case "Derivative":
             case "GenericFunc":
+            case "Derivative":
             case "Matrix":
             case "OverSymbol":
             case "Piecewise":
@@ -53,6 +53,12 @@ export class PrTransformMap<TContext extends object> {
                 }
                 if (children != main.symbols) {
                     newMain = { ...main, symbols: children };
+                }
+                if (newMain.type == "GenericFunc" && typeof newMain.func != "string") {
+                    const newFunc = this.innerMap(newMain.func, ctx);
+                    if (newFunc && newFunc != newMain.func) {
+                        newMain = { ...newMain, func: newFunc }
+                    }
                 }
 
                 break;

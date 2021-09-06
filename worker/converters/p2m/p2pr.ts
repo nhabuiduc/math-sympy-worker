@@ -717,6 +717,19 @@ class Main {
             case "Xor": {
                 return prTh.bin(this.m(obj.args), "⊻");
             }
+            case "Identity": {
+                return prTh.var("I", { bold: this.ops.matrixSymbol?.style == "plain" ? "blackboard" : true })
+            }
+            case "OneMatrix": {
+                return prTh.var("1", { bold: this.ops.matrixSymbol?.style == "plain" ? "blackboard" : true })
+            }
+            case "ZeroMatrix": {
+                return prTh.var("0", { bold: this.ops.matrixSymbol?.style == "plain" ? "blackboard" : true })
+            }
+            case "ElementwiseApplyFunction":{
+                const ss = this.m(obj.args);
+                return prTh.index(prTh.genFunc(ss[0],[ss[1]]),prTh.var("∘"))
+            }
 
         }
 
@@ -951,7 +964,7 @@ namespace P {
         F<"BaseScalarField"> | F<"BaseVectorField"> | Differential | F<"PermutationMatrix"> | F<"AppliedPermutation"> |
         UNamed<"MatrixSymbol"> | F<"Trace"> | TensorIndex | F<"Tensor"> | F<"TensorElement"> | F<"PartialDerivative"> |
         F<"WedgeProduct"> | F<"TensorProduct"> | F<"Quaternion"> | F<"Series"> | F<"KroneckerProduct"> | F<"MatrixElement"> |
-        F<"Equivalent"> | F<"Xor"> |
+        F<"Equivalent"> | F<"Xor"> | U<"Identity"> | U<"OneMatrix"> | U<"ZeroMatrix"> | F<"ElementwiseApplyFunction"> |
         UnknownFunc;
 
 

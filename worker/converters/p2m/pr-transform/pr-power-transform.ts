@@ -58,6 +58,7 @@ export class PrPowerTransform extends PrBaseTransform {
 
     private transformPowNegativeOne = (s: Symbol): Symbol => {
         if (this.isAllow(s) && prTh.isNegativeOne(s.symbols[1])) {
+            
             /**ignore one  */
             if (prTh.isOne(s.symbols[0])) {
                 return s;
