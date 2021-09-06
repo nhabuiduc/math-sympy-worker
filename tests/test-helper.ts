@@ -20,6 +20,7 @@ class TestHelper {
             "theta": "𝜃",
             "phi": "𝜙",
             "pi": "𝜋",
+            "Pi": "𝛱",
             "delta": "𝛿",
             "mu": "𝜇",
             "rho": "𝜌",

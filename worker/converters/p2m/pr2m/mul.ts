@@ -18,12 +18,13 @@ export class Mul extends Pr2MItemBase {
         const blockss: BlockModel[][] = [];
         let lastBracketChecked: boolean | "wrap-if-shortcut-after" = false;
 
-        
+        const unevaluatedDetected = prTh.detectUnevaluatedMul(obj);
+
         for (let idx = 0; idx < items.length; idx++) {
             const item = items[idx];
             const curArg = symbols[idx];
 
-            if (idx == 0 && prTh.isNegativeOne(curArg) && !obj.unevaluatedDetected) {
+            if (!unevaluatedDetected && idx == 0 && prTh.isNegativeOne(curArg)) {
                 isNegative = true;
                 continue;
             }

@@ -5,7 +5,7 @@ export class Symbol {
     }
 
     parse(name: string, boldType?: P2Pr.BoldType): P2Pr.Symbol {
-        return this.nameParser.parse(name, (cn) => ({ type: "Var", kind: "Leaf", name: cn, bold: boldType }), boldType)
+        return this.nameParser.parseSymbol(name, boldType);
     }
 }
 

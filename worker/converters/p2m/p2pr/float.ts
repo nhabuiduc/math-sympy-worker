@@ -19,7 +19,7 @@ class Float {
         if (exp[0] == "+") {
             exp = exp.substr(1);
         }
-        return prTh.mul([prTh.float(mant), prTh.pow(prTh.int(10), prTh.float(exp))], { unevaluatedDetected: true })
+        return prTh.mul([prTh.float(mant), prTh.pow(prTh.int(10), prTh.float(exp))])
     }
 }
 

@@ -1,7 +1,9 @@
 import { P2Pr } from "../p2pr";
 
 export class PrTransformMap<TContext extends object> {
-    constructor(private transform: (s: Symbol, ctx: TContext) => Symbol, private enabled: (ops: P2Pr.TransformOptions, ctx: TContext) => boolean) {
+    constructor(
+        private transform: (s: Symbol, ctx: TContext) => Symbol,
+        private enabled: (ops: P2Pr.TransformOptions, ctx: TContext) => boolean) {
 
     }
 

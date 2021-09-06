@@ -1342,11 +1342,135 @@ Y = MatrixSymbol('Y', 2, 2)
     it("array_expressions", async () => {
         expect(await th.run(`ArraySymbol("A", 2, 3, 4)`)).equal('[A]');
         expect(await th.run(`ArrayElement("A", (2, 1/(1-x), 0))`)).equal('[A][⛏️,[2,][frac,[1],[1-x]][,0]]');
-    })
+    });
 
-    it.only("13651", async () => {
+    it.only("modifiers(", async () => {
+        expect(await th.run(`symbols("xMathring")`)).equal('[ring,[x]]');
+        expect(await th.run(`symbols("xCheck")`)).equal('[check,[x]]');
+        expect(await th.run(`symbols("xBreve")`)).equal('[breve,[x]]');
+        expect(await th.run(`symbols("xAcute")`)).equal('[acute,[x]]');
+        expect(await th.run(`symbols("xGrave")`)).equal('[grave,[x]]');
+        expect(await th.run(`symbols("xTilde")`)).equal('[small-tilde,[x]]');
+        expect(await th.run(`symbols("xPrime")`)).equal("[x']");
+        expect(await th.run(`symbols("xddDDot")`)).equal('[ddddot,[x]]');
+        expect(await th.run(`symbols("xDdDot")`)).equal('[dddot,[x]]');
+        expect(await th.run(`symbols("xDDot")`)).equal('[ddot,[x]]');
+        expect(await th.run(`symbols("xBold")`)).equal('[x,bf]');
+        expect(await th.run(`symbols("xnOrM")`)).equal('|[x]|');
+        expect(await th.run(`symbols("xAVG")`)).equal('<[x]>');
+        expect(await th.run(`symbols("xHat")`)).equal('[🎩,[x]]');
+        expect(await th.run(`symbols("xDot")`)).equal('[dot,[x]]');
+        expect(await th.run(`symbols("xBar")`)).equal('[overline,[x]]');
+        expect(await th.run(`symbols("xVec")`)).equal('[overrightarrow,[x]]');
+        expect(await th.run(`symbols("xAbs")`)).equal('|[x]|');
+        expect(await th.run(`symbols("xMag")`)).equal('|[x]|');
+        expect(await th.run(`symbols("xPrM")`)).equal("[x']");
+        expect(await th.run(`symbols("xBM")`)).equal('[x,boldsymbol]');
+    })
+    it("greek_symbols(", async () => {
+        expect(await th.run(`Symbol('alpha')`)).equal('[𝛼]');
+        expect(await th.run(`Symbol('beta')`)).equal('[𝛽]');
+
+        /**there are more, but no need */
+    })
+    it("fancyset_symbols", async () => {
+        expect(await th.run(`S.Rationals`)).equal('[Q,mathbb]');
+        expect(await th.run(`S.Naturals`)).equal('[N,mathbb]');
+        expect(await th.run(`S.Naturals0`)).equal('[N,mathbb][⛏️,[0]]');
+        expect(await th.run(`S.Integers`)).equal('[Z,mathbb]');
+        expect(await th.run(`S.Reals`)).equal('[R,mathbb]');
+        expect(await th.run(`S.Complexes`)).equal('[C,mathbb]');
+    });
+    it("builtin_no_args", async () => {
+        await th.prepare(`from sympy import beta`);
+        expect(await th.run(`Chi`)).equal('[⚙️,[Chi]]');
+        expect(await th.run(`beta`)).equal('[⚙️,[B]]');
+        expect(await th.run(`gamma`)).equal('[𝛤]');
+        expect(await th.run(`KroneckerDelta`)).equal('[𝛿]');
+        expect(await th.run(`DiracDelta`)).equal('[𝛿]');
+        expect(await th.run(`lowergamma`)).equal('[𝛾]');
+    });
+    it("6853", async () => {
+        expect(await th.run(`p = Function('Pi')(x)`)).equal('[𝛱]([x])');
+    });
+
+    it("Mul", async () => {
+        expect(await th.run(`Mul(-2, x + 1, evaluate=False)`)).equal('[-2]([1+x])');
+        expect(await th.run(`Mul(2, x + 1, evaluate=False)`)).equal('[2]([1+x])');
+        expect(await th.run(`Mul(S.Half, x + 1, evaluate=False)`)).equal('[frac,[1+x],[2]]');
+        expect(await th.run(`Mul(y, x + 1, evaluate=False)`)).equal('[y]([1+x])');
+        expect(await th.run(`Mul(-y, x + 1, evaluate=False)`)).equal('[-y]([1+x])');
+        expect(await th.run(`Mul(-2, x + 1)`)).equal('[-2-2x]');
+        expect(await th.run(`Mul(2, x + 1)`)).equal('[2+2x]');
 
     })
+    it("Pow", async () => {
+        await th.prepare(`
+e = Pow(2, 2, evaluate=False)
+x2 = Symbol(r'x^2')
+        `);
+
+        expect(await th.run(`e`)).equal('[2][💪,[2]]');
+        expect(await th.run(`x**(Rational(-1, 3))`)).equal('[frac,[1],[sqrt,[x],[3]]]');
+        expect(await th.run(`x2**2`)).equal('[¬]([x⇔y])');
+    })
+    it("7180", async () => {
+        expect(await th.run(`Equivalent(x, y)`)).equal('[x⇔y]');
+        expect(await th.run(`Not(Equivalent(x, y))`)).equal('[¬]([x⇔y])');
+        /**TODO: handle not properly */
+    })
+    it("8409", async () => {
+        expect(await th.run(`S.Half**n`)).equal('([frac,[1],[2]])[💪,[n]]');
+    })
+    it("8470", async () => {
+        await th.prepare(`
+from sympy.parsing.sympy_parser import parse_expr
+e = parse_expr("-B*A", evaluate=False)
+        `)
+        expect(await th.run(`e`)).equal('[-AB]');
+    });
+    it("15439", async () => {
+        await th.prepare(`
+x = MatrixSymbol('x', 2, 2)
+y = MatrixSymbol('y', 2, 2)
+        `)
+        expect(await th.run(`(x * y).subs(y, -y)`)).equal('[-xy]');
+        expect(await th.run(`(x * y).subs(y, -2*y)`)).equal('[x]([-2])[y]');
+        expect(await th.run(`(x * y).subs(x, -x)`)).equal('[-xy]');
+    });
+
+    it.skip("2934", async () => {
+        /**
+        assert latex(Symbol(r'\frac{a_1}{b_1}')) == r'\frac{a_1}{b_1}'
+         */
+    });
+    it.skip("10489", async () => {
+        /**
+        latexSymbolWithBrace = r'C_{x_{0}}'
+    s = Symbol(latexSymbolWithBrace)
+    assert latex(s) == latexSymbolWithBrace
+    assert latex(cos(s)) == r'\cos{\left(C_{x_{0}} \right)}'
+         */
+    });
+    it.skip("12886", async () => {
+        /**
+         *  m__1, l__1 = symbols('m__1, l__1')
+    assert latex(m__1**2 + l__1**2) == \
+        r'\left(l^{1}\right)^{2} + \left(m^{1}\right)^{2}'
+         */
+    });
+
+    it("13559", async () => {
+        await th.prepare(`
+from sympy.parsing.sympy_parser import parse_expr
+expr = parse_expr('5/1', evaluate=False)
+        `)
+        expect(await th.run(`expr`)).equal('[5×1][💪,[-1]]');
+    });
+    it("13651", async () => {
+        expect(await th.run(`c + Mul(-1, a + b, evaluate=False)`)).equal('[c-]([a+b])');
+    });
+
     it("MatrixElement", async () => {
         await th.prepare(`
 # test cases for issue #11821

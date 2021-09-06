@@ -2,8 +2,8 @@ import type { P2Pr } from "../p2pr";
 import { PrBaseTransform } from "./pr-base-transform";
 import { prTh } from "./pr-transform-helper";
 
-export class PrMulTransform extends PrBaseTransform {
-    protected initCtx(): {} {
+export class PrMulTransform extends PrBaseTransform<Ctx> {
+    protected initCtx(): Ctx {
         return {};
     }
     override initTransform() {
@@ -11,6 +11,7 @@ export class PrMulTransform extends PrBaseTransform {
             this.makeTransform(this.flattenMul, op => op.mul?.flatten),
             this.makeTransform(this.orderTransform, op => op.mul?.order),
             this.makeTransform(this.specialCasesTransform, () => true),
+            this.makeTransform(prTh.normalizeMul, (_, ctx) => ctx.flattenApplied),
         ]
     }
 
@@ -21,9 +22,9 @@ export class PrMulTransform extends PrBaseTransform {
         }
         return s;
     }
-    
+
     private orderTransform = (symbol: Symbol): P2Pr.Symbol => {
-        if (symbol.type == "Mul" && !symbol.unevaluatedDetected) {
+        if (symbol.type == "Mul" && !prTh.detectUnevaluatedMul(symbol)) {
             return { ...symbol, symbols: this.orderSymbols(symbol.symbols) };
         }
         return symbol;
@@ -57,19 +58,20 @@ export class PrMulTransform extends PrBaseTransform {
         return symbols;
     }
 
-    private flattenMul = (symbol: Symbol): Symbol => {
+    private flattenMul = (symbol: Symbol, ctx: Ctx): Symbol => {
         if (symbol.type == "Mul") {
-            return { ...symbol, symbols: this.flattenMulWith(symbol.symbols) }
+            return { ...symbol, symbols: this.flattenMulWith(symbol.symbols, ctx) }
         }
 
         return symbol;
     }
 
-    private flattenMulWith(symbols: Symbol[]): Symbol[] {
+    private flattenMulWith(symbols: Symbol[], ctx: Ctx): Symbol[] {
         let rs: Symbol[] = [];
         for (const s of symbols) {
             if (s.type == "Mul") {
                 rs = rs.concat(s.symbols);
+                ctx.flattenApplied = true;
             } else {
                 rs = rs.concat([s]);
             }
@@ -79,5 +81,8 @@ export class PrMulTransform extends PrBaseTransform {
 
 }
 
+interface Ctx {
+    flattenApplied?: boolean;
+}
 
 type Symbol = P2Pr.Symbol;

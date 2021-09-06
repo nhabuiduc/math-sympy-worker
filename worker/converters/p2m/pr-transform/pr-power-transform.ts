@@ -13,6 +13,7 @@ export class PrPowerTransform extends PrBaseTransform {
             this.makeTransform(this.transformPowNegativeInt, op => op.pow?.negativeIntegerToFrac),
             this.makeTransform(this.transformPowHalf, op => op.pow?.halfToRootSquare),
             this.makeTransform(this.transformPowOneOfInt, op => op.pow?.oneOfIntegerToPowOfRootSquare),
+            this.makeTransform(this.transformPowNegativeOneOfInt, op => op.pow?.negativeOneOfIntegerToPowOfRootSquare),
             this.makeTransform(this.transformPowOfOne, () => true),
             this.makeTransform(this.transformMergeIndex, () => true),
         ]
@@ -88,16 +89,23 @@ export class PrPowerTransform extends PrBaseTransform {
     }
     private transformPowHalf = (s: Symbol): Symbol => {
         if (this.isAllow(s) && prTh.matchRationalFrac(s.symbols[1], 1, 2)) {
-            
+
             return this.powerRationalToSqrt(this.mergedWithRemaningIdx(s.symbols[0], s), s.symbols[1], s);
+        }
+
+        return s;
+    }
+    private transformPowNegativeOneOfInt = (s: Symbol): Symbol => {
+        if (this.isAllow(s) && prTh.matchRationalFrac(s.symbols[1], -1)) {
+            return this.powerRationalToSqrt(this.mergedWithRemaningIdx(s.symbols[0], s), s.symbols[1], s)
         }
 
         return s;
     }
     private transformPowOneOfInt = (s: Symbol): Symbol => {
         if (this.isAllow(s) && prTh.matchRationalFrac(s.symbols[1], 1)) {
-            
-            const [denominator] = prTh.extractRationalFrac(s.symbols[1]);
+
+            const [_enumberator, denominator] = prTh.extractRationalFrac(s.symbols[1]);
             /**handle by  transformPowHalf already */
             if (denominator == 2) {
                 return s;
@@ -110,20 +118,22 @@ export class PrPowerTransform extends PrBaseTransform {
 
     private powerRationalToSqrt(base: Symbol, rational: P2Pr.Frac, defaultSymbol: Symbol): Symbol {
         const [enumerator, denominator] = prTh.extractRationalFrac(rational);
+        if (enumerator == 1 && denominator == 1) {
+            return defaultSymbol;
+        }
+
         if (enumerator == 1 && denominator == 2) {
-            return {
-                type: "Sqrt",
-                kind: "Container",
-                symbols: [base]
-            }
+            return prTh.sqrt(base);
+        }
+        if (enumerator == -1 && denominator == 2) {
+            return prTh.frac(prTh.one(), prTh.sqrt(base));
         }
 
         if (enumerator == 1) {
-            return {
-                type: "Sqrt",
-                kind: "Container",
-                symbols: [base, prTh.int(denominator)]
-            }
+            return prTh.sqrt(base, prTh.int(denominator))
+        }
+        if (enumerator == -1) {
+            return prTh.frac(prTh.one(), prTh.sqrt(base, prTh.int(denominator)));
         }
 
         if (prTh.isPositiveInt(base)) {

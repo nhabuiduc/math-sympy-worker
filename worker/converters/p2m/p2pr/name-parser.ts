@@ -6,6 +6,25 @@ export class NameParser {
 
     }
 
+    parseSymbol(name: string, boldType?: P2Pr.BoldType): P2Pr.Symbol {
+        return this.matchModifier(name, boldType);
+    }
+
+    private matchModifier(name: string, boldType?: P2Pr.BoldType): Symbol {
+        if (!name) {
+            return prTh.empty();
+        }
+
+        for (const [key, vl] of this.modifierMap) {
+            console.log("here: ", name, key);
+            if (name.length > key.length && name.toLowerCase().endsWith(key)) {
+                return vl(this.matchModifier(name.substr(0, name.length - key.length)));
+            }
+        }
+
+        return this.parse(name, (n) => prTh.var(n), boldType)
+    }
+
     parse(name: string, func: (name: string) => P2Pr.Symbol, boldType?: P2Pr.BoldType): P2Pr.Symbol {
         const splitIdx = name.indexOf("|");
         if (splitIdx > 0) {
@@ -91,6 +110,30 @@ export class NameParser {
 
         return symbolNameMap[n] || this.symbolLatexNames[latexName] || n;
     }
+
+    private modifierMap = new Map<string, (s: Symbol) => Symbol>([
+        ["mathring", (s: Symbol) => prTh.over("ring", s)],
+        ["check", (s: Symbol) => prTh.over("check", s)],
+        ["breve", (s: Symbol) => prTh.over("breve", s)],
+        ["acute", (s: Symbol) => prTh.over("acute", s)],
+        ["grave", (s: Symbol) => prTh.over("grave", s)],
+        ["tilde", (s: Symbol) => prTh.over("small-tilde", s)],
+        ["prime", (s: Symbol) => prTh.varList([s, prTh.var("'")], { visualInfo: "asShorthandMul" })],
+        ["ddddot", (s: Symbol) => prTh.over("ddddot", s)],
+        ["dddot", (s: Symbol) => prTh.over("dddot", s)],
+        ["ddot", (s: Symbol) => prTh.over("ddot", s)],
+        ["bold", (s: Symbol) => prTh.applyBold(s, true)],
+        ["norm", (s: Symbol) => prTh.varList([s], { bracket: "|" })],
+        ["avg", (s: Symbol) => prTh.varList([s], { bracket: "<" })],
+        ["hat", (s: Symbol) => prTh.over("small-hat", s)],
+        ["dot", (s: Symbol) => prTh.over("dot", s)],
+        ["bar", (s: Symbol) => prTh.over("overline", s)],
+        ["vec", (s: Symbol) => prTh.over("overrightarrow", s)],
+        ["abs", (s: Symbol) => prTh.varList([s], { bracket: "|" })],
+        ["mag", (s: Symbol) => prTh.varList([s], { bracket: "|" })],
+        ["prm", (s: Symbol) => prTh.varList([s, prTh.var("'")], { visualInfo: "asShorthandMul" })],
+        ["bm", (s: Symbol) => prTh.applyBold(s, "boldsymbol")],
+    ])
 }
 
 const symbolNameMap: { [name: string]: string } = {
@@ -99,3 +142,4 @@ const symbolNameMap: { [name: string]: string } = {
     "TAU": "𝜏",
     "taU": "𝜏",
 }
+type Symbol = P2Pr.Symbol;

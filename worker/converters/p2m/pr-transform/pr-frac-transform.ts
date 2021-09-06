@@ -16,7 +16,7 @@ export class PrFracTransform extends PrBaseTransform<TransformCtx> {
             this.makeTransform(this.transformAddFracs, op => op.frac?.combineAdd),
             this.makeTransform(this.transformLogFrac, op => op.frac?.combineLogFrac),
             this.makeTransform(this.transformNumOrDenMinus, op => op.frac?.extractMinus),
-            this.makeTransform(this.normalizeMul, (_op, ctx) => ctx.minusApplied),
+            this.makeTransform(prTh.normalizeMul, (_op, ctx) => ctx.minusApplied),
         ]
     }
 
@@ -72,30 +72,7 @@ export class PrFracTransform extends PrBaseTransform<TransformCtx> {
         return symbol;
     }
 
-    /** remove multiple One or Negative One, and bring NegativeOne on top */
-    private normalizeMul = (symbol: Symbol): Symbol => {
-        if (symbol.type == "Mul") {
-            let rsSymbols: Symbol[] = [];
-            let currentSign = 1;
-            for (const s of symbol.symbols) {
-                if (prTh.isNegativeOne(s)) {
-                    currentSign = -currentSign;
-                } else if (prTh.isOne(s)) {
 
-                } else {
-                    rsSymbols.push(s);
-                }
-            }
-
-            if (currentSign < 0) {
-                rsSymbols = [prTh.negativeOne() as Symbol].concat(rsSymbols);
-            }
-
-            return { ...symbol, symbols: rsSymbols };
-        }
-
-        return symbol;
-    }
 
     private transformNumOrDenMinus = (symbol: Symbol, ctx: TransformCtx): Symbol => {
         if (symbol.type == "Frac") {
@@ -207,7 +184,7 @@ export class PrFracTransform extends PrBaseTransform<TransformCtx> {
     }
 
     private transformMultipleInverseFrac = (symbol: Symbol): Symbol => {
-        if (symbol.type == "Mul" && !symbol.unevaluatedDetected) {
+        if (symbol.type == "Mul" && !prTh.detectUnevaluatedMul(symbol)) {
             const children = this.combineInverseFrac(symbol.symbols);
             if (children.length <= 1) {
                 return children[0];
@@ -269,7 +246,7 @@ export class PrFracTransform extends PrBaseTransform<TransformCtx> {
                 return children[0];
             }
 
-            const orderedChildren = symbol.unevaluatedDetected ? children : this.combineMulFracs(children);
+            const orderedChildren = prTh.detectUnevaluatedMul(symbol) ? children : this.combineMulFracs(children);
             if (orderedChildren.length == 1) {
                 return orderedChildren[0];
             }
@@ -319,7 +296,7 @@ export class PrFracTransform extends PrBaseTransform<TransformCtx> {
             return symbols[0];
         }
 
-        return { type: "Mul", unevaluatedDetected: false, kind: "Container", symbols }
+        return { type: "Mul", kind: "Container", symbols }
     }
 }
 

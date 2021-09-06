@@ -147,7 +147,6 @@ class Main {
                 return {
                     type: "Mul",
                     kind: "Container",
-                    unevaluatedDetected: this.detectUnevaluatedMul(symbols),
                     symbols: symbols
                 }
             }
@@ -225,7 +224,7 @@ class Main {
                     type: "Index",
                     kind: "Container",
                     symbols: [
-                        prTh.over("hat", vName, { bold: true }),
+                        prTh.over("small-hat", vName, { bold: true }),
                         { type: "Var", kind: "Leaf", name: sName, bold: true }
                     ]
                 }
@@ -254,10 +253,10 @@ class Main {
                 return { type: "Add", kind: "Container", symbols: this.m(obj.args) }
             }
             case "VectorMul": {
-                return { type: "Mul", kind: "Container", unevaluatedDetected: true, symbols: this.m(obj.args) }
+                return { type: "Mul", kind: "Container", symbols: this.m(obj.args) }
             }
             case "VectorZero": {
-                return prTh.over("hat", "0", { bold: true });
+                return prTh.over("small-hat", "0", { bold: true });
             }
             case "Point": {
                 return { type: "GenericFunc", kind: "Container", func: (obj.args[0] as P.Str).text, symbols: this.m(obj.args) }
@@ -712,6 +711,9 @@ class Main {
                 const ss = this.m(obj.args);
                 return prTh.index(ss[0], prTh.varList(ss.slice(1), ","));
             }
+            case "Equivalent": {
+                return prTh.bin(this.m(obj.args), "⇔");
+            }
 
         }
 
@@ -726,9 +728,7 @@ class Main {
         return args.map(c => this.c(c));
     }
 
-    private detectUnevaluatedMul(symbols: Symbol[]): boolean {
-        return (symbols[0].type == "Var" && symbols[0].nativeType == "One") || symbols.some((c, idx) => idx > 0 && prTh.isConstant(c));
-    }
+
 
     private getListSeparator() {
         return this.ops.float?.decimalSeprator == "comma" ? ";" : ",";
@@ -772,7 +772,7 @@ export namespace P2Pr {
 
     export interface BinaryOp extends Container {
         type: "BinaryOp";
-        op: "↦" | "×" | "∧" | "⇒" | "∨" | "⧵" | "▵" | "∩" | "∪" | "⋅" | "mod" | "rightarrow" | "⊗" | " ";
+        op: "↦" | "×" | "∧" | "⇒" | "∨" | "⧵" | "▵" | "∩" | "∪" | "⋅" | "mod" | "rightarrow" | "⊗" | "⇔";
         wrapIfMulShorthand?: boolean;
     }
     export interface UnaryOp extends Container {
@@ -788,7 +788,7 @@ export namespace P2Pr {
 
     export interface OverSymbol extends Container {
         type: "OverSymbol";
-        op: "hat" | "overline";
+        op: "small-hat" | "overline" | "ring" | "check" | "breve" | "acute" | "grave" | "small-tilde" | "prime" | "ddddot" | "dddot" | "ddot"|"dot"|"overrightarrow";
         bold?: boolean;
     }
 
@@ -809,7 +809,6 @@ export namespace P2Pr {
 
     export interface Mul extends Container {
         type: "Mul";
-        unevaluatedDetected: boolean;
     }
 
     export interface Matrix extends Container {
@@ -896,6 +895,7 @@ export namespace P2Pr {
             negativeIntegerToFrac?: boolean;
             halfToRootSquare?: boolean;
             oneOfIntegerToPowOfRootSquare?: boolean;
+            negativeOneOfIntegerToPowOfRootSquare?: boolean;
         };
         sqrt?: {
             combineMul?: boolean;
@@ -948,6 +948,7 @@ namespace P {
         F<"BaseScalarField"> | F<"BaseVectorField"> | Differential | F<"PermutationMatrix"> | F<"AppliedPermutation"> |
         UNamed<"MatrixSymbol"> | F<"Trace"> | TensorIndex | F<"Tensor"> | F<"TensorElement"> | F<"PartialDerivative"> |
         F<"WedgeProduct"> | F<"TensorProduct"> | F<"Quaternion"> | F<"Series"> | F<"KroneckerProduct"> | F<"MatrixElement"> |
+        F<"Equivalent"> |
         UnknownFunc;
 
 
@@ -1044,7 +1045,7 @@ namespace P {
         vectorNames: string[];
     }
 
-    export type BoldType = boolean | "blackboard" | "calligraphic";
+    export type BoldType = boolean | "blackboard" | "calligraphic" | "boldsymbol";
 
     export interface Dummy {
         func: "Dummy";

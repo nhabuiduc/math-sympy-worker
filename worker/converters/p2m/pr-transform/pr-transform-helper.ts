@@ -4,6 +4,7 @@ import type { P2Pr } from "../p2pr";
 import { Pr2M } from "../pr2m";
 import dequal from "fast-deep-equal";
 import { prSymbolVisuallyInfo } from "./pr-symbol-visually-info";
+import { PrTransformMap } from "./pr-transform-map";
 
 
 
@@ -149,8 +150,13 @@ class PrTransformHelper {
         return this.mul(ss);
     }
     mul(ss: Symbol[], more?: Partial<P2Pr.Mul>): P2Pr.Mul {
-        return { type: "Mul", kind: "Container", symbols: ss, unevaluatedDetected: false, ...more }
+        return { type: "Mul", kind: "Container", symbols: ss, ...more }
         // return ss.reduce((prev, cur) => prev ? this.mulOf2(prev, cur) : cur, undefined as P2Pr.Mul) as P2Pr.Mul;
+    }
+
+    detectUnevaluatedMul(s: P2Pr.Mul): boolean {
+        const { symbols } = s;
+        return (symbols[0].type == "Var" && symbols[0].nativeType == "One") || symbols.some((c, idx) => idx > 0 && prTh.isInt(c));
     }
 
     zeroOrSingleOr(ss: Symbol[], or: "mul" | "add") {
@@ -232,7 +238,20 @@ class PrTransformHelper {
         return false;
     }
 
+    sqrt(base: Symbol, root?: Symbol): P2Pr.Sqrt {
+        if (root) {
+            return { type: "Sqrt", kind: "Container", symbols: [base, root] }
+        }
+        return { type: "Sqrt", kind: "Container", symbols: [base] }
+    }
 
+    applyBold(s: Symbol, boldStyle: P2Pr.BoldType): Symbol {
+        return new PrTransformMap((s) => {
+            if (s.type == "Var") {
+                return { ...s, bold: boldStyle }
+            }
+        }, () => true).map(s, {}, {});
+    }
 
     matchRationalFrac(s: Symbol, num: number, den?: number): s is P2Pr.Frac {
         if (!this.isRationalFrac(s)) {
@@ -622,6 +641,31 @@ class PrTransformHelper {
     }
     float(val: string): P2Pr.Var {
         return this.var(val, { nativeType: "Float" });
+    }
+
+    /** remove multiple One or Negative One, and bring NegativeOne on top */
+    normalizeMul = (symbol: Symbol): Symbol => {
+        if (symbol.type == "Mul") {
+            let rsSymbols: Symbol[] = [];
+            let currentSign = 1;
+            for (const s of symbol.symbols) {
+                if (prTh.isNegativeOne(s)) {
+                    currentSign = -currentSign;
+                } else if (prTh.isOne(s)) {
+
+                } else {
+                    rsSymbols.push(s);
+                }
+            }
+
+            if (currentSign < 0) {
+                rsSymbols = [prTh.negativeOne() as Symbol].concat(rsSymbols);
+            }
+
+            return { ...symbol, symbols: rsSymbols };
+        }
+
+        return symbol;
     }
 }
 

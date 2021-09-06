@@ -52,6 +52,7 @@ export class P2M {
             negativeIntegerToFrac: true,
             negativeOneToFrac: true,
             oneOfIntegerToPowOfRootSquare: true,
+            negativeOneOfIntegerToPowOfRootSquare: true,
         },
         sqrt: {
             combineMul: true,

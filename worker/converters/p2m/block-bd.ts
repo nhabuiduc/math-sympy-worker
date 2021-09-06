@@ -39,17 +39,8 @@ class BlockBd {
         return { id: generator.nextId(), type: "single", text: bracket }
     }
     over(textOrBlocks: string | BlockModel[], name: P2Pr.OverSymbol["op"], style?: BlockStyle) {
-        let latexName: "\\small-hat" | "\\overline" = "\\small-hat";
-        switch (name) {
-            case "hat": {
-                latexName = "\\small-hat";
-                break;
-            }
-            case "overline": {
-                latexName = "\\overline";
-                break;
-            }
-        }
+        let latexName: BlockBd.SupportOverSymbolLatexName = `\\${name}`;
+
         if (typeof textOrBlocks == "string") {
             return this.compositeBlock(latexName, ["value"], [[this.textBlock(textOrBlocks)]], style);
         }
@@ -68,6 +59,8 @@ class BlockBd {
             style = { ...style, mathType: "\\mathbb" }
         } else if (obj.bold == "calligraphic") {
             style = { ...style, mathType: "\\mathcal" }
+        } else if (obj.bold == "boldsymbol") {
+            style = { ...style, mathType: "\\boldsymbol" }
         }
         else if (obj.bold) {
             style = { ...style, mathType: "\\mathbf" }
@@ -156,8 +149,8 @@ class BlockBd {
 
 
     compositeBlock(
-        name: "\\power-index" | "\\frac" | "\\sqrt" | "\\matrix" | "\\array" | "\\text" | "\\small-tilde" | "\\small-hat" | "\\middle|" |
-            "\\operatorname" | "\\overline" | "\\rightarrow" | "\\bmod" | "\\prescript" | "\\cases",
+        name: "\\power-index" | "\\frac" | "\\sqrt" | "\\matrix" | "\\array" | "\\text" | "\\middle|" |
+            "\\operatorname" | "\\overline" | "\\rightarrow" | "\\bmod" | "\\prescript" | "\\cases" | BlockBd.SupportOverSymbolLatexName,
         elementNames?: ("powerValue" | "indexValue" | "value" | "sub1" | "textValue")[],
         innerBlocks?: BlockModel[][],
         style?: BlockStyle): CompositeBlockModel;
@@ -319,5 +312,6 @@ export namespace BlockBd {
     export type SupportLeftBracket = "(" | "[" | "\\left\\angle" | "\\left\\lfloor" | "\\left\\lceil" | "\\left|" | "\\left." | "\\left{";
     export type SupportRightBracket = ")" | "]" | "\\right\\angle" | "\\right\\rfloor" | "\\right\\rceil" | "\\right|" | "\\right." | "\\right}";
     export type SupportBracket = SupportLeftBracket | SupportRightBracket;
+    export type SupportOverSymbolLatexName = `\\${P2Pr.OverSymbol["op"]}`;
 }
 type Symbol = P2Pr.Symbol;
