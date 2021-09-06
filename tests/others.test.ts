@@ -1344,7 +1344,51 @@ Y = MatrixSymbol('Y', 2, 2)
         expect(await th.run(`ArrayElement("A", (2, 1/(1-x), 0))`)).equal('[A][⛏️,[2,][frac,[1],[1-x]][,0]]');
     });
 
-    it.only("modifiers(", async () => {
+    it.only("Identity", async () => {
+        await th.prepare(`syms = symbols('a:f')`);
+
+        expect(await th.run(`And(*syms)`)).equal('[a∧b∧c∧d∧e∧f]');
+        expect(await th.run(`Or(*syms)`)).equal('[a∨b∨c∨d∨e∨f]');
+        expect(await th.run(`Equivalent(*syms)`)).equal('[a⇔b⇔c⇔d⇔e⇔f]');
+        expect(await th.run(`Xor(*syms)`)).equal('[a⊻b⊻c⊻d⊻e⊻f]');
+    })
+    it("boolean_args_order", async () => {
+        await th.prepare(`syms = symbols('a:f')`);
+
+        expect(await th.run(`And(*syms)`)).equal('[a∧b∧c∧d∧e∧f]');
+        expect(await th.run(`Or(*syms)`)).equal('[a∨b∨c∨d∨e∨f]');
+        expect(await th.run(`Equivalent(*syms)`)).equal('[a⇔b⇔c⇔d⇔e⇔f]');
+        expect(await th.run(`Xor(*syms)`)).equal('[a⊻b⊻c⊻d⊻e⊻f]');
+    })
+    it("imaginary", async () => {
+        expect(await th.run(`sqrt(-1)`)).equal('[i]');
+    })
+    it("builtins_without_args", async () => {
+        expect(await th.run(`sin`)).equal('[sin,]');
+        expect(await th.run(`cos`)).equal('[cos,]');
+        expect(await th.run(`Ei`)).equal('[⚙️,[Ei]]');
+        expect(await th.run(`zeta`)).equal('[𝜁]');
+
+    });
+
+    it("greek_functions", async () => {
+        expect(await th.run(`Function('Alpha')`)).equal('[A]');
+        expect(await th.run(`Function('Eta')`)).equal('[H]');
+        expect(await th.run(`Function('Pi')`)).equal('[𝛱]');
+        expect(await th.run(`Function('chi')`)).equal('[⚙️,[chi]]');
+    })
+    it("other_symbols", async () => {
+        const ss = `\\hslash\\wp\\ell\\mho\\gimel\\beth\\aleph\\eth\\daleth\\hbar`;
+        const rs = `ℏ℘ℓ℧ℷℶℵðℸℏ`.split("").filter(c=>c);
+        const split=ss.split("\\").filter(c=>c);
+        for (let idx = 0; idx < split.length; idx++) {
+            console.log(split[idx]);
+            expect(await th.run(`symbols("${split[idx]}")`)).equal(`[${rs[idx]}]`);
+        }
+        
+    });
+
+    it("modifiers", async () => {
         expect(await th.run(`symbols("xMathring")`)).equal('[ring,[x]]');
         expect(await th.run(`symbols("xCheck")`)).equal('[check,[x]]');
         expect(await th.run(`symbols("xBreve")`)).equal('[breve,[x]]');
@@ -1366,6 +1410,22 @@ Y = MatrixSymbol('Y', 2, 2)
         expect(await th.run(`symbols("xMag")`)).equal('|[x]|');
         expect(await th.run(`symbols("xPrM")`)).equal("[x']");
         expect(await th.run(`symbols("xBM")`)).equal('[x,boldsymbol]');
+
+        /**modifer itself  */
+
+        expect(await th.run(`symbols("Mathring")`)).equal('[Mathring]');
+        expect(await th.run(`symbols("Check")`)).equal('[Check]');
+        expect(await th.run(`symbols("Breve")`)).equal('[Breve]');
+        expect(await th.run(`symbols("Acute")`)).equal('[Acute]');
+        expect(await th.run(`symbols("ddDDot")`)).equal('[dddot,[d]]');
+
+        /** # Check a few combinations */
+        expect(await th.run(`symbols("xvecdot")`)).equal('[dot,[overrightarrow,[x]]]');
+        expect(await th.run(`symbols("xDotVec")`)).equal('[overrightarrow,[dot,[x]]]');
+        expect(await th.run(`symbols("xHATNorm")`)).equal('|[🎩,[x]]|');
+        expect(await th.run(`symbols("xMathringBm_yCheckPRM__zbreveAbs")`)).equal(`[ring,[x,boldsymbol]][💪,|[breve,[z]]|,[check,[y]][']]`);
+        expect(await th.run(`symbols("alphadothat_nVECDOT__tTildePrime")`)).equal(`[🎩,[dot,[𝛼]]][💪,[small-tilde,[t]]['],[dot,[overrightarrow,[n]]]]`);
+
     })
     it("greek_symbols(", async () => {
         expect(await th.run(`Symbol('alpha')`)).equal('[𝛼]');

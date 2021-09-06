@@ -250,6 +250,7 @@ class PrTransformHelper {
             if (s.type == "Var") {
                 return { ...s, bold: boldStyle }
             }
+            return s;
         }, () => true).map(s, {}, {});
     }
 

@@ -714,6 +714,9 @@ class Main {
             case "Equivalent": {
                 return prTh.bin(this.m(obj.args), "⇔");
             }
+            case "Xor": {
+                return prTh.bin(this.m(obj.args), "⊻");
+            }
 
         }
 
@@ -772,7 +775,7 @@ export namespace P2Pr {
 
     export interface BinaryOp extends Container {
         type: "BinaryOp";
-        op: "↦" | "×" | "∧" | "⇒" | "∨" | "⧵" | "▵" | "∩" | "∪" | "⋅" | "mod" | "rightarrow" | "⊗" | "⇔";
+        op: "↦" | "×" | "∧" | "⇒" | "∨" | "⧵" | "▵" | "∩" | "∪" | "⋅" | "mod" | "rightarrow" | "⊗" | "⇔" | "⊻";
         wrapIfMulShorthand?: boolean;
     }
     export interface UnaryOp extends Container {
@@ -788,7 +791,7 @@ export namespace P2Pr {
 
     export interface OverSymbol extends Container {
         type: "OverSymbol";
-        op: "small-hat" | "overline" | "ring" | "check" | "breve" | "acute" | "grave" | "small-tilde" | "prime" | "ddddot" | "dddot" | "ddot"|"dot"|"overrightarrow";
+        op: "small-hat" | "overline" | "ring" | "check" | "breve" | "acute" | "grave" | "small-tilde" | "prime" | "ddddot" | "dddot" | "ddot" | "dot" | "overrightarrow";
         bold?: boolean;
     }
 
@@ -948,7 +951,7 @@ namespace P {
         F<"BaseScalarField"> | F<"BaseVectorField"> | Differential | F<"PermutationMatrix"> | F<"AppliedPermutation"> |
         UNamed<"MatrixSymbol"> | F<"Trace"> | TensorIndex | F<"Tensor"> | F<"TensorElement"> | F<"PartialDerivative"> |
         F<"WedgeProduct"> | F<"TensorProduct"> | F<"Quaternion"> | F<"Series"> | F<"KroneckerProduct"> | F<"MatrixElement"> |
-        F<"Equivalent"> |
+        F<"Equivalent"> | F<"Xor"> |
         UnknownFunc;
 
 

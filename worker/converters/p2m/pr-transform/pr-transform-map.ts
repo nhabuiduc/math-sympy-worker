@@ -69,7 +69,7 @@ export class PrTransformMap<TContext extends object> {
             }
         }
 
-        return this.transform(newMain, ctx);
+        return this.transform(newMain, ctx) || newMain;
     }
 }
 

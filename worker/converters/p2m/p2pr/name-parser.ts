@@ -7,7 +7,7 @@ export class NameParser {
     }
 
     parseSymbol(name: string, boldType?: P2Pr.BoldType): P2Pr.Symbol {
-        return this.matchModifier(name, boldType);
+        return this.innerParse(name, n => this.matchModifier(n, boldType), n => this.matchModifier(n, boldType), boldType)
     }
 
     private matchModifier(name: string, boldType?: P2Pr.BoldType): Symbol {
@@ -16,7 +16,7 @@ export class NameParser {
         }
 
         for (const [key, vl] of this.modifierMap) {
-            console.log("here: ", name, key);
+
             if (name.length > key.length && name.toLowerCase().endsWith(key)) {
                 return vl(this.matchModifier(name.substr(0, name.length - key.length)));
             }
@@ -25,76 +25,77 @@ export class NameParser {
         return this.parse(name, (n) => prTh.var(n), boldType)
     }
 
-    parse(name: string, func: (name: string) => P2Pr.Symbol, boldType?: P2Pr.BoldType): P2Pr.Symbol {
+    innerParse(
+        name: string,
+        baseFunc: (name: string) => P2Pr.Symbol,
+        powIdxFunc: (name: string) => P2Pr.Symbol,
+        boldType?: P2Pr.BoldType): P2Pr.Symbol {
         const splitIdx = name.indexOf("|");
         if (splitIdx > 0) {
-            return this.handleJsonIdx(name, splitIdx, func);
+            return this.handleJsonIdx(name, splitIdx, baseFunc);
         }
 
         let endWithNumberMatch = name.match(/^([^\d\_\^]+)([\d]+)$/);
         if (endWithNumberMatch) {
             endWithNumberMatch = endWithNumberMatch.map(c => this.nameMap(c));
-            return this.handleNumberIdx(endWithNumberMatch[1], endWithNumberMatch[2], func, boldType);
+            return prTh.index(baseFunc(endWithNumberMatch[1]), prTh.var(endWithNumberMatch[2]))
         }
 
-        let indexPowerMatch = name.match(/^([^\_\^]+)_([^\_\^]+)\^(.+)$/);
+        let indexPowerMatch = name.match(/^([^\_\^]+)_([^\_\^]+)(\^|\_\_)(.+)$/);
         if (indexPowerMatch) {
             indexPowerMatch = indexPowerMatch.map(c => this.nameMap(c));
             return prTh.pow(
-                func(indexPowerMatch[1]),
-                prTh.var(indexPowerMatch[3], { bold: boldType }),
-                prTh.var(indexPowerMatch[2], { bold: boldType }),
+                baseFunc(indexPowerMatch[1]),
+                powIdxFunc(indexPowerMatch[4]),
+                powIdxFunc(indexPowerMatch[2]),
             )
         }
 
 
-        let powerIndexMatch = name.match(/^([^\_\^]+)\^([^\_\^]+)\_(.+)$/);
+        let powerIndexMatch = name.match(/^([^\_\^]+)(\^|\_\_)([^\_\^]+)\_(.+)$/);
         if (powerIndexMatch) {
             powerIndexMatch = powerIndexMatch.map(c => this.nameMap(c));
             return prTh.pow(
-                func(powerIndexMatch[1]),
-                prTh.var(powerIndexMatch[2], { bold: boldType }),
-                prTh.var(powerIndexMatch[3], { bold: boldType }),
+                baseFunc(powerIndexMatch[1]),
+                powIdxFunc(powerIndexMatch[3]),
+                powIdxFunc(powerIndexMatch[4]),
             )
         }
 
         let indexMatch = name.match(/^([^\_\^]+)\_(.+)$/);
         if (indexMatch) {
             indexMatch = indexMatch.map(c => this.nameMap(c));
-            return prTh.index(func(indexMatch[1]), prTh.var(indexMatch[2], { bold: boldType }));
+            return prTh.index(baseFunc(indexMatch[1]), powIdxFunc(indexMatch[2]));
         }
 
-        let powerMatch = name.match(/^([^\_\^]+)\^(.+)$/);
+        let powerMatch = name.match(/^([^\_\^]+)(\^|\_\_)(.+)$/);
         if (powerMatch) {
             powerMatch = powerMatch.map(c => this.nameMap(c));
-            return prTh.pow(func(powerMatch[1]), prTh.var(powerMatch[2], { bold: boldType }));
+            return prTh.pow(baseFunc(powerMatch[1]), powIdxFunc(powerMatch[3]));
         }
 
 
-        return func(this.nameMap(name));
+        return baseFunc(this.nameMap(name));
     }
 
-    private handleNumberIdx(name: string, idx: string, func: (name: string) => P2Pr.Symbol, boldType: P2Pr.BoldType): P2Pr.Index {
-        return {
-            type: "Index",
-            kind: "Container",
-            symbols: [
-                func(this.nameMap(name)),
-                { type: "Var", kind: "Leaf", name: idx, bold: boldType }
-            ]
-        }
-
+    parse(name: string, func: (name: string) => P2Pr.Symbol, boldType?: P2Pr.BoldType): P2Pr.Symbol {
+        return this.innerParse(name, func, (s) => prTh.var(s, { bold: boldType }));
     }
+
+
+    // private handleNumberIdx(name: string, idx: string, func: (name: string) => P2Pr.Symbol, boldType: P2Pr.BoldType): P2Pr.Index {
+    //     return prTh.index(
+    //         func(this.nameMap(name)),
+    //         prTh.var(idx, { bold: boldType })
+    //     )
+
+    // }
 
     private handleJsonIdx(name: string, splitIdx: number, func: (name: string) => P2Pr.Symbol): P2Pr.Symbol {
-        return {
-            type: "Index",
-            kind: "Container",
-            symbols: [
-                func(this.nameMap(name.substr(0, splitIdx))),
-                { type: "JsonData", kind: "Leaf", data: name.substr(splitIdx + 1) },
-            ]
-        }
+        return prTh.index(
+            func(this.nameMap(name.substr(0, splitIdx))),
+            { type: "JsonData", kind: "Leaf", data: name.substr(splitIdx + 1) }
+        )
 
     }
 
@@ -141,5 +142,28 @@ const symbolNameMap: { [name: string]: string } = {
     "Tau": "T",
     "TAU": "𝜏",
     "taU": "𝜏",
+    "hslash": "ℏ",
+    "wp": "℘",
+    "ell": "ℓ",
+    "mho": "℧",
+    "gimel": "ℷ",
+    "beth": "ℶ",
+    "aleph": "ℵ",
+    "eth": "ð",
+    "daleth": "ℸ",
+    "hbar": "ℏ",
+    "Alpha": "A",
+    "Beta": "B",
+    "Epsilon": "E",
+    "Zeta": "Z",
+    "Eta": "H",
+    "Iota": "I",
+    "Kappa": "I",
+    "Mu": "M",
+    "Nu": "N",
+    "Omicron": "O",
+    "Rho": "P",
+    "Upsilon": "Y",
+    "Chi": "X",
 }
 type Symbol = P2Pr.Symbol;
